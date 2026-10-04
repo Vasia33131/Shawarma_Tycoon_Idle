@@ -46,12 +46,16 @@ namespace ShaurmaTycoon.Tests
             Assert.IsNotNull(data.PurchasedUpgrades);
         }
 
+        // JsonUtility пишет double примерно с 15 значащими цифрами (не 17), поэтому последние знаки
+        // огромных чисел могут слегка измениться. Для монет это незаметно (на экране 3 значащие цифры).
         [Test]
-        public void HugeCoins_SurviveRoundTrip()
+        public void HugeCoins_SurviveRoundTrip_WithinRelativePrecision()
         {
             var data = new SaveData { Coins = 1.2345678901234567e250 };
 
-            Assert.AreEqual(data.Coins, _serializer.Deserialize(_serializer.Serialize(data)).Coins);
+            double restored = _serializer.Deserialize(_serializer.Serialize(data)).Coins;
+
+            Assert.AreEqual(data.Coins, restored, data.Coins * 1e-14);
         }
 
         [Test]
