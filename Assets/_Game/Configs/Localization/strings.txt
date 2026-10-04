@@ -1,0 +1,26 @@
+# Таблица локализации: key 	 ru 	 en (разделитель — табуляция). \n — перенос строки, {0} — подстановка.
+key	ru	en
+game.title	Шаурма Тайкун	Shawarma Tycoon
+kiosk.placeholder	Здесь будет ларёк и очередь клиентов	Your kiosk and customers will be here
+city.home	Родной город	Hometown
+hud.income_per_sec	{0}/с	{0}/s
+tab.stations	Станции	Stations
+tab.managers	Менеджеры	Managers
+tab.upgrades	Улучшения	Upgrades
+tab.city	Город	City
+tab.coming_soon	Скоро откроется	Coming soon
+buy_mode.label	Купить: {0}	Buy: {0}
+buy_mode.max	Макс	Max
+station.level	Ур. {0}	Lv. {0}
+station.tap_to_earn	Тапни! +{0}	Tap! +{0}
+station.milestone	Ускорение через {0} ур.	Speed-up in {0} lv.
+station.milestone_max	Максимальная скорость	Max speed
+station.buy_count	×{0}	×{0}
+station.unlock	Открыть\n{0}	Unlock\n{0}
+unit.seconds	{0} с	{0}s
+station.shawarma_classic	Шаурма классик	Classic Shawarma
+station.cheese_lavash	Сырный лаваш	Cheese Lavash
+station.fries	Картошка фри	French Fries
+station.drinks_ayran	Напитки и айран	Drinks & Ayran
+station.shawarma_xl	Шаурма XL	Shawarma XL
+station.grill_plate	Гриль-тарелка	Grill Plate

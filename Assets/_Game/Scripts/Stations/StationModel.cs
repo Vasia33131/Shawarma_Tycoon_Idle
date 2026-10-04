@@ -38,6 +38,7 @@ namespace ShaurmaTycoon.Stations
 
         public double CycleTime => _definition.CycleTime / _speedMultiplier;
         public double IncomePerCycle => _definition.BaseIncome * Level;
+        public double IncomePerSecond => IsUnlocked ? IncomePerCycle / CycleTime : 0;
         public int NextMilestone => _milestones.GetNextMilestone(Level);
 
         /// <summary>Запуск цикла тапом. false — станция закрыта или цикл уже идёт.</summary>

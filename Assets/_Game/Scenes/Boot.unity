@@ -235,6 +235,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _gameSceneName: Game
+  _strings: {fileID: 4900000, guid: f98f25c064634737bf0f310a47c58284, type: 3}
 --- !u!4 &1780249253
 Transform:
   m_ObjectHideFlags: 0

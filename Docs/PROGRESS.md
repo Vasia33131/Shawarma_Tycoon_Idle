@@ -82,10 +82,43 @@
   - доход/сек для HUD ещё не считается (этап 03/04);
   - названия станций пока ключи локализации (`station.*`), таблица локализации появится на этапе 03.
 
+### Этап 03 — UI игрового экрана (код готов, 2026-10-04; ждёт Build Game UI и проверки в Unity)
+- Проверено: runtime- и editor-сборки компилируются без warnings (Roslyn из Unity вне редактора, с TMP). Логика и тесты вне Unity: 120/120 зелёные. `Build Game UI`, Play, Test Runner и WebGL-билд ещё не запускались.
+- Сделано:
+  - TMP Essentials распакованы в `Assets/TextMesh Pro/` (из пакета `com.unity.textmeshpro`), ссылка на `Unity.TextMeshPro` в asmdef;
+  - локализация: `LocTable` (TSV), `Loc` (язык, откат ru → en → ключ, нормализация кода платформы), `LocalizedText`, таблица `Configs/Localization/strings.txt` (ru/en);
+  - `GameBootstrap` создаёт `Loc` после инициализации платформы, таблица привязана в сцене Boot;
+  - язык в редакторе: меню `ShaurmaTycoon/Editor Language`, хранится в EditorPrefs и в Play переключается сразу;
+  - UI: `HudView`, `StationRowView`, `StationsPanel`, `BuyModeButton`, `TabBar`, `ResponsiveLayout`, `GameScreen`;
+  - `StationModel.IncomePerSecond`, `StationController.IncomePerSecond` (только станции с автоциклом), `IStationDefinition.NameKey`;
+  - `GameUiBuilder` (меню `ShaurmaTycoon/Build Game UI`) собирает `Prefabs/UI/StationRow.prefab` и `GameScreen` в сцене Game, убирает `DebugLabel_Stage00`;
+  - удалён `StationsDebugPanel` (скрипт и компонент в сцене Game).
+- Файлы:
+  - `Scripts/Localization/`: `LocTable.cs`, `Loc.cs`, `LocalizedText.cs`
+  - `Scripts/UI/`: `BuyMode.cs`, `BuyModeButton.cs`, `HudView.cs`, `StationRowView.cs`, `StationsPanel.cs`, `TabBar.cs`, `ResponsiveLayout.cs`, `GameScreen.cs`
+  - `Scripts/Editor/`: `GameUiBuilder.cs`, `EditorLanguageMenu.cs`
+  - `Configs/Localization/strings.txt`
+  - `Tests/EditMode/`: `LocTableTests.cs`, `LocTests.cs`, `StringsFileTests.cs` (+ тест `IncomePerSecond`)
+  - изменены: `GameBootstrap.cs`, `EditorPlatformService.cs`, `IStationDefinition.cs`, `StationModel.cs`, `StationController.cs`, `TestStationDefinition.cs`, оба asmdef, `Boot.unity`, `Game.unity`
+- Решения:
+  - UI собирается редакторским инструментом, а не правкой YAML: результат — обычные объекты и префаб, их можно править руками. Повторная сборка спрашивает подтверждение, потому что перезапишет правки;
+  - раскладка: HUD 200 и вкладки 180 по краям. Портрет: ларёк 520 под HUD, ниже список. Ландшафт: ларёк слева, список справа. Ларёк пока цветная заглушка;
+  - прогресс-бар меняет `anchorMax.x` у Fill (без спрайта Filled), тексты строк меняются только при изменении уровня, режима покупки, языка или доступности покупки;
+  - доход/сек в HUD скрыт, пока нет станций с автоциклом (этап 04);
+  - режим ×Max показывает и покупает `max(1, доступно)`, кнопка неактивна, если не хватает даже на 1;
+  - коды языка платформы: ru/be/kk/uk/uz → ru, остальные → en, пустой → ru;
+  - кириллица — через динамический fallback-атлас LiberationSans из TMP Essentials.
+- Известные проблемы / TODO:
+  - в редакторе вне Play `LocalizedText` показывает ключи, потому что `Loc` создаётся только в Play;
+  - `BigNumberFormatter` и `Loc.Format` создают строки (аллоцируют), хотя и только при изменении значений. Полностью без аллокаций — этап 05;
+  - WebGL-билд всё ещё не подтверждён (долг этапа 00).
+
 ## Важные решения (архитектура)
 - Unity 2022.3.62f1, 2D, URP 2D, Color Space Gamma, старый Input Manager.
 - Сборки: `ShaurmaTycoon` (runtime), `ShaurmaTycoon.Editor`, `ShaurmaTycoon.Tests.EditMode` (Assets/_Game/Tests/EditMode). Namespace `ShaurmaTycoon.<Модуль>`, для редакторского кода `ShaurmaTycoon.EditorTools`.
 - Сервисы регистрируются в `GameBootstrap` через `Services.Register<T>`, единственный Update в игре — в `TickManager`.
+- Сервисы Boot: `TickManager`, `Wallet`, `IPlatformService`, `Loc`. Сервисы сцены Game (`GameSceneInstaller`): `StationController`. Вью связываются в `GameScreen.Start`.
+- Все тексты UI — ключи из `Configs/Localization/strings.txt` (TSV: key, ru, en); новые ключи добавлять туда и в `StringsFileTests.RequiredKeys`.
 
 ## TODO(YANDEX)
 - Выбрать PluginYG2 или свой jslib-мост (этап 09).

@@ -26,6 +26,21 @@ namespace ShaurmaTycoon.Stations
 
         public IReadOnlyList<StationModel> Stations => _stations;
 
+        /// <summary>Доход в секунду станций, которые работают сами (с менеджером).</summary>
+        public double IncomePerSecond
+        {
+            get
+            {
+                double total = 0;
+                for (int i = 0; i < _stations.Count; i++)
+                {
+                    if (_stations[i].IsAutomated)
+                        total += _stations[i].IncomePerSecond;
+                }
+                return total;
+            }
+        }
+
         public void Tick(float deltaTime)
         {
             double earned = 0;

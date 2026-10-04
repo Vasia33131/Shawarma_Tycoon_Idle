@@ -6,6 +6,7 @@ namespace ShaurmaTycoon.Tests
     public sealed class TestStationDefinition : IStationDefinition
     {
         public string Id { get; set; } = "test";
+        public string NameKey { get; set; } = "station.test";
         public double BaseCost { get; set; } = 4;
         public double CostGrowth { get; set; } = 1.07;
         public double BaseIncome { get; set; } = 1;

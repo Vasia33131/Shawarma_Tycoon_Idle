@@ -3,7 +3,8 @@
     "rootNamespace": "ShaurmaTycoon.EditorTools",
     "references": [
         "ShaurmaTycoon",
-        "UnityEngine.UI"
+        "UnityEngine.UI",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [
         "Editor"

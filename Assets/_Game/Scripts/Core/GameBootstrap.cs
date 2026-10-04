@@ -1,4 +1,5 @@
 using ShaurmaTycoon.Economy;
+using ShaurmaTycoon.Localization;
 using ShaurmaTycoon.Platform;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -11,6 +12,10 @@ namespace ShaurmaTycoon.Core
     public sealed class GameBootstrap : MonoBehaviour
     {
         [SerializeField] private string _gameSceneName = "Game";
+        [Tooltip("TSV-таблица строк (Configs/Localization/strings.txt).")]
+        [SerializeField] private TextAsset _strings = null;
+
+        private IPlatformService _platform;
 
         private void Awake()
         {
@@ -19,9 +24,9 @@ namespace ShaurmaTycoon.Core
             Services.Register(tickManagerObject.AddComponent<TickManager>());
             Services.Register(new Wallet());
 
-            IPlatformService platform = CreatePlatform();
-            Services.Register(platform);
-            platform.Init(OnPlatformReady);
+            _platform = CreatePlatform();
+            Services.Register(_platform);
+            _platform.Init(OnPlatformReady);
         }
 
         private static IPlatformService CreatePlatform()
@@ -32,8 +37,19 @@ namespace ShaurmaTycoon.Core
 
         private void OnPlatformReady()
         {
+            Services.Register(new Loc(LoadStrings(), _platform.Language));
+
             Debug.Log("Bootstrap OK");
             SceneManager.LoadScene(_gameSceneName);
+        }
+
+        private LocTable LoadStrings()
+        {
+            if (_strings != null)
+                return LocTable.Parse(_strings.text);
+
+            Debug.LogError($"{nameof(GameBootstrap)}: localization table is not assigned.", this);
+            return LocTable.Empty;
         }
     }
 }

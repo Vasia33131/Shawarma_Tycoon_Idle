@@ -478,7 +478,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1100000002}
   - component: {fileID: 1100000003}
-  - component: {fileID: 1100000004}
   m_Layer: 0
   m_Name: GameSceneInstaller
   m_TagString: Untagged
@@ -515,18 +514,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _balance: {fileID: 11400000, guid: e6b8ec15a2814f13b2ebad5d18b56a90, type: 2}
   _city: {fileID: 11400000, guid: 9839bf6e20954771a8e2dfa291909312, type: 2}
---- !u!114 &1100000004
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1100000001}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 84095508bcf24a4ebf32c2902dbcc915, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

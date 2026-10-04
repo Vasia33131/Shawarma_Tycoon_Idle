@@ -55,6 +55,17 @@ namespace ShaurmaTycoon.Tests
         }
 
         [Test]
+        public void IncomePerSecond_CountsOnlyAutomatedStations()
+        {
+            Assert.AreEqual(0, _controller.IncomePerSecond);
+
+            _controller.Stations[1].IsAutomated = true;
+            _controller.Stations[2].IsAutomated = true;
+
+            Assert.AreEqual(10, _controller.IncomePerSecond);
+        }
+
+        [Test]
         public void InvalidIndex_ReturnsFalse()
         {
             Assert.IsFalse(_controller.Tap(-1));

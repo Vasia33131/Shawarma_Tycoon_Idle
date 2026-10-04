@@ -2,7 +2,8 @@
     "name": "ShaurmaTycoon",
     "rootNamespace": "ShaurmaTycoon",
     "references": [
-        "UnityEngine.UI"
+        "UnityEngine.UI",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

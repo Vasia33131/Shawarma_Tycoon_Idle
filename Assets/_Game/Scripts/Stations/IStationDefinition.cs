@@ -7,6 +7,9 @@ namespace ShaurmaTycoon.Stations
     {
         string Id { get; }
 
+        /// <summary>Ключ локализации названия.</summary>
+        string NameKey { get; }
+
         /// <summary>Цена первого уровня; для закрытой станции это цена открытия.</summary>
         double BaseCost { get; }
 

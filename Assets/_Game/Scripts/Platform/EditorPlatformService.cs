@@ -9,10 +9,24 @@ namespace ShaurmaTycoon.Platform
     public sealed class EditorPlatformService : IPlatformService
     {
         private const string SaveKey = "shaurma_tycoon_save";
+        private const string DefaultLanguage = "ru";
+
+        /// <summary>Ключ EditorPrefs с языком редактора (меню ShaurmaTycoon/Editor Language).</summary>
+        public const string EditorLanguagePrefKey = "ShaurmaTycoon.EditorLanguage";
 
         public bool IsInitialized { get; private set; }
 
-        public string Language => "ru";
+        public string Language
+        {
+            get
+            {
+#if UNITY_EDITOR
+                return UnityEditor.EditorPrefs.GetString(EditorLanguagePrefKey, DefaultLanguage);
+#else
+                return DefaultLanguage;
+#endif
+            }
+        }
 
         public DateTime ServerTimeUtc => DateTime.UtcNow;
 
