@@ -13,6 +13,10 @@ namespace ShaurmaTycoon.Core
         [SerializeField] private int[] _milestoneLevels = { 25, 50, 100, 200, 300, 400 };
         [Tooltip("Во сколько раз ускоряется цикл на каждой вехе.")]
         [SerializeField] private double _milestoneSpeedMultiplier = 2;
+        [Tooltip("Цена менеджера = base cost станции × это число (GDD §5).")]
+        [SerializeField] private double _managerCostMultiplier = 1000;
+
+        public double ManagerCostMultiplier => _managerCostMultiplier;
 
         public MilestoneTable CreateMilestoneTable()
         {
@@ -23,6 +27,8 @@ namespace ShaurmaTycoon.Core
         {
             if (_milestoneSpeedMultiplier < 1)
                 _milestoneSpeedMultiplier = 1;
+            if (_managerCostMultiplier < 0)
+                _managerCostMultiplier = 0;
         }
     }
 }

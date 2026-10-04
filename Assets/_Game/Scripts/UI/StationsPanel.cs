@@ -15,16 +15,6 @@ namespace ShaurmaTycoon.UI
         [SerializeField] private RectTransform _content = null;
         [SerializeField] private StationRowView _rowPrefab = null;
         [SerializeField] private BuyModeButton _buyModeButton = null;
-        [Tooltip("Цвета кругов-иконок станций по порядку (пока нет графики).")]
-        [SerializeField] private Color[] _iconColors =
-        {
-            new Color(0.91f, 0.45f, 0.18f),
-            new Color(0.96f, 0.73f, 0.15f),
-            new Color(0.85f, 0.62f, 0.25f),
-            new Color(0.30f, 0.65f, 0.80f),
-            new Color(0.80f, 0.30f, 0.25f),
-            new Color(0.45f, 0.30f, 0.20f),
-        };
 
         private readonly List<StationRowView> _rows = new List<StationRowView>(8);
 
@@ -36,8 +26,7 @@ namespace ShaurmaTycoon.UI
             {
                 StationRowView row = Instantiate(_rowPrefab, _content);
                 row.name = $"StationRow_{i + 1}";
-                Color color = _iconColors.Length > 0 ? _iconColors[i % _iconColors.Length] : Color.white;
-                row.Bind(i, stations.Stations[i], stations, wallet, loc, _buyModeButton, color);
+                row.Bind(i, stations.Stations[i], stations, wallet, loc, _buyModeButton, StationColors.Get(i));
                 _rows.Add(row);
             }
         }

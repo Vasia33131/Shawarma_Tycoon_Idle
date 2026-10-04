@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _milestoneLevels: 190000003200000064000000c80000002c01000090010000
   _milestoneSpeedMultiplier: 2
+  _managerCostMultiplier: 1000

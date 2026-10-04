@@ -19,6 +19,8 @@ namespace ShaurmaTycoon.Tests
             "station.shawarma_classic", "station.cheese_lavash", "station.fries",
             "station.drinks_ayran", "station.shawarma_xl", "station.grill_plate",
             "city.home",
+            "manager.description", "manager.hire", "manager.hired", "manager.locked",
+            "upgrade.station", "upgrade.all", "upgrade.buy", "upgrade.none",
         };
 
         private static LocTable LoadTable()

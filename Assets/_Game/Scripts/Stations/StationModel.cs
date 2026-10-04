@@ -12,6 +12,8 @@ namespace ShaurmaTycoon.Stations
         private readonly IStationDefinition _definition;
         private readonly MilestoneTable _milestones;
         private double _speedMultiplier;
+        private double _incomeMultiplier = 1;
+        private bool _isAutomated;
 
         public StationModel(IStationDefinition definition, MilestoneTable milestones)
         {
@@ -25,19 +27,47 @@ namespace ShaurmaTycoon.Stations
         /// <summary>Аргумент — сама станция.</summary>
         public event Action<StationModel> LevelChanged;
 
+        /// <summary>Изменилось что-то, что видно игроку: уровень, автоматизация или множитель дохода.</summary>
+        public event Action<StationModel> Changed;
+
         public IStationDefinition Definition => _definition;
         public int Level { get; private set; }
         public bool IsUnlocked => Level > 0;
         public bool IsRunning { get; private set; }
 
-        /// <summary>Цикл перезапускается сам (менеджер, этап 04).</summary>
-        public bool IsAutomated { get; set; }
+        /// <summary>Цикл перезапускается сам (нанят менеджер).</summary>
+        public bool IsAutomated
+        {
+            get => _isAutomated;
+            set
+            {
+                if (_isAutomated == value)
+                    return;
+                _isAutomated = value;
+                Changed?.Invoke(this);
+            }
+        }
+
+        /// <summary>Множитель дохода от апгрейдов (GDD §5, upgradesMult).</summary>
+        public double IncomeMultiplier
+        {
+            get => _incomeMultiplier;
+            set
+            {
+                if (!(value > 0) || double.IsInfinity(value))
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Must be positive and finite.");
+                if (_incomeMultiplier == value)
+                    return;
+                _incomeMultiplier = value;
+                Changed?.Invoke(this);
+            }
+        }
 
         /// <summary>Доля текущего цикла, 0..1. Сохраняется при ускорении на вехе.</summary>
         public double Progress { get; private set; }
 
         public double CycleTime => _definition.CycleTime / _speedMultiplier;
-        public double IncomePerCycle => _definition.BaseIncome * Level;
+        public double IncomePerCycle => _definition.BaseIncome * Level * _incomeMultiplier;
         public double IncomePerSecond => IsUnlocked ? IncomePerCycle / CycleTime : 0;
         public int NextMilestone => _milestones.GetNextMilestone(Level);
 
@@ -103,6 +133,7 @@ namespace ShaurmaTycoon.Stations
             Level += count;
             _speedMultiplier = _milestones.GetSpeedMultiplier(Level);
             LevelChanged?.Invoke(this);
+            Changed?.Invoke(this);
             return true;
         }
     }

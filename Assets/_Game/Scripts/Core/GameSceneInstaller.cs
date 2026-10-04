@@ -1,6 +1,8 @@
 using ShaurmaTycoon.Economy;
+using ShaurmaTycoon.Managers;
 using ShaurmaTycoon.Prestige;
 using ShaurmaTycoon.Stations;
+using ShaurmaTycoon.Upgrades;
 using UnityEngine;
 
 namespace ShaurmaTycoon.Core
@@ -25,8 +27,12 @@ namespace ShaurmaTycoon.Core
                 return;
             }
 
-            _stations = new StationController(_city.Stations, _balance.CreateMilestoneTable(), Services.Get<Wallet>());
+            var wallet = Services.Get<Wallet>();
+
+            _stations = new StationController(_city.Stations, _balance.CreateMilestoneTable(), wallet);
             Services.Register(_stations);
+            Services.Register(new ManagerController(_stations, wallet, _balance.ManagerCostMultiplier));
+            Services.Register(new UpgradeService(_city.Upgrades, _stations, wallet));
 
             _tickManager = Services.Get<TickManager>();
             _tickManager.Register(_stations);
@@ -39,6 +45,8 @@ namespace ShaurmaTycoon.Core
 
             if (_tickManager != null)
                 _tickManager.Unregister(_stations);
+            Services.Unregister<UpgradeService>();
+            Services.Unregister<ManagerController>();
             Services.Unregister<StationController>();
         }
     }

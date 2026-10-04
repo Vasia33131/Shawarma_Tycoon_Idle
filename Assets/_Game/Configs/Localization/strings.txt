@@ -24,3 +24,11 @@ station.fries	Картошка фри	French Fries
 station.drinks_ayran	Напитки и айран	Drinks & Ayran
 station.shawarma_xl	Шаурма XL	Shawarma XL
 station.grill_plate	Гриль-тарелка	Grill Plate
+manager.description	Сам запускает станцию — тапать больше не нужно	Runs the station for you — no more tapping
+manager.hire	Нанять\n{0}	Hire\n{0}
+manager.hired	Нанят	Hired
+manager.locked	Открой станцию	Unlock station first
+upgrade.station	{0}: доход ×{1}	{0}: income ×{1}
+upgrade.all	Все станции: доход ×{0}	All stations: income ×{0}
+upgrade.buy	Купить\n{0}	Buy\n{0}
+upgrade.none	Все улучшения куплены!	All upgrades purchased!

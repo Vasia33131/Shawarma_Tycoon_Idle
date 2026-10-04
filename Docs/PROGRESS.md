@@ -113,11 +113,37 @@
   - `BigNumberFormatter` и `Loc.Format` создают строки (аллоцируют), хотя и только при изменении значений. Полностью без аллокаций — этап 05;
   - WebGL-билд всё ещё не подтверждён (долг этапа 00).
 
+### Этап 04 — Менеджеры и апгрейды (код готов, 2026-10-04; ждёт Build Game UI и проверки в Unity)
+- Проверено: runtime- и editor-сборки компилируются без warnings (вне редактора). Логика и тесты вне Unity: 142/142 зелёные. В Unity ещё не запускались.
+- Сделано:
+  - `StationModel`: `IncomeMultiplier` (upgradesMult) и событие `Changed` (уровень, автоматизация, множитель); `IsAutomated` теперь сообщает об изменении;
+  - `ManagerController`: цена = base cost × `BalanceConfig.ManagerCostMultiplier` (1000), найм только на открытой станции, повторно нельзя, событие `ManagerHired`;
+  - `IUpgradeDefinition`, `UpgradeConfig` (SO), `UpgradeService`: покупка, множитель станции = произведение купленных улучшений этой станции и улучшений «для всех»;
+  - 20 ассетов `Configs/Upgrades/City01/Upgrade_01…20`, подключены в `City_01_Home._upgrades`;
+  - UI: `ManagersPanel` + `ManagerRowView`, `UpgradesPanel` + `UpgradeRowView` (сортировка по цене, купленные скрыты, «Все улучшения куплены!»), общая палитра `StationColors`;
+  - `GameUiBuilder`: общий `BuildListPanel`, префабы `ManagerRow` и `UpgradeRow`, рабочие вкладки вместо заглушек (кроме «Город»);
+  - строки ru/en для менеджеров и улучшений.
+- Файлы:
+  - `Scripts/Managers/ManagerController.cs`
+  - `Scripts/Upgrades/`: `IUpgradeDefinition.cs`, `UpgradeConfig.cs`, `UpgradeService.cs`
+  - `Scripts/UI/`: `StationColors.cs`, `ManagersPanel.cs`, `ManagerRowView.cs`, `UpgradesPanel.cs`, `UpgradeRowView.cs`
+  - `Tests/EditMode/`: `TestUpgradeDefinition.cs`, `ManagerControllerTests.cs`, `UpgradeServiceTests.cs` (+ тесты в `StationModelTests`)
+  - изменены: `StationModel.cs`, `BalanceConfig.cs`, `CityConfig.cs`, `GameSceneInstaller.cs`, `GameScreen.cs`, `StationsPanel.cs`, `StationRowView.cs`, `GameUiBuilder.cs`, `Balance.asset`, `City_01_Home.asset`, `strings.txt`, `StringsFileTests.cs`
+- Решения:
+  - отдельного `ManagerModel` нет: «нанят» = `StationModel.IsAutomated` (имён и бонусов у менеджеров в GDD нет);
+  - **предварительный баланс апгрейдов** (в GDD цен нет, тюнинг на этапе 11):
+    - 3 круга «станция ×3» на каждую станцию по цене base cost × 250 / × 25 000 / × 2 500 000;
+    - «Все станции ×2» за 500M и 50B;
+  - цель апгрейда, которой нет в городе, — ошибка конфига (`ArgumentException` при создании сервиса);
+  - `UpgradeConfig.TargetStation` возвращает настоящий null вместо «фейкового null» Unity.
+- Известные проблемы / TODO:
+  - менеджеры и апгрейды не сохраняются (этап 06).
+
 ## Важные решения (архитектура)
 - Unity 2022.3.62f1, 2D, URP 2D, Color Space Gamma, старый Input Manager.
 - Сборки: `ShaurmaTycoon` (runtime), `ShaurmaTycoon.Editor`, `ShaurmaTycoon.Tests.EditMode` (Assets/_Game/Tests/EditMode). Namespace `ShaurmaTycoon.<Модуль>`, для редакторского кода `ShaurmaTycoon.EditorTools`.
 - Сервисы регистрируются в `GameBootstrap` через `Services.Register<T>`, единственный Update в игре — в `TickManager`.
-- Сервисы Boot: `TickManager`, `Wallet`, `IPlatformService`, `Loc`. Сервисы сцены Game (`GameSceneInstaller`): `StationController`. Вью связываются в `GameScreen.Start`.
+- Сервисы Boot: `TickManager`, `Wallet`, `IPlatformService`, `Loc`. Сервисы сцены Game (`GameSceneInstaller`): `StationController`, `ManagerController`, `UpgradeService`. Вью связываются в `GameScreen.Start`.
 - Все тексты UI — ключи из `Configs/Localization/strings.txt` (TSV: key, ru, en); новые ключи добавлять туда и в `StringsFileTests.RequiredKeys`.
 
 ## TODO(YANDEX)

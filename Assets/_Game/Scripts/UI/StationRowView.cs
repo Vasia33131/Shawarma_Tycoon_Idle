@@ -71,7 +71,7 @@ namespace ShaurmaTycoon.UI
             _buyButton.onClick.AddListener(OnBuy);
             _unlockButton.onClick.AddListener(OnUnlock);
 
-            _station.LevelChanged += OnLevelChanged;
+            _station.Changed += OnStationChanged;
             _wallet.CoinsChanged += OnCoinsChanged;
             _loc.LanguageChanged += RefreshAll;
             _buyMode.ModeChanged += OnBuyModeChanged;
@@ -84,7 +84,7 @@ namespace ShaurmaTycoon.UI
             if (_station == null)
                 return;
 
-            _station.LevelChanged -= OnLevelChanged;
+            _station.Changed -= OnStationChanged;
             _wallet.CoinsChanged -= OnCoinsChanged;
             _loc.LanguageChanged -= RefreshAll;
             _buyMode.ModeChanged -= OnBuyModeChanged;
@@ -128,7 +128,7 @@ namespace ShaurmaTycoon.UI
             _controller.TryBuy(_index, 1);
         }
 
-        private void OnLevelChanged(StationModel station)
+        private void OnStationChanged(StationModel station)
         {
             RefreshAll();
         }

@@ -19,11 +19,16 @@ namespace ShaurmaTycoon.EditorTools
         private const string GameScenePath = "Assets/_Game/Scenes/Game.unity";
         private const string PrefabFolder = "Assets/_Game/Prefabs/UI";
         private const string RowPrefabPath = PrefabFolder + "/StationRow.prefab";
+        private const string ManagerRowPrefabPath = PrefabFolder + "/ManagerRow.prefab";
+        private const string UpgradeRowPrefabPath = PrefabFolder + "/UpgradeRow.prefab";
         private const string ScreenName = "GameScreen";
 
         private const float HudHeight = 200f;
         private const float TabBarHeight = 180f;
         private const float RowHeight = 220f;
+        private const float ManagerRowHeight = 180f;
+        private const float UpgradeRowHeight = 160f;
+        private const float HeaderHeight = 110f;
 
         private static readonly Color Cream = new Color(1f, 0.95f, 0.88f);
         private static readonly Color RowColor = new Color(1f, 0.99f, 0.96f);
@@ -70,7 +75,7 @@ namespace ShaurmaTycoon.EditorTools
             if (oldScreen != null)
             {
                 if (!EditorUtility.DisplayDialog("Build Game UI",
-                        "Экран уже собран. Пересобрать? Ручные правки в GameScreen и StationRow.prefab пропадут.", "Пересобрать", "Отмена"))
+                        "Экран уже собран. Пересобрать? Ручные правки в GameScreen и префабах строк (Prefabs/UI) пропадут.", "Пересобрать", "Отмена"))
                     return;
                 Object.DestroyImmediate(oldScreen.gameObject);
             }
@@ -80,7 +85,7 @@ namespace ShaurmaTycoon.EditorTools
                 Object.DestroyImmediate(debugLabel.gameObject);
 
             StationRowView rowPrefab = BuildRowPrefab();
-            BuildScreen(canvas, rowPrefab);
+            BuildScreen(canvas, rowPrefab, BuildManagerRowPrefab(), BuildUpgradeRowPrefab());
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
@@ -186,9 +191,96 @@ namespace ShaurmaTycoon.EditorTools
             return prefab.GetComponent<StationRowView>();
         }
 
+        // ---------- Manager / upgrade row prefabs ----------
+
+        private static ManagerRowView BuildManagerRowPrefab()
+        {
+            GameObject root = CreateUi("ManagerRow", null);
+            ((RectTransform)root.transform).sizeDelta = new Vector2(1000f, ManagerRowHeight);
+            AddImage(root, RowColor, _roundSprite);
+            root.AddComponent<LayoutElement>().preferredHeight = ManagerRowHeight;
+            var view = root.AddComponent<ManagerRowView>();
+
+            Image icon = BuildRowIcon(root.transform, 140f, out TMP_Text iconLabel, 64);
+
+            TMP_Text nameText = AddText(root.transform, "NameText", "Station", 40, DarkBrown, TextAlignmentOptions.Left, bold: true, autoSize: true);
+            SetRect(nameText.gameObject, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0f, 1f), new Vector2(180f, -20f), new Vector2(-470f, 56f));
+            TMP_Text description = AddText(root.transform, "DescriptionText", "", 30, Muted, TextAlignmentOptions.TopLeft, autoSize: true);
+            SetRect(description.gameObject, new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(0f, 0f), new Vector2(180f, 18f), new Vector2(-470f, -94f));
+
+            Button hireButton = BuildRowButton(root.transform, "HireButton", Green, new Vector2(270f, 140f), out TMP_Text hireText);
+
+            var so = new SerializedObject(view);
+            Set(so, "_icon", icon);
+            Set(so, "_iconLabel", iconLabel);
+            Set(so, "_nameText", nameText);
+            Set(so, "_descriptionText", description);
+            Set(so, "_hireButton", hireButton);
+            Set(so, "_hireText", hireText);
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            return SavePrefab(root, ManagerRowPrefabPath).GetComponent<ManagerRowView>();
+        }
+
+        private static UpgradeRowView BuildUpgradeRowPrefab()
+        {
+            GameObject root = CreateUi("UpgradeRow", null);
+            ((RectTransform)root.transform).sizeDelta = new Vector2(1000f, UpgradeRowHeight);
+            AddImage(root, RowColor, _roundSprite);
+            root.AddComponent<LayoutElement>().preferredHeight = UpgradeRowHeight;
+            var view = root.AddComponent<UpgradeRowView>();
+
+            Image icon = BuildRowIcon(root.transform, 120f, out TMP_Text iconLabel, 48);
+
+            TMP_Text description = AddText(root.transform, "DescriptionText", "Station: income ×3", 38, DarkBrown, TextAlignmentOptions.Left, bold: true, autoSize: true);
+            SetRect(description.gameObject, new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(0f, 0.5f), new Vector2(160f, 0f), new Vector2(-450f, -30f));
+
+            Button buyButton = BuildRowButton(root.transform, "BuyButton", Orange, new Vector2(270f, 120f), out TMP_Text buyText);
+
+            var so = new SerializedObject(view);
+            Set(so, "_icon", icon);
+            Set(so, "_iconLabel", iconLabel);
+            Set(so, "_descriptionText", description);
+            Set(so, "_buyButton", buyButton);
+            Set(so, "_buyText", buyText);
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            return SavePrefab(root, UpgradeRowPrefabPath).GetComponent<UpgradeRowView>();
+        }
+
+        private static Image BuildRowIcon(Transform parent, float size, out TMP_Text label, float labelSize)
+        {
+            GameObject icon = CreateUi("Icon", parent);
+            SetRect(icon, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(20f, 0f), new Vector2(size, size));
+            Image image = AddImage(icon, Orange, _circleSprite, sliced: false);
+            image.raycastTarget = false;
+            label = AddText(icon.transform, "IconLabel", "1", labelSize, Color.white, TextAlignmentOptions.Center, bold: true, autoSize: true);
+            Stretch(label.gameObject, new Vector2(10f, 0f), new Vector2(-10f, 0f));
+            return image;
+        }
+
+        private static Button BuildRowButton(Transform parent, string name, Color color, Vector2 size, out TMP_Text label)
+        {
+            GameObject buttonObject = CreateUi(name, parent);
+            SetRect(buttonObject, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-20f, 0f), size);
+            AddImage(buttonObject, color, _roundSprite);
+            Button button = AddButton(buttonObject);
+            label = AddText(buttonObject.transform, "Label", "", 36, Color.white, TextAlignmentOptions.Center, bold: true, autoSize: true);
+            Stretch(label.gameObject, new Vector2(12f, 8f), new Vector2(-12f, -8f));
+            return button;
+        }
+
+        private static GameObject SavePrefab(GameObject root, string path)
+        {
+            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(root, path);
+            Object.DestroyImmediate(root);
+            return prefab;
+        }
+
         // ---------- Screen ----------
 
-        private static void BuildScreen(GameObject canvas, StationRowView rowPrefab)
+        private static void BuildScreen(GameObject canvas, StationRowView rowPrefab, ManagerRowView managerRowPrefab,
+            UpgradeRowView upgradeRowPrefab)
         {
             GameObject screen = CreateUi(ScreenName, canvas.transform);
             Stretch(screen, Vector2.zero, Vector2.zero);
@@ -213,8 +305,8 @@ namespace ShaurmaTycoon.EditorTools
             Stretch(content, Vector2.zero, Vector2.zero);
 
             StationsPanel stationsPanel = BuildStationsPanel(content.transform, rowPrefab);
-            GameObject managers = BuildPlaceholderPanel(content.transform, "ManagersPanel");
-            GameObject upgrades = BuildPlaceholderPanel(content.transform, "UpgradesPanel");
+            ManagersPanel managersPanel = BuildManagersPanel(content.transform, managerRowPrefab);
+            UpgradesPanel upgradesPanel = BuildUpgradesPanel(content.transform, upgradeRowPrefab);
             GameObject city = BuildPlaceholderPanel(content.transform, "CityPanel");
 
             HudView hud = BuildHud(screen.transform);
@@ -222,12 +314,14 @@ namespace ShaurmaTycoon.EditorTools
 
             var tabSo = new SerializedObject(tabBar);
             SetArray(tabSo, "_buttons", tabButtons);
-            SetArray(tabSo, "_panels", stationsPanel.gameObject, managers, upgrades, city);
+            SetArray(tabSo, "_panels", stationsPanel.gameObject, managersPanel.gameObject, upgradesPanel.gameObject, city);
             tabSo.ApplyModifiedPropertiesWithoutUndo();
 
             var screenSo = new SerializedObject(gameScreen);
             Set(screenSo, "_hud", hud);
             Set(screenSo, "_stationsPanel", stationsPanel);
+            Set(screenSo, "_managersPanel", managersPanel);
+            Set(screenSo, "_upgradesPanel", upgradesPanel);
             screenSo.ApplyModifiedPropertiesWithoutUndo();
 
             var layoutSo = new SerializedObject(layout);
@@ -246,19 +340,58 @@ namespace ShaurmaTycoon.EditorTools
             ((RectTransform)content.transform).offsetMax = new Vector2(0f, -(HudHeight + 520f));
         }
 
-        private static StationsPanel BuildStationsPanel(Transform parent, StationRowView rowPrefab)
+        /// <summary>Панель вкладки: заголовок высотой HeaderHeight и прокручиваемый вертикальный список.</summary>
+        private static GameObject BuildListPanel(Transform parent, string name, string titleKey,
+            out RectTransform header, out RectTransform list)
         {
-            GameObject panel = CreateUi("StationsPanel", parent);
+            GameObject panel = CreateUi(name, parent);
             Stretch(panel, Vector2.zero, Vector2.zero);
-            var stationsPanel = panel.AddComponent<StationsPanel>();
 
-            GameObject header = CreateUi("Header", panel.transform);
-            SetRect(header, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f), Vector2.zero, new Vector2(0f, 110f));
-            TMP_Text headerTitle = AddLocalizedText(header.transform, "Title", "tab.stations", 46, DarkBrown, bold: true);
+            GameObject headerObject = CreateUi("Header", panel.transform);
+            SetRect(headerObject, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f), Vector2.zero, new Vector2(0f, HeaderHeight));
+            TMP_Text headerTitle = AddLocalizedText(headerObject.transform, "Title", titleKey, 46, DarkBrown, bold: true);
             headerTitle.alignment = TextAlignmentOptions.Left;
             SetRect(headerTitle.gameObject, new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(0f, 0.5f), new Vector2(30f, 0f), new Vector2(-400f, 0f));
+            header = (RectTransform)headerObject.transform;
 
-            GameObject buyMode = CreateUi("BuyModeButton", header.transform);
+            GameObject scroll = CreateUi("Scroll", panel.transform);
+            Stretch(scroll, Vector2.zero, new Vector2(0f, -HeaderHeight));
+            var scrollRect = scroll.AddComponent<ScrollRect>();
+            scrollRect.horizontal = false;
+            scrollRect.scrollSensitivity = 40f;
+
+            GameObject viewport = CreateUi("Viewport", scroll.transform);
+            Stretch(viewport, Vector2.zero, Vector2.zero);
+            AddImage(viewport, new Color(1f, 1f, 1f, 0f), null);
+            viewport.AddComponent<RectMask2D>();
+
+            GameObject listObject = CreateUi("Content", viewport.transform);
+            list = (RectTransform)listObject.transform;
+            list.anchorMin = new Vector2(0f, 1f);
+            list.anchorMax = new Vector2(1f, 1f);
+            list.pivot = new Vector2(0.5f, 1f);
+            list.offsetMin = Vector2.zero;
+            list.offsetMax = Vector2.zero;
+            var vertical = listObject.AddComponent<VerticalLayoutGroup>();
+            vertical.padding = new RectOffset(20, 20, 10, 30);
+            vertical.spacing = 16f;
+            vertical.childControlWidth = true;
+            vertical.childControlHeight = true;
+            vertical.childForceExpandWidth = true;
+            vertical.childForceExpandHeight = false;
+            listObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            scrollRect.viewport = (RectTransform)viewport.transform;
+            scrollRect.content = list;
+            return panel;
+        }
+
+        private static StationsPanel BuildStationsPanel(Transform parent, StationRowView rowPrefab)
+        {
+            GameObject panel = BuildListPanel(parent, "StationsPanel", "tab.stations", out RectTransform header, out RectTransform list);
+            var stationsPanel = panel.AddComponent<StationsPanel>();
+
+            GameObject buyMode = CreateUi("BuyModeButton", header);
             SetRect(buyMode, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-20f, 0f), new Vector2(330f, 86f));
             AddImage(buyMode, Brown, _roundSprite);
             Button buyModeButton = AddButton(buyMode);
@@ -270,43 +403,45 @@ namespace ShaurmaTycoon.EditorTools
             Set(buyModeSo, "_label", buyModeLabel);
             buyModeSo.ApplyModifiedPropertiesWithoutUndo();
 
-            // Прокручиваемый список строк.
-            GameObject scroll = CreateUi("Scroll", panel.transform);
-            Stretch(scroll, Vector2.zero, new Vector2(0f, -110f));
-            var scrollRect = scroll.AddComponent<ScrollRect>();
-            scrollRect.horizontal = false;
-            scrollRect.scrollSensitivity = 40f;
-
-            GameObject viewport = CreateUi("Viewport", scroll.transform);
-            Stretch(viewport, Vector2.zero, Vector2.zero);
-            AddImage(viewport, new Color(1f, 1f, 1f, 0f), null);
-            viewport.AddComponent<RectMask2D>();
-
-            GameObject list = CreateUi("Content", viewport.transform);
-            var listRect = (RectTransform)list.transform;
-            listRect.anchorMin = new Vector2(0f, 1f);
-            listRect.anchorMax = new Vector2(1f, 1f);
-            listRect.pivot = new Vector2(0.5f, 1f);
-            listRect.offsetMin = Vector2.zero;
-            listRect.offsetMax = Vector2.zero;
-            var vertical = list.AddComponent<VerticalLayoutGroup>();
-            vertical.padding = new RectOffset(20, 20, 10, 30);
-            vertical.spacing = 16f;
-            vertical.childControlWidth = true;
-            vertical.childControlHeight = true;
-            vertical.childForceExpandWidth = true;
-            vertical.childForceExpandHeight = false;
-            list.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-            scrollRect.viewport = (RectTransform)viewport.transform;
-            scrollRect.content = listRect;
-
             var so = new SerializedObject(stationsPanel);
-            Set(so, "_content", listRect);
+            Set(so, "_content", list);
             Set(so, "_rowPrefab", rowPrefab);
             Set(so, "_buyModeButton", buyModeView);
             so.ApplyModifiedPropertiesWithoutUndo();
             return stationsPanel;
+        }
+
+        private static ManagersPanel BuildManagersPanel(Transform parent, ManagerRowView rowPrefab)
+        {
+            GameObject panel = BuildListPanel(parent, "ManagersPanel", "tab.managers", out _, out RectTransform list);
+            var managersPanel = panel.AddComponent<ManagersPanel>();
+
+            var so = new SerializedObject(managersPanel);
+            Set(so, "_content", list);
+            Set(so, "_rowPrefab", rowPrefab);
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            panel.SetActive(false);
+            return managersPanel;
+        }
+
+        private static UpgradesPanel BuildUpgradesPanel(Transform parent, UpgradeRowView rowPrefab)
+        {
+            GameObject panel = BuildListPanel(parent, "UpgradesPanel", "tab.upgrades", out _, out RectTransform list);
+            var upgradesPanel = panel.AddComponent<UpgradesPanel>();
+
+            TMP_Text allPurchased = AddLocalizedText(panel.transform, "AllPurchased", "upgrade.none", 44, Muted, bold: true);
+            Stretch(allPurchased.gameObject, new Vector2(40f, 0f), new Vector2(-40f, -HeaderHeight));
+            allPurchased.gameObject.SetActive(false);
+
+            var so = new SerializedObject(upgradesPanel);
+            Set(so, "_content", list);
+            Set(so, "_rowPrefab", rowPrefab);
+            Set(so, "_allPurchased", allPurchased.gameObject);
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            panel.SetActive(false);
+            return upgradesPanel;
         }
 
         private static GameObject BuildPlaceholderPanel(Transform parent, string name)

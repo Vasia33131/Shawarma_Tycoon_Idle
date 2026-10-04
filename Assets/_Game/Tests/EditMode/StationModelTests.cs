@@ -181,6 +181,44 @@ namespace ShaurmaTycoon.Tests
         }
 
         [Test]
+        public void IncomeMultiplier_ScalesIncome()
+        {
+            StationModel station = CreateStation();
+
+            station.IncomeMultiplier = 3;
+
+            Assert.AreEqual(3, station.IncomePerCycle);
+            Assert.AreEqual(3 / 0.6, station.IncomePerSecond, Tolerance);
+        }
+
+        [TestCase(0)]
+        [TestCase(-1)]
+        [TestCase(double.NaN)]
+        [TestCase(double.PositiveInfinity)]
+        public void IncomeMultiplier_Invalid_Throws(double value)
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => CreateStation().IncomeMultiplier = value);
+        }
+
+        [Test]
+        public void Changed_RaisedOnLevelAutomationAndMultiplier_OnlyWhenValueChanges()
+        {
+            var wallet = new Wallet();
+            wallet.Add(100);
+            StationModel station = CreateStation();
+            int changes = 0;
+            station.Changed += _ => changes++;
+
+            station.TryBuy(wallet, 1);
+            station.IsAutomated = true;
+            station.IsAutomated = true;
+            station.IncomeMultiplier = 2;
+            station.IncomeMultiplier = 2;
+
+            Assert.AreEqual(3, changes);
+        }
+
+        [Test]
         public void NullWallet_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => CreateStation().TryBuy(null, 1));
