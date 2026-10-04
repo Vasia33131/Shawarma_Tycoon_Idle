@@ -28,7 +28,7 @@
 - Известные проблемы / TODO:
   - `Assets/Scenes/SampleScene.unity` убрана из Build Settings, но файл не удалён;
   - WebGL-билд после Setup Project не подтверждён;
-  - Play сразу из сцены Game упадёт на `Services.Get`. Нужно запускать из Boot (можно добавить автопереход в редакторе позже);
+  - ~~Play сразу из сцены Game падал на `Services.Get`~~ — исправлено на этапе 03: `Editor/PlayModeStartScene.cs` всегда стартует Play со сцены Boot;
   - на этапе 03 импортировать TMP Essentials и убрать `DebugLabel_Stage00`.
 
 ### Этап 01 — Экономика и форматирование чисел (готов, 2026-10-04)
