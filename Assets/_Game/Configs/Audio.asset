@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea98c2fefc637844295bd7e3e68da281, type: 3}
+  m_Name: Audio
+  m_EditorClassIdentifier: 
+  _masterVolume: 0.8
+  _sounds:
+  - Id: 0
+    Clips:
+    - {fileID: 8300000, guid: a9656cd87d0cd3d47b27401927f7d5d3, type: 3}
+    Volume: 0.7
+    PitchJitter: 0.06
+    MinInterval: 0.04
+  - Id: 1
+    Clips:
+    - {fileID: 8300000, guid: 0b18575218427f04ca4c90ceba17f134, type: 3}
+    - {fileID: 8300000, guid: f29f2837858d1d844809f576ef2df844, type: 3}
+    - {fileID: 8300000, guid: 40eaa108ff2d63c47b1d4449d54b3658, type: 3}
+    Volume: 0.55
+    PitchJitter: 0.06
+    MinInterval: 0.07
+  - Id: 2
+    Clips:
+    - {fileID: 8300000, guid: aa4f56331439923449ce7185c89d7208, type: 3}
+    Volume: 0.8
+    PitchJitter: 0.06
+    MinInterval: 0.05
+  - Id: 3
+    Clips:
+    - {fileID: 8300000, guid: 890a4cd007546294ead41b0b15f2d23a, type: 3}
+    Volume: 0.9
+    PitchJitter: 0.06
+    MinInterval: 0.1
+  - Id: 4
+    Clips:
+    - {fileID: 8300000, guid: d87c6e0a489857f45bdbaa442ccad82f, type: 3}
+    Volume: 0.9
+    PitchJitter: 0.06
+    MinInterval: 0.1
+  - Id: 5
+    Clips:
+    - {fileID: 8300000, guid: 6e59d04742e94084e87567389cc57eea, type: 3}
+    Volume: 0.9
+    PitchJitter: 0.06
+    MinInterval: 0.1
+  - Id: 6
+    Clips:
+    - {fileID: 8300000, guid: 6ee35bf0af911824d91c1c2c1711b5b0, type: 3}
+    Volume: 0.6
+    PitchJitter: 0.06
+    MinInterval: 0.05
+  - Id: 7
+    Clips:
+    - {fileID: 8300000, guid: 62dd1f372e311634cb56d736811a8ad1, type: 3}
+    Volume: 0.5
+    PitchJitter: 0.06
+    MinInterval: 0.2

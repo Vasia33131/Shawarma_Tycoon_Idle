@@ -1,0 +1,84 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b83c569b9a0d21349824b7493b464c74, type: 3}
+  m_Name: Customers
+  m_EditorClassIdentifier: 
+  _customerSkins:
+  - Idle: {fileID: 21300000, guid: 20c5e59a775f9d741a64219fa9ecc0c5, type: 3}
+    Walk:
+    - {fileID: 21300000, guid: e00af033f62a2f54c9c025cd9dfafa09, type: 3}
+    - {fileID: 21300000, guid: bc5e6c1af015d1b4196079d37a4854be, type: 3}
+    - {fileID: 21300000, guid: e7639dfc4e98bf24ea4ef74ef56293ab, type: 3}
+    - {fileID: 21300000, guid: f2123929762407b4cbeb01e3922d0a16, type: 3}
+    - {fileID: 21300000, guid: 0b1fd87a81adc604483d579a8aaa5f5c, type: 3}
+    - {fileID: 21300000, guid: 700d1246c25232f43934220de4086e88, type: 3}
+    - {fileID: 21300000, guid: 0e42cdb6c0c67a14fba19826d5a69216, type: 3}
+    - {fileID: 21300000, guid: e73ad77ea550add489cc10787fb997a1, type: 3}
+    Cheer: {fileID: 21300000, guid: 7340a189a199fee428d644b5db90d263, type: 3}
+    Interact: {fileID: 21300000, guid: bde16b7a8103cfb4e9cac50e01eeede6, type: 3}
+  - Idle: {fileID: 21300000, guid: 4344ea4feb9aa9a4fafcab84d7796b03, type: 3}
+    Walk:
+    - {fileID: 21300000, guid: 1d271398afbb9ad428d7d269c0d0814c, type: 3}
+    - {fileID: 21300000, guid: 4689f1b4db122214198b349669eaad1e, type: 3}
+    - {fileID: 21300000, guid: e9f75b641343d7c458a5eb9875c9d1ed, type: 3}
+    - {fileID: 21300000, guid: bf85a90c5c3c08b4eaae7a41a887c3dc, type: 3}
+    - {fileID: 21300000, guid: cf87f8b8a7bfa0242946a504d0520c0d, type: 3}
+    - {fileID: 21300000, guid: aae5ce700e7c1764b95099957b03e5ef, type: 3}
+    - {fileID: 21300000, guid: 651c500074c2a1448a6b5f9d37650a98, type: 3}
+    - {fileID: 21300000, guid: 2434ff07f72b4b5438d1aee48a46e76f, type: 3}
+    Cheer: {fileID: 21300000, guid: f13c70e346bb6d04faa94c87169397c8, type: 3}
+    Interact: {fileID: 21300000, guid: 2a5e028401b40bc46a0f1cb3d6746acf, type: 3}
+  - Idle: {fileID: 21300000, guid: e212cc362823a7a4bb00b4c0992d8a24, type: 3}
+    Walk:
+    - {fileID: 21300000, guid: 83e1be748f5a11a4a9c5cc6413bf24ec, type: 3}
+    - {fileID: 21300000, guid: cb13a86415b632c4584647bf6ae1d163, type: 3}
+    - {fileID: 21300000, guid: 3c375d44072ebcf4eb5f68cbd062dee7, type: 3}
+    - {fileID: 21300000, guid: 447aff0a66947a34d95d2db2d96d18ac, type: 3}
+    - {fileID: 21300000, guid: ad1ed0dd78ee7734b962f4ecf35e7fa4, type: 3}
+    - {fileID: 21300000, guid: cec9b7961e894f945a99b39e8b64fe53, type: 3}
+    - {fileID: 21300000, guid: aaf7ed2c24def4e468fe220c52435296, type: 3}
+    - {fileID: 21300000, guid: 377ada0ac1360fa4db2134f3e655a35d, type: 3}
+    Cheer: {fileID: 21300000, guid: 59dedee62a8893e4bbf6797c7d484b87, type: 3}
+    Interact: {fileID: 21300000, guid: 0da1d903f157c6a478ceaa81a122edb4, type: 3}
+  _sellerSkin:
+    Idle: {fileID: 21300000, guid: b0a095a6f9964344786e48eb831a3ffd, type: 3}
+    Walk:
+    - {fileID: 21300000, guid: b41ba779603329c41bae47b199f0a213, type: 3}
+    - {fileID: 21300000, guid: d9bfb888d1e8ca343b533363f4db6b73, type: 3}
+    - {fileID: 21300000, guid: 9cf8728882051e746946a4a9fc82cf38, type: 3}
+    - {fileID: 21300000, guid: 497e9443f6e97fd42a1e20f6697fd908, type: 3}
+    - {fileID: 21300000, guid: d474914f080db8e4f8cfbe5a6a65a82d, type: 3}
+    - {fileID: 21300000, guid: 613a852eb54ec6e428edb557fe790c8c, type: 3}
+    - {fileID: 21300000, guid: e8b76217c24ddd447bc14c7cc0c04649, type: 3}
+    - {fileID: 21300000, guid: f25db79c4dd638147b01c59495d80750, type: 3}
+    Cheer: {fileID: 21300000, guid: a7b8e14ed475326448ac9700348b759c, type: 3}
+    Interact: {fileID: 21300000, guid: 4a2bffc726a92e740a7de0190cf56176, type: 3}
+  _walkSpeed: 280
+  _walkFrameRate: 12
+  _queueSpacing: 120
+  _offscreenMargin: 140
+  _maxQueue: 7
+  _queueGrowth: 1.2
+  _serviceTimeMax: 3
+  _serviceTimeMin: 0.7
+  _serviceSpeedup: 0.6
+  _phraseKeys:
+  - customer.phrase_01
+  - customer.phrase_02
+  - customer.phrase_03
+  - customer.phrase_04
+  - customer.phrase_05
+  - customer.phrase_06
+  - customer.phrase_07
+  - customer.phrase_08
+  - customer.phrase_09
+  - customer.phrase_10
