@@ -52,6 +52,36 @@
 - Известные проблемы / TODO:
   - нет.
 
+### Этап 02 — Станции (код готов, 2026-10-04; ждёт проверки в Unity)
+- Проверено: игровая и редакторская сборки компилируются без warnings (Roslyn из Unity вне редактора). Логика и тесты вне Unity: 97/97 зелёные. В Unity Play и Test Runner ещё не запускались.
+- Сделано:
+  - `IStationDefinition` + `StationConfig` (SO), `MilestoneTable`;
+  - `StationModel`: уровень, цикл по тапу, автоцикл с подсчётом нескольких циклов за кадр, покупка ×N/×Max;
+  - `StationController`: `ITickable`, доход за тик в `Wallet` одним событием;
+  - `BalanceConfig` (вехи), `CityConfig` (станции города);
+  - `GameSceneInstaller` в сцене Game: создаёт `StationController` и регистрирует его в `Services` и `TickManager`;
+  - временная `StationsDebugPanel` (IMGUI);
+  - ассеты: `Configs/Balance.asset`, `Configs/Cities/City_01_Home.asset`, `Configs/Stations/City01/Station_01…06.asset` по таблице GDD §4.
+- Файлы:
+  - `Scripts/Stations/`: `IStationDefinition.cs`, `StationConfig.cs`, `MilestoneTable.cs`, `StationModel.cs`, `StationController.cs`
+  - `Scripts/Core/`: `BalanceConfig.cs`, `GameSceneInstaller.cs`
+  - `Scripts/Prestige/CityConfig.cs`
+  - `Scripts/UI/StationsDebugPanel.cs`
+  - `Tests/EditMode/`: `TestStationDefinition.cs`, `MilestoneTableTests.cs`, `StationModelTests.cs`, `StationControllerTests.cs`
+  - изменена `Scenes/Game.unity` (объект `GameSceneInstaller`)
+- Решения:
+  - станция 1 стартует с уровнем 1 (`startLevel = 1`), это «Откр. за 0». Открытие остальных станций = покупка 1-го уровня за base cost;
+  - веха ускоряет цикл (время ÷ 2), а доход за цикл не меняет. `milestoneMult` из формулы GDD реализован как скорость;
+  - growth = 1.07 у всех станций. Вариант 1.15 для станций 1–2 оставлен на этап 11;
+  - прогресс цикла хранится долей (0..1), поэтому при ускорении на вехе доля сохраняется;
+  - ручной цикл за один большой dt даёт максимум один цикл, автоцикл — все завершённые;
+  - `CityConfig` создан сейчас с одним полем (список станций), этап 08 его расширит;
+  - конфиги и правка сцены сделаны вручную в YAML с заранее заданными GUID в `.meta`.
+- Известные проблемы / TODO:
+  - `StationsDebugPanel` убрать на этапе 03;
+  - доход/сек для HUD ещё не считается (этап 03/04);
+  - названия станций пока ключи локализации (`station.*`), таблица локализации появится на этапе 03.
+
 ## Важные решения (архитектура)
 - Unity 2022.3.62f1, 2D, URP 2D, Color Space Gamma, старый Input Manager.
 - Сборки: `ShaurmaTycoon` (runtime), `ShaurmaTycoon.Editor`, `ShaurmaTycoon.Tests.EditMode` (Assets/_Game/Tests/EditMode). Namespace `ShaurmaTycoon.<Модуль>`, для редакторского кода `ShaurmaTycoon.EditorTools`.

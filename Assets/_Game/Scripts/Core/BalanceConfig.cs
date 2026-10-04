@@ -1,0 +1,28 @@
+using ShaurmaTycoon.Stations;
+using UnityEngine;
+
+namespace ShaurmaTycoon.Core
+{
+    /// <summary>
+    /// Глобальный баланс, общий для всех городов.
+    /// </summary>
+    [CreateAssetMenu(menuName = "ShaurmaTycoon/Balance Config", fileName = "Balance")]
+    public sealed class BalanceConfig : ScriptableObject
+    {
+        [Tooltip("Уровни станции, на которых цикл ускоряется (GDD §5).")]
+        [SerializeField] private int[] _milestoneLevels = { 25, 50, 100, 200, 300, 400 };
+        [Tooltip("Во сколько раз ускоряется цикл на каждой вехе.")]
+        [SerializeField] private double _milestoneSpeedMultiplier = 2;
+
+        public MilestoneTable CreateMilestoneTable()
+        {
+            return new MilestoneTable(_milestoneLevels ?? new int[0], _milestoneSpeedMultiplier);
+        }
+
+        private void OnValidate()
+        {
+            if (_milestoneSpeedMultiplier < 1)
+                _milestoneSpeedMultiplier = 1;
+        }
+    }
+}
