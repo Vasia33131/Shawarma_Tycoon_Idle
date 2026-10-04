@@ -23,6 +23,8 @@ namespace ShaurmaTycoon.Tests
             "upgrade.station", "upgrade.all", "upgrade.buy", "upgrade.none",
             "customer.phrase_01", "customer.phrase_02", "customer.phrase_03", "customer.phrase_04", "customer.phrase_05",
             "customer.phrase_06", "customer.phrase_07", "customer.phrase_08", "customer.phrase_09", "customer.phrase_10",
+            "offline.title", "offline.subtitle", "offline.claim", "offline.claim_ad", "offline.limit",
+            "time.minutes", "time.hours", "time.hours_minutes",
         };
 
         private static LocTable LoadTable()

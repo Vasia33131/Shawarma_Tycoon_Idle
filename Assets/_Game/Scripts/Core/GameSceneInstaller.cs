@@ -2,6 +2,8 @@ using ShaurmaTycoon.Core.Audio;
 using ShaurmaTycoon.Customers;
 using ShaurmaTycoon.Economy;
 using ShaurmaTycoon.Managers;
+using ShaurmaTycoon.Offline;
+using ShaurmaTycoon.Platform;
 using ShaurmaTycoon.Prestige;
 using ShaurmaTycoon.Save;
 using ShaurmaTycoon.Stations;
@@ -58,8 +60,20 @@ namespace ShaurmaTycoon.Core
                 _save.Register(_saveParticipant);
             }
 
+            // Офлайн-доход считается по времени из только что загруженного сейва — до первого автосейва.
+            Services.Register(new OfflineIncomeService(wallet, CalculateOfflineIncome(), _balance.OfflineAdMultiplier));
+
             _tickManager = Services.Get<TickManager>();
             _tickManager.Register(_stations);
+        }
+
+        private OfflineIncome CalculateOfflineIncome()
+        {
+            if (_save == null || !Services.TryGet(out IPlatformService platform))
+                return OfflineIncome.None;
+
+            return OfflineIncomeCalculator.Calculate(_stations.IncomePerSecond, _save.Data.SavedAtUtcTicks,
+                platform.ServerTimeUtc, _balance.CreateOfflineSettings());
         }
 
         private void OnDestroy()
@@ -73,6 +87,7 @@ namespace ShaurmaTycoon.Core
                 _save.Unregister(_saveParticipant);
             _audioService?.Dispose();
 
+            Services.Unregister<OfflineIncomeService>();
             Services.Unregister<CustomerConfig>();
             Services.Unregister<AudioService>();
             Services.Unregister<UpgradeService>();

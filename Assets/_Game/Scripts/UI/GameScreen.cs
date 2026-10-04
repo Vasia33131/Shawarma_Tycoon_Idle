@@ -5,6 +5,9 @@ using ShaurmaTycoon.Customers;
 using ShaurmaTycoon.Economy;
 using ShaurmaTycoon.Localization;
 using ShaurmaTycoon.Managers;
+using ShaurmaTycoon.Offline;
+using ShaurmaTycoon.Platform;
+using ShaurmaTycoon.Save;
 using ShaurmaTycoon.Stations;
 using ShaurmaTycoon.Upgrades;
 using UnityEngine;
@@ -27,6 +30,7 @@ namespace ShaurmaTycoon.UI
         [SerializeField] private CustomerQueue _customers = null;
         [SerializeField] private CoinFlyEffect _coinFly = null;
         [SerializeField] private FloatingTextEffect _floatingText = null;
+        [SerializeField] private OfflineIncomePopup _offlinePopup = null;
 
         private readonly IncomeRateTracker _incomeRate = new IncomeRateTracker();
 
@@ -55,6 +59,13 @@ namespace ShaurmaTycoon.UI
             _tickManager.Register(_kiosk);
 
             _stations.Earned += _incomeRate.Add;
+            if (Services.TryGet(out OfflineIncomeService offline))
+            {
+                Services.TryGet(out SaveService save);
+                _offlinePopup.Bind(offline, Services.Get<IPlatformService>(), save, tweens, _coinFly, loc);
+                _offlinePopup.ShowIfPending();
+            }
+
             if (Services.TryGet(out CustomerConfig customers))
             {
                 _customers.Bind(customers, _incomeRate, _stations, _coinFly, audio, tweens, loc);

@@ -203,11 +203,40 @@
 - Известные проблемы / TODO:
   - сейв из более новой версии игры (Version > 1) загрузится, но при записи станет версии 1 — защиту добавим, когда появится версия 2.
 
+### Этап 07 — Офлайн-доход (код готов, 2026-10-04; ждёт Build Game UI и проверки в Unity)
+- Проверено: runtime, editor и тестовая сборка компилируются без warnings (вне редактора). Чистая логика и тесты вне Unity: 229/229 зелёные. В Unity ещё не запускалось.
+- Сделано:
+  - `Offline/`:
+    - `OfflineSettings` (доля 0.5, лимит, минимум отсутствия), `OfflineIncome` (секунды, сумма, обрезано ли);
+    - `OfflineIncomeCalculator` (нет сейва, часы назад, меньше минимума, нет менеджеров → 0; обрезание лимитом);
+    - `OfflineIncomeService` (одна выдача, ×1 или ×2 за рекламу, событие `Claimed`);
+  - `BalanceConfig` + `Balance.asset`: `offlineIncomeRate` 0.5, `offlineLimitHours` 2, `offlineMinAwaySeconds` 60, `offlineAdMultiplier` 2;
+  - `GameSceneInstaller` считает офлайн-доход сразу после применения сейва (`StationController.IncomePerSecond` × время с `SaveData.SavedAtUtcTicks` по `IPlatformService.ServerTimeUtc`);
+  - `OfflineIncomePopup`:
+    - затемнение, срок отсутствия, «+X», пометка лимита;
+    - «Забрать» и «Забрать ×2 за рекламу» через `IPlatformService.ShowRewarded`;
+    - монеты в HUD, сразу `SaveNow`;
+  - `DurationFormatter` («1 ч 23 мин»), строки ru/en;
+  - `SaveMenu`: Shift Save Time −1 h / −3 h / +1 h (часы назад).
+- Файлы:
+  - `Scripts/Offline/`: `OfflineSettings.cs`, `OfflineIncome.cs`, `OfflineIncomeCalculator.cs`, `OfflineIncomeService.cs`
+  - `Scripts/Localization/DurationFormatter.cs`, `Scripts/UI/OfflineIncomePopup.cs`
+  - `Tests/EditMode/OfflineIncomeTests.cs`
+  - изменены: `BalanceConfig.cs`, `Balance.asset`, `GameSceneInstaller.cs`, `GameScreen.cs`, `GameUiBuilder.cs`, `SaveMenu.cs`, `strings.txt`, `StringsFileTests.cs`
+- Решения:
+  - порог 60 с (в GDD нет), чтобы окно не всплывало после каждого перезапуска;
+  - незабранная награда сгорает при выходе (время сейва обновляется) — так её нельзя получить дважды;
+  - если реклама не досмотрена, кнопки снова активны и можно забрать ×1;
+  - лимит пока базовый (2 ч), бонус из магазина репутации — этап 08.
+- Известные проблемы / TODO:
+  - время берётся из `ServerTimeUtc`, а в редакторе это локальные часы: перевод часов вперёд не защищён (TODO(YANDEX): серверное время, этап 09);
+  - пауза игры и звука на время рекламы — этап 09 (`AdService`).
+
 ## Важные решения (архитектура)
 - Unity 2022.3.62f1, 2D, URP 2D, Color Space Gamma, старый Input Manager.
 - Сборки: `ShaurmaTycoon` (runtime), `ShaurmaTycoon.Editor`, `ShaurmaTycoon.Tests.EditMode` (Assets/_Game/Tests/EditMode). Namespace `ShaurmaTycoon.<Модуль>`, для редакторского кода `ShaurmaTycoon.EditorTools`.
 - Сервисы регистрируются в `GameBootstrap` через `Services.Register<T>`, единственный Update в игре — в `TickManager`.
-- Сервисы Boot: `TickManager` (+ `ApplicationEvents`), `Wallet`, `TweenRunner`, `PulseDriver`, `IPlatformService`, `Loc`, `SaveService`. Сервисы сцены Game (`GameSceneInstaller`): `StationController`, `ManagerController`, `UpgradeService`, `AudioService`, `CustomerConfig`. Вью связываются в `GameScreen.Start`.
+- Сервисы Boot: `TickManager` (+ `ApplicationEvents`), `Wallet`, `TweenRunner`, `PulseDriver`, `IPlatformService`, `Loc`, `SaveService`. Сервисы сцены Game (`GameSceneInstaller`): `StationController`, `ManagerController`, `UpgradeService`, `AudioService`, `CustomerConfig`, `OfflineIncomeService`. Вью связываются в `GameScreen.Start`.
 - Все тексты UI — ключи из `Configs/Localization/strings.txt` (TSV: key, ru, en); новые ключи добавлять туда и в `StringsFileTests.RequiredKeys`.
 - Тексты, которые меняются в Tick, выводить через `NumberText` + `TMP_Text.SetNumberText`, шаблоны — `Loc.GetTemplate(key)` (без string.Format).
 - Новая система с состоянием → реализовать `ISaveParticipant` и зарегистрировать в `SaveService`; новые поля `SaveData` — со значением по умолчанию, при несовместимых изменениях повышать `SaveData.CurrentVersion` и добавлять шаг в `SaveMigrator`.
@@ -217,3 +246,4 @@
 - `GameBootstrap.CreatePlatform`: в WebGL создавать `YandexPlatformService`.
 - Уточнить сигнатуры лидерборда и покупок в `IPlatformService`.
 - WebGL-шаблон на весь экран (дефолтный шаблон Unity даёт канвас фиксированного размера).
+- Серверное время Яндекса для офлайн-дохода (сейчас `ServerTimeUtc` = локальные часы).

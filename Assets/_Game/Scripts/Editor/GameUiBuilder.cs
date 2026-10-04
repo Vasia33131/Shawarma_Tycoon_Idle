@@ -351,6 +351,7 @@ namespace ShaurmaTycoon.EditorTools
 
             HudView hud = BuildHud(screen.transform);
             TabBar tabBar = BuildTabBar(screen.transform, out Button[] tabButtons);
+            OfflineIncomePopup offlinePopup = BuildOfflinePopup(screen.transform);
             BuildEffects(screen.transform, hud.CoinIcon, out CoinFlyEffect coinFly, out FloatingTextEffect floatingText);
 
             var tabSo = new SerializedObject(tabBar);
@@ -367,6 +368,7 @@ namespace ShaurmaTycoon.EditorTools
             Set(screenSo, "_customers", customers);
             Set(screenSo, "_coinFly", coinFly);
             Set(screenSo, "_floatingText", floatingText);
+            Set(screenSo, "_offlinePopup", offlinePopup);
             screenSo.ApplyModifiedPropertiesWithoutUndo();
 
             var layoutSo = new SerializedObject(layout);
@@ -682,6 +684,67 @@ namespace ShaurmaTycoon.EditorTools
             rect.pivot = new Vector2(0.5f, 0.5f);
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
+        }
+
+        private static OfflineIncomePopup BuildOfflinePopup(Transform parent)
+        {
+            GameObject root = CreateUi("OfflinePopup", parent);
+            Stretch(root, Vector2.zero, Vector2.zero);
+            AddImage(root, new Color(0f, 0f, 0f, 0.6f), null);
+            var popup = root.AddComponent<OfflineIncomePopup>();
+
+            GameObject panel = CreateUi("Panel", root.transform);
+            SetRect(panel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(860f, 760f));
+            AddImage(panel, Cream, _roundSprite);
+
+            TMP_Text title = AddLocalizedText(panel.transform, "Title", "offline.title", 56, DarkBrown, bold: true);
+            SetRect(title.gameObject, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -50f), new Vector2(-80f, 80f));
+            TMP_Text subtitle = AddText(panel.transform, "Subtitle", "", 36, Muted, TextAlignmentOptions.Center, autoSize: true);
+            SetRect(subtitle.gameObject, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -140f), new Vector2(-80f, 60f));
+
+            GameObject coin = CreateUi("CoinIcon", panel.transform);
+            SetRect(coin, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 110f), new Vector2(110f, 110f));
+            AddImage(coin, Gold, _circleSprite, sliced: false).raycastTarget = false;
+            TMP_Text amount = AddText(panel.transform, "Amount", "+0", 96, Orange, TextAlignmentOptions.Center, bold: true, autoSize: true);
+            SetRect(amount.gameObject, new Vector2(0f, 0.5f), new Vector2(1f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -20f), new Vector2(-80f, 130f));
+            TMP_Text limit = AddText(panel.transform, "Limit", "", 30, BoothRed, TextAlignmentOptions.Center, autoSize: true);
+            SetRect(limit.gameObject, new Vector2(0f, 0.5f), new Vector2(1f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -105f), new Vector2(-80f, 50f));
+
+            Button claim = BuildPopupButton(panel.transform, "ClaimButton", Brown, new Vector2(-195f, 70f), SoundId.Buy, out TMP_Text claimText);
+            var claimLocalized = claimText.gameObject.AddComponent<LocalizedText>();
+            var claimSo = new SerializedObject(claimLocalized);
+            claimSo.FindProperty("_key").stringValue = "offline.claim";
+            claimSo.ApplyModifiedPropertiesWithoutUndo();
+            claimText.text = "offline.claim";
+
+            Button claimDouble = BuildPopupButton(panel.transform, "ClaimDoubleButton", Green, new Vector2(195f, 70f), SoundId.Tap, out TMP_Text claimDoubleText);
+            AddPulseWhileInteractable(claimDouble.gameObject, claimDouble);
+
+            var so = new SerializedObject(popup);
+            Set(so, "_root", root);
+            Set(so, "_panel", panel.transform);
+            Set(so, "_subtitleText", subtitle);
+            Set(so, "_amountText", amount);
+            Set(so, "_limitText", limit);
+            Set(so, "_claimButton", claim);
+            Set(so, "_claimDoubleButton", claimDouble);
+            Set(so, "_claimDoubleText", claimDoubleText);
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            root.SetActive(false);
+            return popup;
+        }
+
+        private static Button BuildPopupButton(Transform parent, string name, Color color, Vector2 bottomCenterOffset, SoundId sound,
+            out TMP_Text label)
+        {
+            GameObject buttonObject = CreateUi(name, parent);
+            SetRect(buttonObject, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), bottomCenterOffset, new Vector2(360f, 130f));
+            AddImage(buttonObject, color, _roundSprite);
+            Button button = AddButton(buttonObject, sound);
+            label = AddText(buttonObject.transform, "Label", "", 38, Color.white, TextAlignmentOptions.Center, bold: true, autoSize: true);
+            Stretch(label.gameObject, new Vector2(16f, 8f), new Vector2(-16f, -8f));
+            return button;
         }
 
         private static HudView BuildHud(Transform parent)

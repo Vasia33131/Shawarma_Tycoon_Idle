@@ -15,3 +15,7 @@ MonoBehaviour:
   _milestoneLevels: 190000003200000064000000c80000002c01000090010000
   _milestoneSpeedMultiplier: 2
   _managerCostMultiplier: 1000
+  _offlineIncomeRate: 0.5
+  _offlineLimitHours: 2
+  _offlineMinAwaySeconds: 60
+  _offlineAdMultiplier: 2

@@ -41,3 +41,11 @@ customer.phrase_07	Сдачи не надо!	Keep the change!
 customer.phrase_08	Можно с собой?	To go, please!
 customer.phrase_09	Ммм, как пахнет!	Mmm, smells great!
 customer.phrase_10	Лучшая шаурма в городе!	Best shawarma in town!
+offline.title	Пока тебя не было	While you were away
+offline.subtitle	Менеджеры работали {0}	Your managers worked for {0}
+offline.claim	Забрать	Collect
+offline.claim_ad	Забрать {0}\nза рекламу	Collect {0}\nwatch an ad
+offline.limit	Засчитано максимум: {0}. Лимит растёт за репутацию	Capped at {0}. Reputation raises the limit
+time.minutes	{0} мин	{0} min
+time.hours	{0} ч	{0} h
+time.hours_minutes	{0} ч {1} мин	{0} h {1} min

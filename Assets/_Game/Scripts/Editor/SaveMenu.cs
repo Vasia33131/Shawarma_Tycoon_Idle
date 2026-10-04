@@ -1,4 +1,6 @@
+using System;
 using ShaurmaTycoon.Platform;
+using ShaurmaTycoon.Save;
 using UnityEditor;
 using UnityEngine;
 
@@ -43,6 +45,39 @@ namespace ShaurmaTycoon.EditorTools
         private static void WriteCorruptSave()
         {
             Write(CorruptSaveJson, "corrupt JSON");
+        }
+
+        [MenuItem("ShaurmaTycoon/Save/Shift Save Time −1 h")]
+        private static void ShiftOneHour()
+        {
+            ShiftSaveTime(TimeSpan.FromHours(-1));
+        }
+
+        [MenuItem("ShaurmaTycoon/Save/Shift Save Time −3 h")]
+        private static void ShiftThreeHours()
+        {
+            ShiftSaveTime(TimeSpan.FromHours(-3));
+        }
+
+        [MenuItem("ShaurmaTycoon/Save/Shift Save Time +1 h (clock moved back)")]
+        private static void ShiftToFuture()
+        {
+            ShiftSaveTime(TimeSpan.FromHours(1));
+        }
+
+        /// <summary>Сдвигает время последнего сохранения — имитация отсутствия игрока.</summary>
+        private static void ShiftSaveTime(TimeSpan shift)
+        {
+            if (!PlayerPrefs.HasKey(EditorPlatformService.SaveKey))
+            {
+                Debug.LogWarning("[Save] No save to shift. Play at least 10 seconds first.");
+                return;
+            }
+
+            var serializer = new JsonSaveSerializer();
+            SaveData data = serializer.Deserialize(PlayerPrefs.GetString(EditorPlatformService.SaveKey));
+            data.SavedAtUtcTicks += shift.Ticks;
+            Write(serializer.Serialize(data), $"save with time shifted by {shift.TotalHours:+0;-0} h");
         }
 
         private static void Write(string json, string description)
