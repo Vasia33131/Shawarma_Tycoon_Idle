@@ -3,8 +3,8 @@
 ## Текущий этап: 01 — Экономика и форматирование чисел (в работе)
 
 ## Журнал
-### Этап 00 — Каркас (готов, 2026-10-04)
-- Проверено в Unity: Setup Project, Play из Boot (`Bootstrap OK` → Game), масштаб в портрете и ландшафте, WebGL-билд.
+### Этап 00 — Каркас (код готов, 2026-10-04; ждёт запуска Setup Project)
+- Проверено: скрипты компилируются в Unity без ошибок. Не выполнено: `ShaurmaTycoon → Setup Project` не запускался (на диске нет Boot/Game, настройки не применены), поэтому Play из Boot и WebGL-билд не проверены.
 - Сделано:
   - создана структура `Assets/_Game/` по PLAN.md;
   - написаны сервисы ядра, заглушка платформы и адаптер Canvas Scaler;
@@ -30,9 +30,30 @@
   - Play сразу из сцены Game упадёт на `Services.Get`. Нужно запускать из Boot (можно добавить автопереход в редакторе позже);
   - на этапе 03 импортировать TMP Essentials и убрать `DebugLabel_Stage00`.
 
+### Этап 01 — Экономика и форматирование чисел (код готов, 2026-10-04; ждёт прогона в Test Runner)
+- Проверено: игровая сборка компилируется. Экономика и тесты собраны вне Unity (.NET 6 из комплекта Unity, заглушка NUnit): 63/63 зелёные. В Unity Test Runner ещё не запускались.
+- Сделано:
+  - `Wallet`: монеты, событие `CoinsChanged`, защита от NaN, отрицательных значений и переполнения;
+  - `BigNumberFormatter`: 3 значащие цифры, суффиксы K/M/B/T/aa…zz, точка в любой локали;
+  - `EconomyMath`: цена уровня, ×N через сумму прогрессии, ×Max через логарифм с коррекцией;
+  - `Wallet` зарегистрирован в `GameBootstrap`.
+- Файлы:
+  - `Assets/_Game/Scripts/Economy/`: `Wallet.cs`, `BigNumberFormatter.cs`, `EconomyMath.cs`
+  - `Assets/_Game/Tests/EditMode/`: `ShaurmaTycoon.Tests.EditMode.asmdef`, `BigNumberFormatterTests.cs`, `EconomyMathTests.cs`, `WalletTests.cs`
+  - изменён `Core/GameBootstrap.cs`
+- Решения:
+  - отображение отбрасывает лишние цифры, а не округляет (999 999 → `999K`, а не `1.00M`): игрок не видит больше, чем у него есть;
+  - числа меньше 1000 показываются целыми, отбрасыванием;
+  - `level` в формулах — число уже купленных уровней, цена следующего = `baseCost × growth^level`;
+  - ×Max ограничен `EconomyMath.MaxBulkCount` = 1 000 000 (защита от вырожденных конфигов);
+  - growth < 1 — ошибка конфига, бросается `ArgumentOutOfRangeException`;
+  - экономика (`ShaurmaTycoon.Economy`) не использует UnityEngine.
+- Известные проблемы / TODO:
+  - нет.
+
 ## Важные решения (архитектура)
 - Unity 2022.3.62f1, 2D, URP 2D, Color Space Gamma, старый Input Manager.
-- Сборки: `ShaurmaTycoon` (runtime) и `ShaurmaTycoon.Editor`. Namespace `ShaurmaTycoon.<Модуль>`, для редакторского кода `ShaurmaTycoon.EditorTools`.
+- Сборки: `ShaurmaTycoon` (runtime), `ShaurmaTycoon.Editor`, `ShaurmaTycoon.Tests.EditMode` (Assets/_Game/Tests/EditMode). Namespace `ShaurmaTycoon.<Модуль>`, для редакторского кода `ShaurmaTycoon.EditorTools`.
 - Сервисы регистрируются в `GameBootstrap` через `Services.Register<T>`, единственный Update в игре — в `TickManager`.
 
 ## TODO(YANDEX)

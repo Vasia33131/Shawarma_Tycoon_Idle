@@ -1,3 +1,4 @@
+using ShaurmaTycoon.Economy;
 using ShaurmaTycoon.Platform;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -16,6 +17,7 @@ namespace ShaurmaTycoon.Core
             var tickManagerObject = new GameObject(nameof(TickManager));
             DontDestroyOnLoad(tickManagerObject);
             Services.Register(tickManagerObject.AddComponent<TickManager>());
+            Services.Register(new Wallet());
 
             IPlatformService platform = CreatePlatform();
             Services.Register(platform);

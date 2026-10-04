@@ -60,15 +60,15 @@
 4. [x] `GameBootstrap` (Boot → Game, лог `Bootstrap OK`).
 5. [x] `CanvasScalerAdapter`.
 6. [x] `ProjectSetupTool`: сцены, Build Settings, WebGL-настройки.
-7. [x] Запустить пункт меню, проверить Play из Boot, собрать WebGL-билд.
+7. [ ] Запустить пункт меню, проверить Play из Boot, собрать WebGL-билд.
 8. [x] Обновить `PROGRESS.md`.
 
 ## Критерии приёмки
 - [x] Компилируется (проверено Roslyn из Unity 2022.3.62f1 вне редактора; консоль Unity — проверить после импорта)
-- [x] Проект открывается, Play из Boot идёт без ошибок, в логе `Bootstrap OK`, после этого загружается Game
-- [x] WebGL-билд собирается
-- [x] В Build Settings Boot (index 0) и Game (index 1), SampleScene выключена
-- [x] В Game View 1080×1920 и 1920×1080 канвас масштабируется корректно (тестовый Text в центре читается)
+- [ ] Проект открывается, Play из Boot идёт без ошибок, в логе `Bootstrap OK`, после этого загружается Game
+- [ ] WebGL-билд собирается
+- [ ] В Build Settings Boot (index 0) и Game (index 1), SampleScene выключена
+- [ ] В Game View 1080×1920 и 1920×1080 канвас масштабируется корректно (тестовый Text в центре читается)
 - [x] В коде нет `FindObjectOfType` и Update, кроме `TickManager`
 - [x] PROGRESS.md обновлён
 
