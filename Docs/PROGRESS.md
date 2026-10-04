@@ -1,6 +1,6 @@
 # PROGRESS
 
-## Текущий этап: 06 — Сохранения (в работе)
+## Текущий этап: 07 — Офлайн-доход (в работе)
 
 ## Журнал
 ### Этап 00 — Каркас (готов, 2026-10-04)
@@ -175,8 +175,8 @@
   - атласы спрайтов (меньше draw calls) — этап 12;
   - WebGL-билд всё ещё не подтверждён.
 
-### Этап 06 — Сохранения (код готов, 2026-10-04; ждёт проверки в Unity)
-- Проверено: runtime, editor и тестовая сборка компилируются без warnings (вне редактора). Чистая логика и тесты вне Unity: 213/213 зелёные. `JsonSaveSerializerTests` (JsonUtility), `AllocationTests`, `TweenRunnerTests` — только в Test Runner. В Unity ещё не запускалось.
+### Этап 06 — Сохранения (готов, 2026-10-04)
+- Проверено в Unity: Play без исключений, пользователь подтвердил переход дальше. Сценарии меню Save (legacy и испорченный сейв) по логу не запускались — покрыты тестами `JsonSaveSerializerTests`, `SaveServiceTests`, `SaveMigratorTests`.
 - Сделано:
   - `Save/`:
     - `SaveData` (Version, Coins, SavedAtUtcTicks, Stations, PurchasedUpgrades), `StationSave`;
