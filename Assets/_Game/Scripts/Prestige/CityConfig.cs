@@ -6,7 +6,7 @@ using UnityEngine;
 namespace ShaurmaTycoon.Prestige
 {
     /// <summary>
-    /// Город: станции и улучшения. Фон, множитель и прочее для престижа добавляются на этапе 08.
+    /// Город (GDD §7): станции и улучшения, порог престижа, масштаб значений и цвета ларька.
     /// </summary>
     [CreateAssetMenu(menuName = "ShaurmaTycoon/City Config", fileName = "City_")]
     public sealed class CityConfig : ScriptableObject
@@ -17,9 +17,31 @@ namespace ShaurmaTycoon.Prestige
         [SerializeField] private StationConfig[] _stations = new StationConfig[0];
         [SerializeField] private UpgradeConfig[] _upgrades = new UpgradeConfig[0];
 
+        [Header("Prestige")]
+        [Tooltip("Сколько нужно заработать в этом городе, чтобы открыть следующий (GDD §7).")]
+        [SerializeField] private double _prestigeThreshold = 1e9;
+        [Tooltip("Во сколько раз значения города больше базовых (город 2 — ×10). Масштабирует стартовый капитал.")]
+        [SerializeField] private double _valueScale = 1;
+
+        [Header("Look")]
+        [SerializeField] private Color _skyColor = new Color(1f, 0.87f, 0.68f);
+        [SerializeField] private Color _boothColor = new Color(0.85f, 0.30f, 0.20f);
+
         public string Id => _id;
         public string NameKey => _nameKey;
         public IReadOnlyList<StationConfig> Stations => _stations;
         public IReadOnlyList<UpgradeConfig> Upgrades => _upgrades;
+        public double PrestigeThreshold => _prestigeThreshold;
+        public double ValueScale => _valueScale;
+        public Color SkyColor => _skyColor;
+        public Color BoothColor => _boothColor;
+
+        private void OnValidate()
+        {
+            if (_prestigeThreshold < 1)
+                _prestigeThreshold = 1;
+            if (_valueScale < 0)
+                _valueScale = 0;
+        }
     }
 }

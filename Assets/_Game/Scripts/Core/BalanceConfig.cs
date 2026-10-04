@@ -1,4 +1,5 @@
 using ShaurmaTycoon.Offline;
+using ShaurmaTycoon.Prestige;
 using ShaurmaTycoon.Stations;
 using UnityEngine;
 
@@ -27,8 +28,20 @@ namespace ShaurmaTycoon.Core
         [Tooltip("Множитель кнопки «Забрать ×2» за рекламу.")]
         [SerializeField] private double _offlineAdMultiplier = 2;
 
+        [Header("Prestige (GDD §7)")]
+        [Tooltip("Всего репутации = floor(sqrt(заработано за всё время / это число)).")]
+        [SerializeField] private double _reputationDivisor = 1e6;
+        [Tooltip("Прибавка к доходу за единицу полученной репутации (0.02 = +2%).")]
+        [SerializeField] private double _incomeBonusPerReputation = 0.02;
+
         public double ManagerCostMultiplier => _managerCostMultiplier;
+
+        public PrestigeRules CreatePrestigeRules()
+        {
+            return new PrestigeRules(_reputationDivisor, _incomeBonusPerReputation);
+        }
         public double OfflineAdMultiplier => _offlineAdMultiplier;
+        public double OfflineLimitHours => _offlineLimitHours;
 
         public MilestoneTable CreateMilestoneTable()
         {
@@ -52,6 +65,10 @@ namespace ShaurmaTycoon.Core
                 _offlineLimitHours = 0;
             if (_offlineMinAwaySeconds < 0)
                 _offlineMinAwaySeconds = 0;
+            if (_reputationDivisor < 1)
+                _reputationDivisor = 1;
+            if (_incomeBonusPerReputation < 0)
+                _incomeBonusPerReputation = 0;
             if (_offlineAdMultiplier < 1)
                 _offlineAdMultiplier = 1;
         }

@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using ShaurmaTycoon.Localization;
 
@@ -25,6 +26,14 @@ namespace ShaurmaTycoon.Tests
             "customer.phrase_06", "customer.phrase_07", "customer.phrase_08", "customer.phrase_09", "customer.phrase_10",
             "offline.title", "offline.subtitle", "offline.claim", "offline.claim_ad", "offline.limit",
             "time.minutes", "time.hours", "time.hours_minutes",
+            "city.kazan", "station.kazan_shawarma", "station.echpochmak_wrap", "station.chak_chak", "station.katyk_tea",
+            "station.kazan_xl", "station.plov_plate",
+            "prestige.city_label", "prestige.earned_label", "prestige.gain", "prestige.bonus", "prestige.reputation",
+            "prestige.go_next", "prestige.go_same", "prestige.confirm_title", "prestige.confirm_title_same",
+            "prestige.confirm_body", "prestige.confirm_gain", "prestige.confirm_yes", "prestige.confirm_no",
+            "shop.title", "shop.level", "shop.buy", "shop.max",
+            "shop.offline_limit.name", "shop.offline_limit.desc", "shop.start_coins.name", "shop.start_coins.desc",
+            "shop.free_managers.name", "shop.free_managers.desc", "shop.fast_customers.name", "shop.fast_customers.desc",
         };
 
         private static LocTable LoadTable()
@@ -39,6 +48,30 @@ namespace ShaurmaTycoon.Tests
 
             Assert.AreEqual("ru", table.Languages[0]);
             Assert.AreEqual("en", table.Languages[1]);
+        }
+
+        [Test]
+        public void ConfigNameKeys_HaveBothTranslations()
+        {
+            LocTable table = LoadTable();
+            var keyPattern = new Regex(@"^\s*_nameKey:\s*(\S+)\s*$", RegexOptions.Multiline);
+            int checkedKeys = 0;
+
+            foreach (string folder in new[] { "Assets/_Game/Configs/Stations", "Assets/_Game/Configs/Cities" })
+            {
+                foreach (string asset in Directory.GetFiles(folder, "*.asset", SearchOption.AllDirectories))
+                {
+                    foreach (Match match in keyPattern.Matches(File.ReadAllText(asset)))
+                    {
+                        string key = match.Groups[1].Value;
+                        Assert.IsTrue(table.TryGet(key, "ru", out _), $"ru missing: {key} ({asset})");
+                        Assert.IsTrue(table.TryGet(key, "en", out _), $"en missing: {key} ({asset})");
+                        checkedKeys++;
+                    }
+                }
+            }
+
+            Assert.Greater(checkedKeys, 0);
         }
 
         [Test]

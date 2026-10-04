@@ -20,5 +20,11 @@ namespace ShaurmaTycoon.Offline
 
         /// <summary>Меньшее отсутствие не считается (окно не показывается).</summary>
         public double MinAwaySeconds { get; }
+
+        /// <summary>Те же параметры с лимитом, увеличенным на bonusSeconds (магазин репутации).</summary>
+        public OfflineSettings WithExtraLimit(double bonusSeconds)
+        {
+            return new OfflineSettings(IncomeRate, LimitSeconds + Math.Max(0, bonusSeconds), MinAwaySeconds);
+        }
     }
 }

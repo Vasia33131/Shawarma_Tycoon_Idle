@@ -13,6 +13,8 @@ namespace ShaurmaTycoon.Stations
         private readonly MilestoneTable _milestones;
         private double _speedMultiplier;
         private double _incomeMultiplier = 1;
+        private double _globalIncomeMultiplier = 1;
+        private double _globalSpeedMultiplier = 1;
         private bool _isAutomated;
 
         public StationModel(IStationDefinition definition, MilestoneTable milestones)
@@ -66,11 +68,32 @@ namespace ShaurmaTycoon.Stations
             }
         }
 
+        /// <summary>Множитель дохода, общий для всех станций (престиж, позже — бусты).</summary>
+        public double GlobalIncomeMultiplier => _globalIncomeMultiplier;
+
+        /// <summary>Ускорение циклов, общее для всех станций (магазин репутации).</summary>
+        public double GlobalSpeedMultiplier => _globalSpeedMultiplier;
+
+        /// <summary>Выставляет общие множители; доля текущего цикла сохраняется.</summary>
+        public void SetGlobalModifiers(double incomeMultiplier, double speedMultiplier)
+        {
+            if (!(incomeMultiplier > 0) || double.IsInfinity(incomeMultiplier))
+                throw new ArgumentOutOfRangeException(nameof(incomeMultiplier), incomeMultiplier, "Must be positive and finite.");
+            if (!(speedMultiplier > 0) || double.IsInfinity(speedMultiplier))
+                throw new ArgumentOutOfRangeException(nameof(speedMultiplier), speedMultiplier, "Must be positive and finite.");
+            if (_globalIncomeMultiplier == incomeMultiplier && _globalSpeedMultiplier == speedMultiplier)
+                return;
+
+            _globalIncomeMultiplier = incomeMultiplier;
+            _globalSpeedMultiplier = speedMultiplier;
+            Changed?.Invoke(this);
+        }
+
         /// <summary>Доля текущего цикла, 0..1. Сохраняется при ускорении на вехе.</summary>
         public double Progress { get; private set; }
 
-        public double CycleTime => _definition.CycleTime / _speedMultiplier;
-        public double IncomePerCycle => _definition.BaseIncome * Level * _incomeMultiplier;
+        public double CycleTime => _definition.CycleTime / (_speedMultiplier * _globalSpeedMultiplier);
+        public double IncomePerCycle => _definition.BaseIncome * Level * _incomeMultiplier * _globalIncomeMultiplier;
         public double IncomePerSecond => IsUnlocked ? IncomePerCycle / CycleTime : 0;
         public int NextMilestone => _milestones.GetNextMilestone(Level);
 

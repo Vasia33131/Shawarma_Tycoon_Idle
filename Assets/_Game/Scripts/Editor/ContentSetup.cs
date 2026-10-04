@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using ShaurmaTycoon.Core.Audio;
 using ShaurmaTycoon.Customers;
+using ShaurmaTycoon.Prestige;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
@@ -22,18 +23,20 @@ namespace ShaurmaTycoon.EditorTools
         private const string CustomerConfigPath = "Assets/_Game/Configs/Customers.asset";
         private const string AudioFolder = "Assets/_Game/Audio/";
         private const string CustomersFolder = "Assets/_Game/Sprites/Customers";
+        private const string ReputationShopPath = "Assets/_Game/Configs/ReputationShop.asset";
 
         private static readonly string[] CustomerCharacters = { "malePerson", "femalePerson", "femaleAdventurer" };
         private const string SellerCharacter = "maleAdventurer";
         private const int WalkFrames = 8;
         private const int PhraseCount = 10;
 
-        public static void EnsureAll(out AudioConfig audio, out CustomerConfig customers)
+        public static void EnsureAll(out AudioConfig audio, out CustomerConfig customers, out ReputationShopConfig shop)
         {
             EnsureFont();
             EnsureSpriteImport();
             audio = EnsureAudioConfig();
             customers = EnsureCustomerConfig();
+            shop = EnsureReputationShop();
             AssetDatabase.SaveAssets();
         }
 
@@ -180,6 +183,51 @@ namespace ShaurmaTycoon.EditorTools
 
             so.ApplyModifiedPropertiesWithoutUndo();
             Debug.Log("[ContentSetup] Created " + AudioConfigPath);
+            return config;
+        }
+
+        // Набор магазина репутации, согласованный на этапе 08 (дальше правится в ассете).
+        private static ReputationShopConfig EnsureReputationShop()
+        {
+            var config = AssetDatabase.LoadAssetAtPath<ReputationShopConfig>(ReputationShopPath);
+            if (config != null)
+                return config;
+
+            config = ScriptableObject.CreateInstance<ReputationShopConfig>();
+            AssetDatabase.CreateAsset(config, ReputationShopPath);
+
+            var items = new (string id, ShopEffect effect, double[] values, long[] prices)[]
+            {
+                ("offline_limit", ShopEffect.OfflineLimitHours, new double[] { 1, 2, 3, 4, 5, 6 }, new long[] { 5, 10, 20, 40, 80, 160 }),
+                ("start_coins", ShopEffect.StartCoins, new double[] { 1e3, 1e5, 1e7 }, new long[] { 3, 15, 75 }),
+                ("free_managers", ShopEffect.FreeManagers, new double[] { 1, 2, 3 }, new long[] { 10, 50, 250 }),
+                ("fast_customers", ShopEffect.CycleTimeFactor, new[] { 0.9, 0.8, 0.7 }, new long[] { 20, 80, 320 }),
+            };
+
+            var so = new SerializedObject(config);
+            SerializedProperty list = so.FindProperty("_items");
+            list.arraySize = items.Length;
+            for (int i = 0; i < items.Length; i++)
+            {
+                SerializedProperty item = list.GetArrayElementAtIndex(i);
+                item.FindPropertyRelative("Id").stringValue = items[i].id;
+                item.FindPropertyRelative("NameKey").stringValue = $"shop.{items[i].id}.name";
+                item.FindPropertyRelative("DescriptionKey").stringValue = $"shop.{items[i].id}.desc";
+                item.FindPropertyRelative("Effect").enumValueIndex = (int)items[i].effect;
+
+                SerializedProperty values = item.FindPropertyRelative("Values");
+                values.arraySize = items[i].values.Length;
+                for (int v = 0; v < items[i].values.Length; v++)
+                    values.GetArrayElementAtIndex(v).doubleValue = items[i].values[v];
+
+                SerializedProperty prices = item.FindPropertyRelative("Prices");
+                prices.arraySize = items[i].prices.Length;
+                for (int p = 0; p < items[i].prices.Length; p++)
+                    prices.GetArrayElementAtIndex(p).longValue = items[i].prices[p];
+            }
+
+            so.ApplyModifiedPropertiesWithoutUndo();
+            Debug.Log("[ContentSetup] Created " + ReputationShopPath);
             return config;
         }
     }

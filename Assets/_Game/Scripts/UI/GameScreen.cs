@@ -7,6 +7,7 @@ using ShaurmaTycoon.Localization;
 using ShaurmaTycoon.Managers;
 using ShaurmaTycoon.Offline;
 using ShaurmaTycoon.Platform;
+using ShaurmaTycoon.Prestige;
 using ShaurmaTycoon.Save;
 using ShaurmaTycoon.Stations;
 using ShaurmaTycoon.Upgrades;
@@ -24,6 +25,8 @@ namespace ShaurmaTycoon.UI
         [SerializeField] private StationsPanel _stationsPanel = null;
         [SerializeField] private ManagersPanel _managersPanel = null;
         [SerializeField] private UpgradesPanel _upgradesPanel = null;
+        [SerializeField] private CityPanel _cityPanel = null;
+        [SerializeField] private PrestigeConfirmPopup _prestigePopup = null;
 
         [Header("Kiosk & effects")]
         [SerializeField] private KioskView _kiosk = null;
@@ -48,15 +51,21 @@ namespace ShaurmaTycoon.UI
             _coinFly.Bind(tweens, audio);
             _floatingText.Bind(tweens);
 
-            _hud.Bind(wallet, _stations, loc);
+            var prestige = Services.Get<PrestigeState>();
+            var city = Services.Get<CityConfig>();
+            _kiosk.ApplyTheme(city.SkyColor, city.BoothColor);
+
+            _hud.Bind(wallet, _stations, loc, prestige);
             _stationsPanel.Bind(_stations, wallet, loc, _coinFly, _floatingText, _kiosk.Window);
             _managersPanel.Bind(Services.Get<ManagerController>(), _stations, wallet, loc);
             _upgradesPanel.Bind(Services.Get<UpgradeService>(), _stations, wallet, loc);
+            BindCityPanel(prestige, city, tweens, loc);
 
             _tickManager = Services.Get<TickManager>();
             _tickManager.Register(_hud);
             _tickManager.Register(_stationsPanel);
             _tickManager.Register(_kiosk);
+            _tickManager.Register(_cityPanel);
 
             _stations.Earned += _incomeRate.Add;
             if (Services.TryGet(out OfflineIncomeService offline))
@@ -73,6 +82,16 @@ namespace ShaurmaTycoon.UI
             }
         }
 
+        private void BindCityPanel(PrestigeState prestige, CityConfig city, TweenRunner tweens, Loc loc)
+        {
+            var controller = Services.Get<PrestigeController>();
+            CityConfig nextCity = Services.TryGet(out CityCatalog catalog) ? catalog.Get(controller.NextCityIndex) : city;
+            double baseOfflineHours = Services.TryGet(out BalanceConfig balance) ? balance.OfflineLimitHours : 0;
+
+            _prestigePopup.Bind(tweens);
+            _cityPanel.Bind(controller, Services.Get<ReputationShop>(), prestige, city, nextCity, loc, baseOfflineHours);
+        }
+
         private void OnDestroy()
         {
             if (_stations != null)
@@ -84,6 +103,7 @@ namespace ShaurmaTycoon.UI
             _tickManager.Unregister(_hud);
             _tickManager.Unregister(_stationsPanel);
             _tickManager.Unregister(_kiosk);
+            _tickManager.Unregister(_cityPanel);
             _tickManager.Unregister(_customers);
         }
     }

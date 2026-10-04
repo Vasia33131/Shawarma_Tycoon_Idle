@@ -1,8 +1,10 @@
+using System.Collections.Generic;
 using System.IO;
 using ShaurmaTycoon.Core;
 using ShaurmaTycoon.Core.Audio;
 using ShaurmaTycoon.Customers;
 using ShaurmaTycoon.Localization;
+using ShaurmaTycoon.Prestige;
 using ShaurmaTycoon.UI;
 using TMPro;
 using UnityEditor;
@@ -25,6 +27,8 @@ namespace ShaurmaTycoon.EditorTools
         private const string ManagerRowPrefabPath = PrefabFolder + "/ManagerRow.prefab";
         private const string UpgradeRowPrefabPath = PrefabFolder + "/UpgradeRow.prefab";
         private const string ScreenName = "GameScreen";
+        private const string CityCatalogPath = "Assets/_Game/Configs/Cities/CityCatalog.asset";
+        private const string ShopRowPrefabPath = PrefabFolder + "/ShopItemRow.prefab";
 
         private const float HudHeight = 200f;
         private const float TabBarHeight = 180f;
@@ -32,6 +36,8 @@ namespace ShaurmaTycoon.EditorTools
         private const float ManagerRowHeight = 180f;
         private const float UpgradeRowHeight = 160f;
         private const float HeaderHeight = 110f;
+        private const float ShopRowHeight = 170f;
+        private const float CityCardHeight = 470f;
         private const float GroundRatio = 0.2f;
         private const int CustomerPoolSize = 9;
         private const int CoinPoolSize = 24;
@@ -54,6 +60,7 @@ namespace ShaurmaTycoon.EditorTools
         private static readonly Color Steel = new Color(0.62f, 0.62f, 0.66f);
         private static readonly Color CoinInner = new Color(1f, 0.65f, 0.10f);
         private static readonly Color FloatText = new Color(0.85f, 0.42f, 0.05f);
+        private static readonly Color Reputation = new Color(0.55f, 0.35f, 0.85f);
         private static readonly Color Green = new Color(0.30f, 0.69f, 0.31f);
         private static readonly Color BarBack = new Color(0.36f, 0.18f, 0.07f, 0.25f);
         private static readonly Color Gold = new Color(1f, 0.80f, 0.20f);
@@ -77,7 +84,7 @@ namespace ShaurmaTycoon.EditorTools
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
                 return;
 
-            ContentSetup.EnsureAll(out AudioConfig audioConfig, out CustomerConfig customerConfig);
+            ContentSetup.EnsureAll(out AudioConfig audioConfig, out CustomerConfig customerConfig, out ReputationShopConfig shopConfig);
             _font = TMP_Settings.defaultFontAsset;
             _roundSprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
             _circleSprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
@@ -103,17 +110,17 @@ namespace ShaurmaTycoon.EditorTools
             if (debugLabel != null)
                 Object.DestroyImmediate(debugLabel.gameObject);
 
-            AssignInstallerConfigs(scene, audioConfig, customerConfig);
+            AssignInstallerConfigs(scene, audioConfig, customerConfig, shopConfig);
 
             StationRowView rowPrefab = BuildRowPrefab();
-            BuildScreen(canvas, rowPrefab, BuildManagerRowPrefab(), BuildUpgradeRowPrefab());
+            BuildScreen(canvas, rowPrefab, BuildManagerRowPrefab(), BuildUpgradeRowPrefab(), BuildShopRowPrefab());
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             Debug.Log("[Build Game UI] Done");
         }
 
-        private static void AssignInstallerConfigs(Scene scene, AudioConfig audio, CustomerConfig customers)
+        private static void AssignInstallerConfigs(Scene scene, AudioConfig audio, CustomerConfig customers, ReputationShopConfig shop)
         {
             GameObject installerObject = FindRoot(scene, nameof(GameSceneInstaller));
             GameSceneInstaller installer = installerObject != null ? installerObject.GetComponent<GameSceneInstaller>() : null;
@@ -126,6 +133,8 @@ namespace ShaurmaTycoon.EditorTools
             var so = new SerializedObject(installer);
             Set(so, "_audio", audio);
             Set(so, "_customers", customers);
+            Set(so, "_shop", shop);
+            Set(so, "_cities", AssetDatabase.LoadAssetAtPath<CityCatalog>(CityCatalogPath));
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
@@ -321,7 +330,7 @@ namespace ShaurmaTycoon.EditorTools
         // ---------- Screen ----------
 
         private static void BuildScreen(GameObject canvas, StationRowView rowPrefab, ManagerRowView managerRowPrefab,
-            UpgradeRowView upgradeRowPrefab)
+            UpgradeRowView upgradeRowPrefab, ShopItemRowView shopRowPrefab)
         {
             GameObject screen = CreateUi(ScreenName, canvas.transform);
             Stretch(screen, Vector2.zero, Vector2.zero);
@@ -335,9 +344,10 @@ namespace ShaurmaTycoon.EditorTools
             // Ларёк и улица с клиентами.
             GameObject kiosk = CreateUi("KioskArea", screen.transform);
             Stretch(kiosk, Vector2.zero, Vector2.zero);
-            AddImage(kiosk, Sky, null).raycastTarget = false;
+            Image sky = AddImage(kiosk, Sky, null);
+            sky.raycastTarget = false;
             kiosk.AddComponent<RectMask2D>();
-            KioskView kioskView = BuildKiosk(kiosk.transform);
+            KioskView kioskView = BuildKiosk(kiosk.transform, sky);
             CustomerQueue customers = BuildStreet(kiosk.transform, kioskView);
 
             // Контент: панели вкладок.
@@ -347,16 +357,20 @@ namespace ShaurmaTycoon.EditorTools
             StationsPanel stationsPanel = BuildStationsPanel(content.transform, rowPrefab);
             ManagersPanel managersPanel = BuildManagersPanel(content.transform, managerRowPrefab);
             UpgradesPanel upgradesPanel = BuildUpgradesPanel(content.transform, upgradeRowPrefab);
-            GameObject city = BuildPlaceholderPanel(content.transform, "CityPanel");
+            CityPanel cityPanel = BuildCityPanel(content.transform, shopRowPrefab);
 
             HudView hud = BuildHud(screen.transform);
             TabBar tabBar = BuildTabBar(screen.transform, out Button[] tabButtons);
             OfflineIncomePopup offlinePopup = BuildOfflinePopup(screen.transform);
+            PrestigeConfirmPopup prestigePopup = BuildPrestigePopup(screen.transform);
+            var cityPanelSo = new SerializedObject(cityPanel);
+            Set(cityPanelSo, "_confirmPopup", prestigePopup);
+            cityPanelSo.ApplyModifiedPropertiesWithoutUndo();
             BuildEffects(screen.transform, hud.CoinIcon, out CoinFlyEffect coinFly, out FloatingTextEffect floatingText);
 
             var tabSo = new SerializedObject(tabBar);
             SetArray(tabSo, "_buttons", tabButtons);
-            SetArray(tabSo, "_panels", stationsPanel.gameObject, managersPanel.gameObject, upgradesPanel.gameObject, city);
+            SetArray(tabSo, "_panels", stationsPanel.gameObject, managersPanel.gameObject, upgradesPanel.gameObject, cityPanel.gameObject);
             tabSo.ApplyModifiedPropertiesWithoutUndo();
 
             var screenSo = new SerializedObject(gameScreen);
@@ -364,6 +378,8 @@ namespace ShaurmaTycoon.EditorTools
             Set(screenSo, "_stationsPanel", stationsPanel);
             Set(screenSo, "_managersPanel", managersPanel);
             Set(screenSo, "_upgradesPanel", upgradesPanel);
+            Set(screenSo, "_cityPanel", cityPanel);
+            Set(screenSo, "_prestigePopup", prestigePopup);
             Set(screenSo, "_kiosk", kioskView);
             Set(screenSo, "_customers", customers);
             Set(screenSo, "_coinFly", coinFly);
@@ -491,22 +507,12 @@ namespace ShaurmaTycoon.EditorTools
             return upgradesPanel;
         }
 
-        private static GameObject BuildPlaceholderPanel(Transform parent, string name)
-        {
-            GameObject panel = CreateUi(name, parent);
-            Stretch(panel, Vector2.zero, Vector2.zero);
-            TMP_Text text = AddLocalizedText(panel.transform, "ComingSoon", "tab.coming_soon", 48, Muted, bold: true);
-            Stretch(text.gameObject, new Vector2(40f, 0f), new Vector2(-40f, 0f));
-            panel.SetActive(false);
-            return panel;
-        }
-
         // ---------- Kiosk, street, effects ----------
 
         private const string SellerIdlePath = "Assets/_Game/Sprites/Customers/maleAdventurer/character_maleAdventurer_idle.png";
         private const string CustomerIdlePath = "Assets/_Game/Sprites/Customers/malePerson/character_malePerson_idle.png";
 
-        private static KioskView BuildKiosk(Transform area)
+        private static KioskView BuildKiosk(Transform area, Image sky)
         {
             GameObject pavement = CreateUi("Pavement", area);
             StretchAnchors(pavement, Vector2.zero, new Vector2(1f, GroundRatio));
@@ -521,7 +527,9 @@ namespace ShaurmaTycoon.EditorTools
 
             GameObject body = CreateUi("Body", booth.transform);
             SetRect(body, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0.5f, 0f), Vector2.zero, new Vector2(0f, 250f));
-            AddImage(body, BoothRed, _roundSprite).raycastTarget = false;
+            Image bodyImage = AddImage(body, BoothRed, _roundSprite);
+            bodyImage.raycastTarget = false;
+            var tinted = new List<Object> { bodyImage };
 
             GameObject window = CreateUi("Window", body.transform);
             SetRect(window, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -24f), new Vector2(400f, 160f));
@@ -565,7 +573,10 @@ namespace ShaurmaTycoon.EditorTools
             for (int i = 0; i < 8; i++)
             {
                 GameObject stripe = CreateUi("AwningStripe_" + i, awning.transform);
-                AddImage(stripe, i % 2 == 0 ? BoothRed : AwningWhite, null).raycastTarget = false;
+                Image stripeImage = AddImage(stripe, i % 2 == 0 ? BoothRed : AwningWhite, null);
+                stripeImage.raycastTarget = false;
+                if (i % 2 == 0)
+                    tinted.Add(stripeImage);
             }
 
             GameObject sign = CreateUi("Sign", booth.transform);
@@ -579,6 +590,8 @@ namespace ShaurmaTycoon.EditorTools
             Set(so, "_spit", spit.transform);
             SetArray(so, "_spitStripes", stripes);
             Set(so, "_window", window.transform);
+            Set(so, "_sky", sky);
+            SetArray(so, "_boothTinted", tinted.ToArray());
             so.ApplyModifiedPropertiesWithoutUndo();
             return kioskView;
         }
@@ -747,6 +760,154 @@ namespace ShaurmaTycoon.EditorTools
             return button;
         }
 
+        // ---------- City tab, reputation shop, prestige popup ----------
+
+        private static CityPanel BuildCityPanel(Transform parent, ShopItemRowView shopRowPrefab)
+        {
+            GameObject panel = BuildListPanel(parent, "CityPanel", "tab.city", out _, out RectTransform list);
+            var cityPanel = panel.AddComponent<CityPanel>();
+
+            GameObject card = CreateUi("CityCard", list);
+            ((RectTransform)card.transform).sizeDelta = new Vector2(1000f, CityCardHeight);
+            AddImage(card, RowColor, _roundSprite);
+            card.AddComponent<LayoutElement>().preferredHeight = CityCardHeight;
+
+            TMP_Text cityName = AddText(card.transform, "CityName", "", 46, DarkBrown, TextAlignmentOptions.Left, bold: true, autoSize: true);
+            SetCardLine(cityName.gameObject, -24f, 60f);
+            TMP_Text earnedLabel = AddLocalizedText(card.transform, "EarnedLabel", "prestige.earned_label", 30, Muted, bold: false);
+            earnedLabel.alignment = TextAlignmentOptions.Left;
+            SetCardLine(earnedLabel.gameObject, -92f, 40f);
+
+            GameObject bar = CreateUi("ProgressBar", card.transform);
+            SetCardLine(bar, -140f, 56f);
+            AddImage(bar, BarBack, _roundSprite).raycastTarget = false;
+            GameObject fill = CreateUi("Fill", bar.transform);
+            var fillRect = (RectTransform)fill.transform;
+            fillRect.anchorMin = Vector2.zero;
+            fillRect.anchorMax = new Vector2(0f, 1f);
+            fillRect.offsetMin = Vector2.zero;
+            fillRect.offsetMax = Vector2.zero;
+            AddImage(fill, Reputation, _roundSprite).raycastTarget = false;
+            TMP_Text progress = AddText(bar.transform, "ProgressText", "0 / 1.00B", 30, DarkBrown, TextAlignmentOptions.Center, bold: true, autoSize: true);
+            Stretch(progress.gameObject, new Vector2(16f, 0f), new Vector2(-16f, 0f));
+
+            TMP_Text gain = AddText(card.transform, "GainText", "", 34, Reputation, TextAlignmentOptions.Left, bold: true, autoSize: true);
+            SetCardLine(gain.gameObject, -214f, 48f);
+            TMP_Text bonus = AddText(card.transform, "BonusText", "", 32, DarkBrown, TextAlignmentOptions.Left, autoSize: true);
+            SetCardLine(bonus.gameObject, -266f, 44f);
+            TMP_Text reputation = AddText(card.transform, "ReputationText", "", 32, DarkBrown, TextAlignmentOptions.Left, autoSize: true);
+            SetCardLine(reputation.gameObject, -314f, 44f);
+
+            GameObject prestige = CreateUi("PrestigeButton", card.transform);
+            SetRect(prestige, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 24f), new Vector2(-60f, 100f));
+            AddImage(prestige, Orange, _roundSprite);
+            Button prestigeButton = AddButton(prestige, SoundId.Unlock);
+            AddPulseWhileInteractable(prestige, prestigeButton);
+            TMP_Text prestigeText = AddText(prestige.transform, "Label", "", 36, Color.white, TextAlignmentOptions.Center, bold: true, autoSize: true);
+            Stretch(prestigeText.gameObject, new Vector2(16f, 6f), new Vector2(-16f, -6f));
+
+            GameObject shopTitle = CreateUi("ShopTitle", list);
+            shopTitle.AddComponent<LayoutElement>().preferredHeight = 80f;
+            TMP_Text shopTitleText = AddLocalizedText(shopTitle.transform, "Title", "shop.title", 42, DarkBrown, bold: true);
+            shopTitleText.alignment = TextAlignmentOptions.BottomLeft;
+            Stretch(shopTitleText.gameObject, new Vector2(10f, 0f), new Vector2(-10f, 0f));
+
+            var so = new SerializedObject(cityPanel);
+            Set(so, "_cityNameText", cityName);
+            Set(so, "_progressFill", fillRect);
+            Set(so, "_progressText", progress);
+            Set(so, "_gainText", gain);
+            Set(so, "_bonusText", bonus);
+            Set(so, "_reputationText", reputation);
+            Set(so, "_prestigeButton", prestigeButton);
+            Set(so, "_prestigeButtonText", prestigeText);
+            Set(so, "_shopContent", list);
+            Set(so, "_shopRowPrefab", shopRowPrefab);
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            panel.SetActive(false);
+            return cityPanel;
+        }
+
+        // Строка карточки города: растянута по ширине с отступами 30, отсчёт сверху.
+        private static void SetCardLine(GameObject go, float top, float height)
+        {
+            SetRect(go, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, top), new Vector2(-60f, height));
+        }
+
+        private static ShopItemRowView BuildShopRowPrefab()
+        {
+            GameObject root = CreateUi("ShopItemRow", null);
+            ((RectTransform)root.transform).sizeDelta = new Vector2(1000f, ShopRowHeight);
+            AddImage(root, RowColor, _roundSprite);
+            root.AddComponent<LayoutElement>().preferredHeight = ShopRowHeight;
+            var view = root.AddComponent<ShopItemRowView>();
+
+            TMP_Text nameText = AddText(root.transform, "NameText", "Item", 40, DarkBrown, TextAlignmentOptions.Left, bold: true, autoSize: true);
+            SetRect(nameText.gameObject, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0f, 1f), new Vector2(30f, -16f), new Vector2(-340f, 52f));
+            TMP_Text description = AddText(root.transform, "DescriptionText", "", 30, Muted, TextAlignmentOptions.Left, autoSize: true);
+            SetRect(description.gameObject, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0f, 1f), new Vector2(30f, -70f), new Vector2(-340f, 46f));
+            TMP_Text level = AddText(root.transform, "LevelText", "", 28, Reputation, TextAlignmentOptions.Left, bold: true, autoSize: true);
+            SetRect(level.gameObject, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0f, 0f), new Vector2(30f, 14f), new Vector2(-340f, 38f));
+
+            Button buyButton = BuildRowButton(root.transform, "BuyButton", Reputation, new Vector2(270f, 120f), SoundId.Upgrade, out TMP_Text buyText);
+
+            var so = new SerializedObject(view);
+            Set(so, "_nameText", nameText);
+            Set(so, "_descriptionText", description);
+            Set(so, "_levelText", level);
+            Set(so, "_buyButton", buyButton);
+            Set(so, "_buyText", buyText);
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            return SavePrefab(root, ShopRowPrefabPath).GetComponent<ShopItemRowView>();
+        }
+
+        private static PrestigeConfirmPopup BuildPrestigePopup(Transform parent)
+        {
+            GameObject root = CreateUi("PrestigePopup", parent);
+            Stretch(root, Vector2.zero, Vector2.zero);
+            AddImage(root, new Color(0f, 0f, 0f, 0.6f), null);
+            var popup = root.AddComponent<PrestigeConfirmPopup>();
+
+            GameObject panel = CreateUi("Panel", root.transform);
+            SetRect(panel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(860f, 720f));
+            AddImage(panel, Cream, _roundSprite);
+
+            TMP_Text title = AddText(panel.transform, "Title", "", 50, DarkBrown, TextAlignmentOptions.Center, bold: true, autoSize: true);
+            SetRect(title.gameObject, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -40f), new Vector2(-80f, 130f));
+            TMP_Text body = AddLocalizedText(panel.transform, "Body", "prestige.confirm_body", 32, Muted, bold: false);
+            SetRect(body.gameObject, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -190f), new Vector2(-80f, 180f));
+            TMP_Text gain = AddText(panel.transform, "Gain", "", 40, Reputation, TextAlignmentOptions.Center, bold: true, autoSize: true);
+            SetRect(gain.gameObject, new Vector2(0f, 0.5f), new Vector2(1f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -100f), new Vector2(-80f, 80f));
+
+            Button cancel = BuildPopupButton(panel.transform, "CancelButton", Brown, new Vector2(-195f, 60f), SoundId.Tap, out TMP_Text cancelText);
+            AddLocalizedKey(cancelText, "prestige.confirm_no");
+            Button confirm = BuildPopupButton(panel.transform, "ConfirmButton", Orange, new Vector2(195f, 60f), SoundId.Unlock, out TMP_Text confirmText);
+            AddLocalizedKey(confirmText, "prestige.confirm_yes");
+
+            var so = new SerializedObject(popup);
+            Set(so, "_root", root);
+            Set(so, "_panel", panel.transform);
+            Set(so, "_titleText", title);
+            Set(so, "_gainText", gain);
+            Set(so, "_confirmButton", confirm);
+            Set(so, "_cancelButton", cancel);
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            root.SetActive(false);
+            return popup;
+        }
+
+        private static void AddLocalizedKey(TMP_Text text, string key)
+        {
+            var localized = text.gameObject.AddComponent<LocalizedText>();
+            var so = new SerializedObject(localized);
+            so.FindProperty("_key").stringValue = key;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            text.text = key;
+        }
+
         private static HudView BuildHud(Transform parent)
         {
             GameObject hud = CreateUi("Hud", parent);
@@ -781,6 +942,18 @@ namespace ShaurmaTycoon.EditorTools
             Set(so, "_coinsText", coins);
             Set(so, "_incomeText", income);
             Set(so, "_coinIcon", coinIcon.transform);
+
+            // Репутация — справа сверху (показывается, когда появится).
+            GameObject reputation = CreateUi("Reputation", hud.transform);
+            SetRect(reputation, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-20f, -20f), new Vector2(200f, 64f));
+            AddImage(reputation, Brown, _roundSprite).raycastTarget = false;
+            GameObject reputationIcon = CreateUi("Icon", reputation.transform);
+            SetRect(reputationIcon, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(8f, 0f), new Vector2(48f, 48f));
+            AddImage(reputationIcon, Reputation, _circleSprite, sliced: false).raycastTarget = false;
+            TMP_Text reputationText = AddText(reputation.transform, "Text", "0", 38, Color.white, TextAlignmentOptions.Center, bold: true, autoSize: true);
+            Stretch(reputationText.gameObject, new Vector2(60f, 4f), new Vector2(-12f, -4f));
+            Set(so, "_reputationRoot", reputation);
+            Set(so, "_reputationText", reputationText);
             so.ApplyModifiedPropertiesWithoutUndo();
             return hudView;
         }

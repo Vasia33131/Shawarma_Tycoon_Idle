@@ -33,6 +33,40 @@ namespace ShaurmaTycoon.Save
 
             data.Stations = NormalizeStations(data.Stations);
             data.PurchasedUpgrades = NormalizeIds(data.PurchasedUpgrades);
+            data.Prestige = NormalizePrestige(data.Prestige);
+        }
+
+        private static PrestigeSave NormalizePrestige(PrestigeSave prestige)
+        {
+            if (prestige == null)
+                return new PrestigeSave();
+
+            if (prestige.CityIndex < 0)
+                prestige.CityIndex = 0;
+            if (!(prestige.CityEarned >= 0) || double.IsInfinity(prestige.CityEarned))
+                prestige.CityEarned = 0;
+            if (!(prestige.LifetimeEarned >= prestige.CityEarned) || double.IsInfinity(prestige.LifetimeEarned))
+                prestige.LifetimeEarned = prestige.CityEarned;
+            if (prestige.ReputationEarned < 0)
+                prestige.ReputationEarned = 0;
+            if (prestige.ReputationSpent < 0)
+                prestige.ReputationSpent = 0;
+            if (prestige.ReputationSpent > prestige.ReputationEarned)
+                prestige.ReputationSpent = prestige.ReputationEarned;
+
+            var levels = new List<ShopLevelSave>();
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            if (prestige.ShopLevels != null)
+            {
+                foreach (ShopLevelSave level in prestige.ShopLevels)
+                {
+                    if (level == null || string.IsNullOrEmpty(level.Id) || level.Level <= 0 || !seen.Add(level.Id))
+                        continue;
+                    levels.Add(level);
+                }
+            }
+            prestige.ShopLevels = levels;
+            return prestige;
         }
 
         private static List<StationSave> NormalizeStations(List<StationSave> stations)

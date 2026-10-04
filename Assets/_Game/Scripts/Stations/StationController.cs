@@ -57,6 +57,13 @@ namespace ShaurmaTycoon.Stations
             }
         }
 
+        /// <summary>Общие множители всех станций: доход (престиж) и скорость циклов (магазин репутации).</summary>
+        public void SetGlobalModifiers(double incomeMultiplier, double speedMultiplier)
+        {
+            for (int i = 0; i < _stations.Count; i++)
+                _stations[i].SetGlobalModifiers(incomeMultiplier, speedMultiplier);
+        }
+
         public bool Tap(int index)
         {
             return IsValidIndex(index) && _stations[index].TryStartCycle();

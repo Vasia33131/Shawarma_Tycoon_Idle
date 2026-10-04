@@ -42,3 +42,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 8a3419e21b0f44a6a40e0fe021e3af29, type: 2}
   - {fileID: 11400000, guid: 17b425a8b69b46f289724edecb4d12fd, type: 2}
   - {fileID: 11400000, guid: 12e6747c97e046f28d72e0d84af7095e, type: 2}
+  _prestigeThreshold: 1000000000
+  _valueScale: 1
+  _skyColor: {r: 1, g: 0.87, b: 0.68, a: 1}
+  _boothColor: {r: 0.85, g: 0.3, b: 0.2, a: 1}

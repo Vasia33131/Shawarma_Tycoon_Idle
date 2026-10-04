@@ -1,6 +1,7 @@
 using ShaurmaTycoon.Core;
 using ShaurmaTycoon.Economy;
 using ShaurmaTycoon.Localization;
+using ShaurmaTycoon.Prestige;
 using ShaurmaTycoon.Stations;
 using TMPro;
 using UnityEngine;
@@ -8,7 +9,7 @@ using UnityEngine;
 namespace ShaurmaTycoon.UI
 {
     /// <summary>
-    /// Верхняя панель: монеты и доход/сек. Тексты обновляются не чаще 10 раз в секунду,
+    /// Верхняя панель: монеты, доход/сек и свободная репутация. Тексты обновляются не чаще 10 раз в секунду,
     /// только при изменении и без аллокаций (NumberText → SetCharArray).
     /// </summary>
     public sealed class HudView : MonoBehaviour, ITickable
@@ -19,13 +20,18 @@ namespace ShaurmaTycoon.UI
         [SerializeField] private TMP_Text _incomeText = null;
         [Tooltip("Иконка монет: цель летящих монет, подпрыгивает при их прилёте.")]
         [SerializeField] private RectTransform _coinIcon = null;
+        [Tooltip("Репутация (GDD §3): показывается, когда она уже есть.")]
+        [SerializeField] private GameObject _reputationRoot = null;
+        [SerializeField] private TMP_Text _reputationText = null;
 
         private readonly NumberText _coins = new NumberText();
         private readonly NumberText _income = new NumberText();
+        private readonly NumberText _reputation = new NumberText();
 
         private Wallet _wallet;
         private StationController _stations;
         private Loc _loc;
+        private PrestigeState _prestige;
         private LocTemplate _incomeTemplate;
         private double _shownCoins = double.NaN;
         private double _shownIncome = double.NaN;
@@ -33,8 +39,12 @@ namespace ShaurmaTycoon.UI
 
         public RectTransform CoinIcon => _coinIcon;
 
-        public void Bind(Wallet wallet, StationController stations, Loc loc)
+        public void Bind(Wallet wallet, StationController stations, Loc loc, PrestigeState prestige)
         {
+            _prestige = prestige;
+            _prestige.Changed += RefreshReputation;
+            RefreshReputation();
+
             _wallet = wallet;
             _stations = stations;
             _loc = loc;
@@ -45,6 +55,8 @@ namespace ShaurmaTycoon.UI
 
         private void OnDestroy()
         {
+            if (_prestige != null)
+                _prestige.Changed -= RefreshReputation;
             if (_loc != null)
                 _loc.LanguageChanged -= ForceRefresh;
         }
@@ -57,6 +69,14 @@ namespace ShaurmaTycoon.UI
 
             _timer = 0f;
             Refresh(force: false);
+        }
+
+        private void RefreshReputation()
+        {
+            bool hasReputation = _prestige.ReputationEarned > 0;
+            _reputationRoot.SetActive(hasReputation);
+            if (hasReputation)
+                _reputationText.SetNumberText(_reputation.Clear().AppendInteger(_prestige.FreeReputation));
         }
 
         private void ForceRefresh()

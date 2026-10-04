@@ -20,5 +20,7 @@ namespace ShaurmaTycoon.Save
 
         public List<StationSave> Stations = new List<StationSave>();
         public List<string> PurchasedUpgrades = new List<string>();
+
+        public PrestigeSave Prestige = new PrestigeSave();
     }
 }

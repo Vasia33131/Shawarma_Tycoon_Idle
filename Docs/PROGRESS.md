@@ -233,14 +233,66 @@
   - время берётся из `ServerTimeUtc`, а в редакторе это локальные часы: перевод часов вперёд не защищён (TODO(YANDEX): серверное время, этап 09);
   - пауза игры и звука на время рекламы — этап 09 (`AdService`).
 
+### Этап 08 — Престиж и города (код готов, 2026-10-04; ждёт Build Game UI и проверки в Unity)
+- Проверено: runtime, editor и тестовая сборка компилируются без warnings (вне редактора). Чистая логика и тесты вне Unity: 252/252 зелёные. В Unity ещё не запускалось.
+- Решения пользователя:
+  - бонус +2% считается от всей заработанной репутации, траты в магазине его не уменьшают;
+  - порог ×10 за город (1e9, 1e10);
+  - в последнем городе — перезапуск того же города;
+  - набор магазина:
+    - офлайн +1…6 ч за 5/10/20/40/80/160;
+    - старт 1K/100K/10M × масштаб города за 3/15/75;
+    - бесплатные менеджеры 1/2/3 за 10/50/250;
+    - циклы −10/−20/−30% за 20/80/320.
+- Сделано:
+  - `Prestige/`:
+    - `PrestigeRules` (sqrt-формула, множитель), `PrestigeState` (CityIndex, CityEarned, LifetimeEarned, ReputationEarned/Spent, уровни магазина), `PrestigeSaveParticipant` (в Boot);
+    - `ShopEffect`, `ShopItemConfig`, `ReputationShopConfig`, `ReputationShop`;
+    - `PrestigeController` (прогноз, порог, переход: отключить город от сейва → начислить → сбросить станции/улучшения/монеты в сейве → SaveNow → перезагрузить сцену);
+    - `CityCatalog`; `CityConfig` + порог, масштаб, цвета;
+  - `Save/`: `PrestigeSave`, `ShopLevelSave`, `SaveData.Prestige`, нормализация в `SaveMigrator`;
+  - `StationModel`/`StationController.SetGlobalModifiers` (доход × престиж, скорость циклов);
+  - `ManagerController.SetFreeManagers` (автонайм, когда станция открыта); `OfflineSettings.WithExtraLimit`;
+  - `Services.Unregister(instance)` — сцена снимает только свои сервисы (важно при перезагрузке);
+  - `GameSceneInstaller`: город из каталога по `PrestigeState.CityIndex`, магазин, модификаторы (пересчёт при покупке), учёт заработка (станции + полученный офлайн), лимит офлайна + бонус, `PrestigeController`;
+  - UI:
+    - репутация в HUD;
+    - вкладка «Город» (`CityPanel`): прогресс к порогу, прогноз, бонус, свободная репутация, кнопка перехода, магазин (`ShopItemRowView`);
+    - `PrestigeConfirmPopup`; цвета неба и ларька по городу (`KioskView.ApplyTheme`);
+  - ассеты:
+    - `City_02_Kazan` (порог 1e10, масштаб 10, голубое небо, зелёный ларёк);
+    - 6 станций Казани (значения ×10), 20 улучшений (цены ×10);
+    - `CityCatalog`; `ReputationShop.asset` создаёт `ContentSetup`;
+  - `Balance.asset`: `reputationDivisor` 1e6, `incomeBonusPerReputation` 0.02;
+  - временное меню `ShaurmaTycoon/Debug/Add 1e9 | 1e10 Earned`;
+  - строки ru/en: Казань и станции, престиж, магазин; тест: у всех `_nameKey` в ассетах есть перевод.
+- Файлы:
+  - `Scripts/Prestige/`: `CityCatalog.cs`, `PrestigeRules.cs`, `PrestigeState.cs`, `PrestigeSaveParticipant.cs`, `ShopEffect.cs`, `ShopItemConfig.cs`, `ReputationShopConfig.cs`, `ReputationShop.cs`, `PrestigeController.cs` (+ изменён `CityConfig.cs`)
+  - `Scripts/Save/`: `PrestigeSave.cs`, `ShopLevelSave.cs`
+  - `Scripts/UI/`: `CityPanel.cs`, `ShopItemRowView.cs`, `PrestigeConfirmPopup.cs`
+  - `Scripts/Editor/DebugMenu.cs`
+  - `Configs/Cities/City_02_Kazan.asset`, `Configs/Cities/CityCatalog.asset`, `Configs/Stations/City02/*`, `Configs/Upgrades/City02/*`
+  - `Tests/EditMode/PrestigeTests.cs` (+ `StringsFileTests.ConfigNameKeys_HaveBothTranslations`)
+- Решения:
+  - `totalEarned` в формуле репутации = заработано за всё время (все города); порог — заработано в текущем городе;
+  - заработком считаются доход станций и полученный офлайн-доход; стартовый капитал и отладочное меню — нет (меню добавляет и то, и другое явно);
+  - переход перезагружает сцену Game, все системы города создаются заново из сейва;
+  - у Казани свои ассеты станций и улучшений (не множитель к городу 1): названия и значения можно править по отдельности;
+  - `CityConfig` в `GameSceneInstaller._city` остался как запасной вариант, пока `_cities` не назначен.
+- Известные проблемы / TODO:
+  - interstitial при переходе — этап 09; лидерборд по `LifetimeEarned` — этап 09;
+  - города 3+ — LiveOps (добавить `CityConfig` в каталог);
+  - `DebugMenu` заменить отладочным окном на этапе 11.
+
 ## Важные решения (архитектура)
 - Unity 2022.3.62f1, 2D, URP 2D, Color Space Gamma, старый Input Manager.
 - Сборки: `ShaurmaTycoon` (runtime), `ShaurmaTycoon.Editor`, `ShaurmaTycoon.Tests.EditMode` (Assets/_Game/Tests/EditMode). Namespace `ShaurmaTycoon.<Модуль>`, для редакторского кода `ShaurmaTycoon.EditorTools`.
 - Сервисы регистрируются в `GameBootstrap` через `Services.Register<T>`, единственный Update в игре — в `TickManager`.
-- Сервисы Boot: `TickManager` (+ `ApplicationEvents`), `Wallet`, `TweenRunner`, `PulseDriver`, `IPlatformService`, `Loc`, `SaveService`. Сервисы сцены Game (`GameSceneInstaller`): `StationController`, `ManagerController`, `UpgradeService`, `AudioService`, `CustomerConfig`, `OfflineIncomeService`. Вью связываются в `GameScreen.Start`.
+- Сервисы Boot: `TickManager` (+ `ApplicationEvents`), `Wallet`, `TweenRunner`, `PulseDriver`, `IPlatformService`, `Loc`, `SaveService`, `PrestigeState`. Сервисы сцены Game (`GameSceneInstaller`): `BalanceConfig`, `CityConfig` (текущий), `CityCatalog`, `StationController`, `ManagerController`, `UpgradeService`, `ReputationShop`, `AudioService`, `CustomerConfig`, `OfflineIncomeService`, `PrestigeController`; снимаются через `Services.Unregister(instance)`. Вью связываются в `GameScreen.Start`.
 - Все тексты UI — ключи из `Configs/Localization/strings.txt` (TSV: key, ru, en); новые ключи добавлять туда и в `StringsFileTests.RequiredKeys`.
 - Тексты, которые меняются в Tick, выводить через `NumberText` + `TMP_Text.SetNumberText`, шаблоны — `Loc.GetTemplate(key)` (без string.Format).
 - Новая система с состоянием → реализовать `ISaveParticipant` и зарегистрировать в `SaveService`; новые поля `SaveData` — со значением по умолчанию, при несовместимых изменениях повышать `SaveData.CurrentVersion` и добавлять шаг в `SaveMigrator`.
+- Новый город = новый `CityConfig` (свои станции и улучшения) в `Configs/Cities/CityCatalog.asset`; переход между городами перезагружает сцену Game.
 
 ## TODO(YANDEX)
 - Выбрать PluginYG2 или свой jslib-мост (этап 09).

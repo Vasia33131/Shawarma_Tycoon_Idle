@@ -54,6 +54,44 @@ namespace ShaurmaTycoon.Managers
             return true;
         }
 
+        /// <summary>
+        /// Бесплатные менеджеры (магазин репутации): первые count станций получают менеджера,
+        /// как только открыты — сразу или позже, при покупке первого уровня.
+        /// </summary>
+        public void SetFreeManagers(int count)
+        {
+            FreeManagerCount = Math.Max(0, count);
+            for (int i = 0; i < _stations.Stations.Count; i++)
+            {
+                _stations.Stations[i].Changed -= OnStationChanged;
+                if (i < FreeManagerCount)
+                {
+                    _stations.Stations[i].Changed += OnStationChanged;
+                    GrantFree(i);
+                }
+            }
+        }
+
+        public int FreeManagerCount { get; private set; }
+
+        private void OnStationChanged(StationModel station)
+        {
+            for (int i = 0; i < FreeManagerCount && i < _stations.Stations.Count; i++)
+            {
+                if (ReferenceEquals(_stations.Stations[i], station))
+                    GrantFree(i);
+            }
+        }
+
+        private void GrantFree(int index)
+        {
+            if (!CanHire(index))
+                return;
+
+            _stations.Stations[index].IsAutomated = true;
+            ManagerHired?.Invoke(index);
+        }
+
         private bool IsValidIndex(int index)
         {
             return index >= 0 && index < _stations.Stations.Count;

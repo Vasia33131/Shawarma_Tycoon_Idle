@@ -17,6 +17,11 @@ namespace ShaurmaTycoon.Customers
         [Tooltip("Точка у окна, откуда вылетают монеты, когда список станций не виден.")]
         [SerializeField] private RectTransform _window = null;
 
+        [Header("City look")]
+        [SerializeField] private Image _sky = null;
+        [Tooltip("Части ларька в фирменном цвете города (корпус, полосы навеса).")]
+        [SerializeField] private Image[] _boothTinted = new Image[0];
+
         private CustomerSkin _sellerSkin;
         private float _offset;
 
@@ -26,6 +31,18 @@ namespace ShaurmaTycoon.Customers
         {
             _sellerSkin = sellerSkin;
             SetServing(false);
+        }
+
+        /// <summary>Цвета города (GDD §7: «новый город — новый фон»).</summary>
+        public void ApplyTheme(Color sky, Color booth)
+        {
+            if (_sky != null)
+                _sky.color = sky;
+            for (int i = 0; i < _boothTinted.Length; i++)
+            {
+                if (_boothTinted[i] != null)
+                    _boothTinted[i].color = booth;
+            }
         }
 
         public void SetServing(bool serving)

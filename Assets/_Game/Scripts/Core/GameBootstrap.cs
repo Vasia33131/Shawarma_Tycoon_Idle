@@ -2,6 +2,7 @@ using ShaurmaTycoon.Core.Tweening;
 using ShaurmaTycoon.Economy;
 using ShaurmaTycoon.Localization;
 using ShaurmaTycoon.Platform;
+using ShaurmaTycoon.Prestige;
 using ShaurmaTycoon.Save;
 using ShaurmaTycoon.UI;
 using UnityEngine;
@@ -62,7 +63,14 @@ namespace ShaurmaTycoon.Core
             Services.Register(save);
             _tickManager.Register(save);
 
-            save.Load(OnSaveLoaded);
+            var prestige = new PrestigeState();
+            Services.Register(prestige);
+            save.Load(() =>
+            {
+                // Прогресс престижа живёт в Boot и переживает перезагрузку сцены Game.
+                save.Register(new PrestigeSaveParticipant(prestige));
+                OnSaveLoaded();
+            });
         }
 
         private void OnSaveLoaded()

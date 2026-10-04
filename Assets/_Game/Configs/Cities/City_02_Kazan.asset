@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: adbad3b3830a453fa915cc0b44a1fde2, type: 3}
+  m_Name: City_02_Kazan
+  m_EditorClassIdentifier: 
+  _id: kazan
+  _nameKey: city.kazan
+  _stations:
+  - {fileID: 11400000, guid: 91d3553021c040bab2085e24c7c1b480, type: 2}
+  - {fileID: 11400000, guid: a18d27ce2e35420eb364b93494996534, type: 2}
+  - {fileID: 11400000, guid: 0b4b083623084e839d8084aa367c93df, type: 2}
+  - {fileID: 11400000, guid: 2066f37d70d24bba9c9fcb191f27752d, type: 2}
+  - {fileID: 11400000, guid: 3fc61ecb8e564ecb8f564ae9934a59c5, type: 2}
+  - {fileID: 11400000, guid: ac6fdb90651344ef939a4c6e02988164, type: 2}
+  _upgrades:
+  - {fileID: 11400000, guid: 383e2a7d47da4bc58fe75ab4d9ad02ba, type: 2}
+  - {fileID: 11400000, guid: 58b27401328044108de46959d99d0fb1, type: 2}
+  - {fileID: 11400000, guid: f07e6c6f7c984c798cb91efec3b93224, type: 2}
+  - {fileID: 11400000, guid: cdaedb2f98ba45559161f0728dc76d00, type: 2}
+  - {fileID: 11400000, guid: 4d31b08fe1d346e58ba9ad1142576b4b, type: 2}
+  - {fileID: 11400000, guid: 885e8e3e79774134a0d2ab8cf951fac9, type: 2}
+  - {fileID: 11400000, guid: b6f24c0dc32b491db6052a6e270fe2a7, type: 2}
+  - {fileID: 11400000, guid: ce57ccb1314247c68a67a10f44756000, type: 2}
+  - {fileID: 11400000, guid: 9dd32dc440164661ad4317e2356272db, type: 2}
+  - {fileID: 11400000, guid: 844fbbadfcf645e08ec23263eb8b7e94, type: 2}
+  - {fileID: 11400000, guid: 89cc90608c8840f79116e9b5f1a47c24, type: 2}
+  - {fileID: 11400000, guid: 93e808bd890c4288b990c5e70915ee50, type: 2}
+  - {fileID: 11400000, guid: 2237a67ec4bf4923824494fb5345b929, type: 2}
+  - {fileID: 11400000, guid: a80654f7b501420fb5701feec13b2f42, type: 2}
+  - {fileID: 11400000, guid: 67890445b4594d73ba50988d1d132c58, type: 2}
+  - {fileID: 11400000, guid: fddf26f063254ec6b21d12f934f24edd, type: 2}
+  - {fileID: 11400000, guid: d047dd70f9e742ed8cf3dc4e896d71c0, type: 2}
+  - {fileID: 11400000, guid: 6c20a16d75d64d64bfe51c2291bd4fef, type: 2}
+  - {fileID: 11400000, guid: 9a52a331c9764b1694762c06ce191846, type: 2}
+  - {fileID: 11400000, guid: faf29be24fb040d0bbcd9de11fe5ba4f, type: 2}
+  _prestigeThreshold: 10000000000
+  _valueScale: 10
+  _skyColor: {r: 0.76, g: 0.88, b: 1, a: 1}
+  _boothColor: {r: 0.18, g: 0.55, b: 0.35, a: 1}

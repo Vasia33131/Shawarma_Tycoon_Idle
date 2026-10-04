@@ -24,6 +24,13 @@ namespace ShaurmaTycoon.Core
             Map.Remove(typeof(T));
         }
 
+        /// <summary>Снимает регистрацию, только если зарегистрирован именно этот объект (не новый того же типа).</summary>
+        public static void Unregister<T>(T service) where T : class
+        {
+            if (Map.TryGetValue(typeof(T), out var registered) && ReferenceEquals(registered, service))
+                Map.Remove(typeof(T));
+        }
+
         public static T Get<T>() where T : class
         {
             if (Map.TryGetValue(typeof(T), out var service))

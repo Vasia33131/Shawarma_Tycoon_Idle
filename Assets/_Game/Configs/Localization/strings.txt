@@ -49,3 +49,35 @@ offline.limit	Засчитано максимум: {0}. Лимит растёт 
 time.minutes	{0} мин	{0} min
 time.hours	{0} ч	{0} h
 time.hours_minutes	{0} ч {1} мин	{0} h {1} min
+city.kazan	Казань	Kazan
+station.kazan_shawarma	Казанская шаурма	Kazan Shawarma
+station.echpochmak_wrap	Эчпочмак-ролл	Echpochmak Wrap
+station.chak_chak	Чак-чак	Chak-Chak
+station.katyk_tea	Катык и чай	Katyk & Tea
+station.kazan_xl	Шаурма «Казан XL»	Kazan XL Shawarma
+station.plov_plate	Плов-тарелка	Plov Plate
+prestige.city_label	Город: {0}	City: {0}
+prestige.earned_label	Заработано в этом городе	Earned in this city
+prestige.gain	Репутация за переезд: +{0}	Reputation for moving: +{0}
+prestige.bonus	Бонус репутации к доходу: +{0}%	Reputation income bonus: +{0}%
+prestige.reputation	Свободная репутация: {0}	Free reputation: {0}
+prestige.go_next	Открыть филиал: {0}	Open a branch: {0}
+prestige.go_same	Переоткрыть: {0}	Reopen: {0}
+prestige.confirm_title	Открыть филиал в городе {0}?	Open a branch in {0}?
+prestige.confirm_title_same	Переоткрыть ларёк: {0}?	Reopen the kiosk in {0}?
+prestige.confirm_body	Сбросятся монеты, станции, менеджеры и улучшения.\nОстанутся репутация и покупки в магазине.	Coins, stations, managers and upgrades will reset.\nReputation and shop purchases stay.
+prestige.confirm_gain	+{0} репутации → бонус +{1}%	+{0} reputation → bonus +{1}%
+prestige.confirm_yes	Переезжаем!	Let's go!
+prestige.confirm_no	Не сейчас	Not now
+shop.title	Магазин репутации	Reputation shop
+shop.level	Ур. {0}/{1}	Lv. {0}/{1}
+shop.buy	{0} реп.	{0} rep.
+shop.max	Макс.	Max
+shop.offline_limit.name	Долгий офлайн	Long offline
+shop.offline_limit.desc	Лимит офлайна: {0}	Offline limit: {0}
+shop.start_coins.name	Стартовый капитал	Starting capital
+shop.start_coins.desc	Старт города: {0} монет	City start: {0} coins
+shop.free_managers.name	Опытные менеджеры	Seasoned managers
+shop.free_managers.desc	Бесплатных менеджеров: {0}	Free managers: {0}
+shop.fast_customers.name	Быстрые клиенты	Fast customers
+shop.fast_customers.desc	Циклы станций быстрее на {0}	Station cycles faster by {0}
