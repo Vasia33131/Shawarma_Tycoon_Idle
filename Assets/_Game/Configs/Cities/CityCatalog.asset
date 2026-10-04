@@ -15,3 +15,6 @@ MonoBehaviour:
   _cities:
   - {fileID: 11400000, guid: 9839bf6e20954771a8e2dfa291909312, type: 2}
   - {fileID: 11400000, guid: 9f9dbf61bf714a83a84d0b2e910b85ab, type: 2}
+  - {fileID: 11400000, guid: 180bb695d3a20172499a90345f3a4d3b, type: 2}
+  - {fileID: 11400000, guid: f740bb6b95dd855c30f64f94c887b231, type: 2}
+  - {fileID: 11400000, guid: 17c61d71c296d61dad3d4594e565f48a, type: 2}

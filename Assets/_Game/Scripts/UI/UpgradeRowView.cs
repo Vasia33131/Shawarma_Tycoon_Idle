@@ -12,7 +12,7 @@ namespace ShaurmaTycoon.UI
     /// <summary>
     /// Строка улучшения: «Станция: доход ×3» и кнопка покупки. Купленное улучшение прячется.
     /// </summary>
-    public sealed class UpgradeRowView : MonoBehaviour
+    public sealed class UpgradeRowView : MonoBehaviour, ISceneBinding
     {
         [SerializeField] private Image _icon = null;
         [SerializeField] private TMP_Text _iconLabel = null;
@@ -29,6 +29,7 @@ namespace ShaurmaTycoon.UI
 
         public void Bind(int index, UpgradeService upgrades, StationController stations, Wallet wallet, Loc loc)
         {
+            SceneBindings.Track(this);
             _index = index;
             _upgrades = upgrades;
             _stations = stations;
@@ -47,6 +48,11 @@ namespace ShaurmaTycoon.UI
         }
 
         private void OnDestroy()
+        {
+            Unbind();
+        }
+
+        public void Unbind()
         {
             if (_wallet == null)
                 return;

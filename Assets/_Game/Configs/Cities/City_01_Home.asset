@@ -46,3 +46,4 @@ MonoBehaviour:
   _valueScale: 1
   _skyColor: {r: 1, g: 0.87, b: 0.68, a: 1}
   _boothColor: {r: 0.85, g: 0.3, b: 0.2, a: 1}
+  _mapPosition: {x: 0.08, y: 0.25}

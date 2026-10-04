@@ -56,8 +56,7 @@ station.chak_chak	Чак-чак	Chak-Chak
 station.katyk_tea	Катык и чай	Katyk & Tea
 station.kazan_xl	Шаурма «Казан XL»	Kazan XL Shawarma
 station.plov_plate	Плов-тарелка	Plov Plate
-prestige.city_label	Город: {0}	City: {0}
-prestige.earned_label	Заработано в этом городе	Earned in this city
+prestige.earned_progress	Заработано: {0}	Earned: {0}
 prestige.gain	Репутация за переезд: +{0}	Reputation for moving: +{0}
 prestige.bonus	Бонус репутации к доходу: +{0}%	Reputation income bonus: +{0}%
 prestige.reputation	Свободная репутация: {0}	Free reputation: {0}
@@ -81,3 +80,53 @@ shop.free_managers.name	Опытные менеджеры	Seasoned managers
 shop.free_managers.desc	Бесплатных менеджеров: {0}	Free managers: {0}
 shop.fast_customers.name	Быстрые клиенты	Fast customers
 shop.fast_customers.desc	Циклы станций быстрее на {0}	Station cycles faster by {0}
+map.title	Карта филиалов	Branch map
+map.here	Вы здесь	You are here
+map.status_done	Филиал открыт	Branch open
+map.status_current	Вы здесь	You are here
+map.status_next	Следующая цель	Next goal
+map.status_locked	Пока закрыт	Locked for now
+map.details	порог {0} · цены и доход ×{1}	goal {0} · prices & income ×{1}
+kiosk.upgraded	Ларёк преобразился!	Kiosk upgraded!
+city.sochi	Сочи	Sochi
+station.beach_shawarma	Пляжная шаурма	Beach Shawarma
+station.corn_cob	Варёная кукуруза	Boiled Corn
+station.churchkhela	Чурчхела	Churchkhela
+station.fresh_lemonade	Домашний лимонад	Homemade Lemonade
+station.resort_xl	Шаурма «Курорт XL»	Resort XL Shawarma
+station.shashlik_plate	Шашлык на углях	Charcoal Shashlik
+city.piter	Санкт-Петербург	Saint Petersburg
+station.piter_shaverma	Питерская шаверма	Petersburg Shaverma
+station.pyshki	Пышки с сахаром	Sugar Doughnuts
+station.koryushka_wrap	Лаваш с корюшкой	Smelt Wrap
+station.bread_kvass	Хлебный квас	Bread Kvass
+station.bridges_xl	Шаверма «Мосты XL»	Bridges XL Shaverma
+station.blini_plate	Блины с икрой	Blini with Caviar
+city.moscow	Москва	Moscow
+station.capital_shawarma	Столичная шаурма	Capital Shawarma
+station.pelmeni	Пельмени	Pelmeni
+station.sbiten	Горячий сбитень	Hot Sbiten
+station.kebab_box	Кебаб-бокс	Kebab Box
+station.city_xl	Шаурма «Сити XL»	City XL Shawarma
+station.business_lunch	Бизнес-ланч	Business Lunch
+settings.title	Настройки	Settings
+settings.sound	Звуки	Sounds
+settings.music	Музыка	Music
+settings.on	Вкл	On
+settings.off	Выкл	Off
+settings.close	Готово	Done
+bills.name	Купюры	Bills
+tab.shop	Магазин	Shop
+shop.bills_title	Купюры	Bills
+shop.coins_title	Монеты за купюры	Coins for bills
+shop.bills_small	Пачка купюр	Stack of bills
+shop.bills_medium	Кошелёк	Wallet
+shop.bills_large	Сейф	Safe
+shop.coins_small	Мешочек монет	Pouch of coins
+shop.coins_medium	Мешок монет	Bag of coins
+shop.coins_large	Сундук монет	Chest of coins
+shop.bills_amount	+{0} купюр	+{0} bills
+shop.coins_reward	+{0} монет	+{0} coins
+shop.price_yan	{0} ян	{0} YAN
+shop.price_bills	{0} купюр	{0} bills
+shop.best	Выгодно!	Best value!

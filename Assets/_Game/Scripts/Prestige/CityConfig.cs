@@ -6,7 +6,7 @@ using UnityEngine;
 namespace ShaurmaTycoon.Prestige
 {
     /// <summary>
-    /// Город (GDD §7): станции и улучшения, порог престижа, масштаб значений и цвета ларька.
+    /// Город (GDD §7): станции и улучшения, порог престижа, масштаб значений, цвета ларька и место на карте.
     /// </summary>
     [CreateAssetMenu(menuName = "ShaurmaTycoon/City Config", fileName = "City_")]
     public sealed class CityConfig : ScriptableObject
@@ -27,6 +27,10 @@ namespace ShaurmaTycoon.Prestige
         [SerializeField] private Color _skyColor = new Color(1f, 0.87f, 0.68f);
         [SerializeField] private Color _boothColor = new Color(0.85f, 0.30f, 0.20f);
 
+        [Header("Map")]
+        [Tooltip("Точка города на карте во вкладке «Город»: доли ширины и высоты карты, (0, 0) — левый нижний угол.")]
+        [SerializeField] private Vector2 _mapPosition = new Vector2(0.5f, 0.5f);
+
         public string Id => _id;
         public string NameKey => _nameKey;
         public IReadOnlyList<StationConfig> Stations => _stations;
@@ -35,6 +39,7 @@ namespace ShaurmaTycoon.Prestige
         public double ValueScale => _valueScale;
         public Color SkyColor => _skyColor;
         public Color BoothColor => _boothColor;
+        public Vector2 MapPosition => _mapPosition;
 
         private void OnValidate()
         {
@@ -42,6 +47,7 @@ namespace ShaurmaTycoon.Prestige
                 _prestigeThreshold = 1;
             if (_valueScale < 0)
                 _valueScale = 0;
+            _mapPosition = new Vector2(Mathf.Clamp01(_mapPosition.x), Mathf.Clamp01(_mapPosition.y));
         }
     }
 }

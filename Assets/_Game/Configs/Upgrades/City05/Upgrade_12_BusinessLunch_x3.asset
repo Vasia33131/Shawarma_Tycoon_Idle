@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 37df7f5318d141e9afa7fd2848a48e22, type: 3}
+  m_Name: Upgrade_12_BusinessLunch_x3
+  m_EditorClassIdentifier: 
+  _id: business_lunch_x3_1
+  _cost: 3110400000000
+  _targetStation: {fileID: 11400000, guid: aa51a90cdb3060718445ed52d18bf976, type: 2}
+  _incomeMultiplier: 3

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using ShaurmaTycoon.Core;
 using ShaurmaTycoon.Economy;
 using ShaurmaTycoon.Localization;
@@ -9,16 +10,16 @@ using UnityEngine.UI;
 namespace ShaurmaTycoon.UI
 {
     /// <summary>
-    /// Вкладка «Город» (GDD §7): прогресс к порогу, прогноз репутации, бонус к доходу,
-    /// кнопка перехода в новый город и магазин репутации.
+    /// Вкладка «Город» (GDD §7): карта филиалов, под ней на той же карточке — прогресс к порогу,
+    /// прогноз репутации, бонус к доходу и кнопка перехода в новый город; ниже — магазин репутации.
     /// Динамические тексты — 4 раза в секунду и без аллокаций (NumberText).
     /// </summary>
-    public sealed class CityPanel : MonoBehaviour, ITickable
+    public sealed class CityPanel : MonoBehaviour, ITickable, ISceneBinding
     {
         private const float RefreshInterval = 0.25f;
 
         [Header("City")]
-        [SerializeField] private TMP_Text _cityNameText = null;
+        [SerializeField] private CityMapView _map = null;
         [SerializeField] private RectTransform _progressFill = null;
         [SerializeField] private TMP_Text _progressText = null;
         [SerializeField] private TMP_Text _gainText = null;
@@ -40,8 +41,8 @@ namespace ShaurmaTycoon.UI
         private PrestigeController _controller;
         private PrestigeState _state;
         private Loc _loc;
-        private CityConfig _city;
         private CityConfig _nextCity;
+        private LocTemplate _earnedTemplate;
         private LocTemplate _gainTemplate;
         private LocTemplate _bonusTemplate;
         private LocTemplate _reputationTemplate;
@@ -53,14 +54,19 @@ namespace ShaurmaTycoon.UI
         private double _shownMultiplier = double.NaN;
         private bool _shownCanPrestige;
 
-        public void Bind(PrestigeController controller, ReputationShop shop, PrestigeState state, CityConfig city,
-            CityConfig nextCity, Loc loc, double baseOfflineHours)
+        /// <param name="cities">Все города по порядку (для карты); текущий — controller.CityIndex.</param>
+        public void Bind(PrestigeController controller, ReputationShop shop, PrestigeState state, IReadOnlyList<CityConfig> cities,
+            Loc loc, double baseOfflineHours)
         {
+            SceneBindings.Track(this);
+            CityConfig city = cities[controller.CityIndex];
+            CityConfig nextCity = cities[controller.NextCityIndex];
+
             _controller = controller;
             _state = state;
             _loc = loc;
-            _city = city;
-            _nextCity = nextCity != null ? nextCity : city;
+            _nextCity = nextCity;
+            _earnedTemplate = loc.GetTemplate("prestige.earned_progress");
             _gainTemplate = loc.GetTemplate("prestige.gain");
             _bonusTemplate = loc.GetTemplate("prestige.bonus");
             _reputationTemplate = loc.GetTemplate("prestige.reputation");
@@ -72,6 +78,7 @@ namespace ShaurmaTycoon.UI
                 row.Bind(i, shop, state, loc, baseOfflineHours, city.ValueScale);
             }
 
+            _map.Bind(cities, controller.CityIndex, loc);
             _prestigeButton.onClick.AddListener(OnPrestigeClicked);
             _loc.LanguageChanged += RefreshStatic;
             _state.Changed += ForceRefresh;
@@ -79,6 +86,11 @@ namespace ShaurmaTycoon.UI
         }
 
         private void OnDestroy()
+        {
+            Unbind();
+        }
+
+        public void Unbind()
         {
             if (_loc == null)
                 return;
@@ -103,7 +115,6 @@ namespace ShaurmaTycoon.UI
 
         private void RefreshStatic()
         {
-            _cityNameText.text = _loc.Format("prestige.city_label", _loc.Get(_city.NameKey));
             _prestigeButtonText.text = _loc.Format(_controller.IsLastCity ? "prestige.go_same" : "prestige.go_next",
                 _loc.Get(_nextCity.NameKey));
             ForceRefresh();
@@ -121,7 +132,9 @@ namespace ShaurmaTycoon.UI
             {
                 _shownEarned = earned;
                 _progressFill.anchorMax = new Vector2((float)_controller.Progress, 1f);
-                _progressText.SetNumberText(_progressBuilder.Clear().AppendNumber(earned).Append(" / ").AppendNumber(_controller.Threshold));
+                _map.SetProgress((float)_controller.Progress);
+                _progressText.SetNumberText(_progressBuilder.Clear().Append(_earnedTemplate.Prefix).AppendNumber(earned)
+                    .Append(" / ").AppendNumber(_controller.Threshold).Append(_earnedTemplate.Suffix));
             }
 
             long gain = _controller.ForecastGain;

@@ -28,12 +28,16 @@ namespace ShaurmaTycoon.Save
         {
             if (!(data.Coins >= 0) || double.IsInfinity(data.Coins))
                 data.Coins = 0;
+            if (data.Bills < 0)
+                data.Bills = 0;
             if (data.SavedAtUtcTicks < 0)
                 data.SavedAtUtcTicks = 0;
 
             data.Stations = NormalizeStations(data.Stations);
             data.PurchasedUpgrades = NormalizeIds(data.PurchasedUpgrades);
             data.Prestige = NormalizePrestige(data.Prestige);
+            if (data.Settings == null)
+                data.Settings = new SettingsSave();
         }
 
         private static PrestigeSave NormalizePrestige(PrestigeSave prestige)

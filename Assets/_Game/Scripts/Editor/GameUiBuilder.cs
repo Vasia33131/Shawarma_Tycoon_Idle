@@ -5,6 +5,7 @@ using ShaurmaTycoon.Core.Audio;
 using ShaurmaTycoon.Customers;
 using ShaurmaTycoon.Localization;
 using ShaurmaTycoon.Prestige;
+using ShaurmaTycoon.Shop;
 using ShaurmaTycoon.UI;
 using TMPro;
 using UnityEditor;
@@ -29,6 +30,9 @@ namespace ShaurmaTycoon.EditorTools
         private const string ScreenName = "GameScreen";
         private const string CityCatalogPath = "Assets/_Game/Configs/Cities/CityCatalog.asset";
         private const string ShopRowPrefabPath = PrefabFolder + "/ShopItemRow.prefab";
+        private const string MapNodePrefabPath = PrefabFolder + "/CityMapNode.prefab";
+        private const string RoadDotPrefabPath = PrefabFolder + "/RoadDot.prefab";
+        private const string BillShopRowPrefabPath = PrefabFolder + "/BillShopRow.prefab";
 
         private const float HudHeight = 200f;
         private const float TabBarHeight = 180f;
@@ -37,7 +41,9 @@ namespace ShaurmaTycoon.EditorTools
         private const float UpgradeRowHeight = 160f;
         private const float HeaderHeight = 110f;
         private const float ShopRowHeight = 170f;
-        private const float CityCardHeight = 470f;
+        private const float CityCardHeight = 910f;
+        private const float MapHeight = 560f;
+        private const int KioskDecorCount = 6;
         private const float GroundRatio = 0.2f;
         private const int CustomerPoolSize = 9;
         private const int CoinPoolSize = 24;
@@ -66,6 +72,12 @@ namespace ShaurmaTycoon.EditorTools
         private static readonly Color Gold = new Color(1f, 0.80f, 0.20f);
         private static readonly Color LightGold = new Color(1f, 0.90f, 0.60f);
         private static readonly Color Muted = new Color(0.45f, 0.35f, 0.28f);
+        private static readonly Color LeafDark = new Color(0.20f, 0.52f, 0.24f);
+        private static readonly Color BillGreen = new Color(0.25f, 0.62f, 0.33f);
+        private static readonly Color BillLight = new Color(0.72f, 0.90f, 0.70f);
+        private static readonly Color Land = new Color(0.85f, 0.91f, 0.70f);
+        private static readonly Color Hill = new Color(0.76f, 0.85f, 0.58f);
+        private static readonly Color Water = new Color(0.62f, 0.82f, 0.95f);
 
         private static Sprite _roundSprite;
         private static Sprite _circleSprite;
@@ -84,7 +96,8 @@ namespace ShaurmaTycoon.EditorTools
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
                 return;
 
-            ContentSetup.EnsureAll(out AudioConfig audioConfig, out CustomerConfig customerConfig, out ReputationShopConfig shopConfig);
+            ContentSetup.EnsureAll(out AudioConfig audioConfig, out MusicConfig musicConfig, out CustomerConfig customerConfig,
+                out ReputationShopConfig shopConfig, out BillShopConfig billShopConfig);
             _font = TMP_Settings.defaultFontAsset;
             _roundSprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
             _circleSprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
@@ -110,7 +123,7 @@ namespace ShaurmaTycoon.EditorTools
             if (debugLabel != null)
                 Object.DestroyImmediate(debugLabel.gameObject);
 
-            AssignInstallerConfigs(scene, audioConfig, customerConfig, shopConfig);
+            AssignInstallerConfigs(scene, audioConfig, musicConfig, customerConfig, shopConfig, billShopConfig);
 
             StationRowView rowPrefab = BuildRowPrefab();
             BuildScreen(canvas, rowPrefab, BuildManagerRowPrefab(), BuildUpgradeRowPrefab(), BuildShopRowPrefab());
@@ -120,7 +133,8 @@ namespace ShaurmaTycoon.EditorTools
             Debug.Log("[Build Game UI] Done");
         }
 
-        private static void AssignInstallerConfigs(Scene scene, AudioConfig audio, CustomerConfig customers, ReputationShopConfig shop)
+        private static void AssignInstallerConfigs(Scene scene, AudioConfig audio, MusicConfig music, CustomerConfig customers,
+            ReputationShopConfig shop, BillShopConfig billShop)
         {
             GameObject installerObject = FindRoot(scene, nameof(GameSceneInstaller));
             GameSceneInstaller installer = installerObject != null ? installerObject.GetComponent<GameSceneInstaller>() : null;
@@ -132,6 +146,8 @@ namespace ShaurmaTycoon.EditorTools
 
             var so = new SerializedObject(installer);
             Set(so, "_audio", audio);
+            Set(so, "_music", music);
+            Set(so, "_billShop", billShop);
             Set(so, "_customers", customers);
             Set(so, "_shop", shop);
             Set(so, "_cities", AssetDatabase.LoadAssetAtPath<CityCatalog>(CityCatalogPath));
@@ -358,11 +374,13 @@ namespace ShaurmaTycoon.EditorTools
             ManagersPanel managersPanel = BuildManagersPanel(content.transform, managerRowPrefab);
             UpgradesPanel upgradesPanel = BuildUpgradesPanel(content.transform, upgradeRowPrefab);
             CityPanel cityPanel = BuildCityPanel(content.transform, shopRowPrefab);
+            ShopPanel shopPanel = BuildShopPanel(content.transform);
 
             HudView hud = BuildHud(screen.transform);
             TabBar tabBar = BuildTabBar(screen.transform, out Button[] tabButtons);
             OfflineIncomePopup offlinePopup = BuildOfflinePopup(screen.transform);
             PrestigeConfirmPopup prestigePopup = BuildPrestigePopup(screen.transform);
+            SettingsPopup settingsPopup = BuildSettingsPopup(screen.transform, hud.transform);
             var cityPanelSo = new SerializedObject(cityPanel);
             Set(cityPanelSo, "_confirmPopup", prestigePopup);
             cityPanelSo.ApplyModifiedPropertiesWithoutUndo();
@@ -370,7 +388,8 @@ namespace ShaurmaTycoon.EditorTools
 
             var tabSo = new SerializedObject(tabBar);
             SetArray(tabSo, "_buttons", tabButtons);
-            SetArray(tabSo, "_panels", stationsPanel.gameObject, managersPanel.gameObject, upgradesPanel.gameObject, cityPanel.gameObject);
+            SetArray(tabSo, "_panels", stationsPanel.gameObject, managersPanel.gameObject, upgradesPanel.gameObject, cityPanel.gameObject,
+                shopPanel.gameObject);
             tabSo.ApplyModifiedPropertiesWithoutUndo();
 
             var screenSo = new SerializedObject(gameScreen);
@@ -380,6 +399,10 @@ namespace ShaurmaTycoon.EditorTools
             Set(screenSo, "_upgradesPanel", upgradesPanel);
             Set(screenSo, "_cityPanel", cityPanel);
             Set(screenSo, "_prestigePopup", prestigePopup);
+            Set(screenSo, "_settingsPopup", settingsPopup);
+            Set(screenSo, "_shopPanel", shopPanel);
+            Set(screenSo, "_tabBar", tabBar);
+            screenSo.FindProperty("_shopTabIndex").intValue = 4;
             Set(screenSo, "_kiosk", kioskView);
             Set(screenSo, "_customers", customers);
             Set(screenSo, "_coinFly", coinFly);
@@ -585,7 +608,18 @@ namespace ShaurmaTycoon.EditorTools
             TMP_Text signText = AddLocalizedText(sign.transform, "Text", "game.title", 40, DarkBrown, bold: true);
             Stretch(signText.gameObject, new Vector2(16f, 4f), new Vector2(-16f, -4f));
 
+            // Лампы над вывеской — «звёзды» ларька, по одной за менеджера.
+            GameObject lampRow = CreateUi("Lamps", booth.transform);
+            SetRect(lampRow, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 378f), new Vector2(230f, 28f));
+            var lamps = new Object[KioskDecorCount];
+            for (int i = 0; i < lamps.Length; i++)
+                lamps[i] = Part(lampRow.transform, "Lamp_" + i, new Vector2(-95f + 38f * i, 0f), new Vector2(28f, 28f), WindowDark, _circleSprite, sliced: false);
+
+            RectTransform[] decor = BuildKioskDecor(area, tinted);
+
             var so = new SerializedObject(kioskView);
+            SetArray(so, "_managerDecor", decor);
+            SetArray(so, "_levelLamps", lamps);
             Set(so, "_seller", sellerImage);
             Set(so, "_spit", spit.transform);
             SetArray(so, "_spitStripes", stripes);
@@ -594,6 +628,107 @@ namespace ShaurmaTycoon.EditorTools
             SetArray(so, "_boothTinted", tinted.ToArray());
             so.ApplyModifiedPropertiesWithoutUndo();
             return kioskView;
+        }
+
+        /// <summary>
+        /// Украшения ларька по числу менеджеров (KioskView._managerDecor): гирлянда, меню-доска, столик под зонтом,
+        /// рамка вывески, цветы, флаги. Все стоят на земле — растут при появлении снизу вверх.
+        /// </summary>
+        private static RectTransform[] BuildKioskDecor(Transform area, List<Object> tinted)
+        {
+            var decor = new RectTransform[KioskDecorCount];
+
+            GameObject garland = DecorRoot(area, "Decor_1_Garland", new Vector2(0f, 214f), new Vector2(640f, 34f));
+            Color[] bulbs = { Gold, Green, Reputation, Orange, AwningWhite };
+            for (int i = 0; i < 11; i++)
+            {
+                float x = -300f + 60f * i;
+                float sag = 12f * (1f - (x / 300f) * (x / 300f));
+                Part(garland.transform, "Bulb_" + i, new Vector2(x, 12f - sag), new Vector2(20f, 20f), bulbs[i % bulbs.Length], _circleSprite, sliced: false);
+            }
+            decor[0] = (RectTransform)garland.transform;
+
+            GameObject menu = DecorRoot(area, "Decor_2_MenuBoard", new Vector2(-440f, 0f), new Vector2(150f, 220f));
+            Part(menu.transform, "LegLeft", new Vector2(-45f, 0f), new Vector2(10f, 80f), Wood, null);
+            Part(menu.transform, "LegRight", new Vector2(45f, 0f), new Vector2(10f, 80f), Wood, null);
+            Image board = Part(menu.transform, "Board", new Vector2(0f, 70f), new Vector2(150f, 140f), Wood, _roundSprite);
+            Image slate = Part(board.transform, "Slate", new Vector2(0f, 8f), new Vector2(134f, 124f), WindowDark, _roundSprite);
+            Part(slate.transform, "Title", new Vector2(0f, 94f), new Vector2(100f, 18f), Gold, _roundSprite);
+            for (int i = 0; i < 3; i++)
+            {
+                Part(slate.transform, "Line_" + i, new Vector2(-12f, 64f - 24f * i), new Vector2(76f, 8f), AwningWhite, null);
+                Part(slate.transform, "Price_" + i, new Vector2(46f, 61f - 24f * i), new Vector2(14f, 14f), Gold, _circleSprite, sliced: false);
+            }
+            decor[1] = (RectTransform)menu.transform;
+
+            GameObject table = DecorRoot(area, "Decor_3_Table", new Vector2(435f, 0f), new Vector2(200f, 250f));
+            Part(table.transform, "Pole", Vector2.zero, new Vector2(8f, 206f), Steel, null);
+            Image canopy = Part(table.transform, "Canopy", new Vector2(0f, 196f), new Vector2(200f, 48f), Orange, _roundSprite);
+            Part(canopy.transform, "Stripe", Vector2.zero, new Vector2(50f, 48f), AwningWhite, null);
+            Part(table.transform, "Top", new Vector2(0f, 74f), new Vector2(150f, 14f), Wood, _roundSprite);
+            Part(table.transform, "Cup", new Vector2(34f, 88f), new Vector2(18f, 24f), AwningWhite, _roundSprite);
+            for (int side = -1; side <= 1; side += 2)
+            {
+                Part(table.transform, side < 0 ? "StoolLegLeft" : "StoolLegRight", new Vector2(70f * side, 0f), new Vector2(8f, 44f), Wood, null);
+                Part(table.transform, side < 0 ? "StoolLeft" : "StoolRight", new Vector2(70f * side, 40f), new Vector2(46f, 12f), Brown, _roundSprite);
+            }
+            decor[2] = (RectTransform)table.transform;
+
+            GameObject frame = DecorRoot(area, "Decor_4_SignFrame", new Vector2(0f, 297f), new Vector2(484f, 80f));
+            Part(frame.transform, "Bottom", Vector2.zero, new Vector2(484f, 7f), Orange, null);
+            Part(frame.transform, "Top", new Vector2(0f, 73f), new Vector2(484f, 7f), Orange, null);
+            Part(frame.transform, "Left", new Vector2(-238.5f, 0f), new Vector2(7f, 80f), Orange, null);
+            Part(frame.transform, "Right", new Vector2(238.5f, 0f), new Vector2(7f, 80f), Orange, null);
+            for (int i = 0; i < 4; i++)
+                Part(frame.transform, "Bulb_" + i, new Vector2(i % 2 == 0 ? -242f : 242f, i < 2 ? -6f : 66f), new Vector2(18f, 18f), Gold, _circleSprite, sliced: false);
+            decor[3] = (RectTransform)frame.transform;
+
+            // Слева — куст между ларьком и меню, справа — горшок поменьше: дальше стоит столик.
+            GameObject plants = DecorRoot(area, "Decor_5_Plants", Vector2.zero, new Vector2(740f, 150f));
+            BuildPlant(plants.transform, "Left", -318f, 100f, 64f);
+            BuildPlant(plants.transform, "Right", 300f, 72f, 50f);
+            decor[4] = (RectTransform)plants.transform;
+
+            GameObject flags = DecorRoot(area, "Decor_6_Flags", new Vector2(0f, 292f), new Vector2(640f, 120f));
+            for (int side = -1; side <= 1; side += 2)
+            {
+                string suffix = side < 0 ? "Left" : "Right";
+                Part(flags.transform, "Pole" + suffix, new Vector2(262f * side, 0f), new Vector2(6f, 112f), Steel, null);
+                tinted.Add(Part(flags.transform, "Flag" + suffix, new Vector2(292f * side, 72f), new Vector2(56f, 36f), BoothRed, null));
+                Part(flags.transform, "Tip" + suffix, new Vector2(262f * side, 106f), new Vector2(14f, 14f), Gold, _circleSprite, sliced: false);
+            }
+            decor[5] = (RectTransform)flags.transform;
+
+            foreach (RectTransform item in decor)
+                item.gameObject.SetActive(false);
+            return decor;
+        }
+
+        private static void BuildPlant(Transform parent, string suffix, float x, float leaves, float pot)
+        {
+            float side = Mathf.Sign(x);
+            Part(parent, "Leaves" + suffix, new Vector2(x, pot * 0.7f), new Vector2(leaves, leaves), Green, _circleSprite, sliced: false);
+            Part(parent, "LeavesTop" + suffix, new Vector2(x - 16f * side, pot * 0.7f + leaves * 0.6f), new Vector2(leaves * 0.56f, leaves * 0.56f),
+                LeafDark, _circleSprite, sliced: false);
+            Part(parent, "Pot" + suffix, new Vector2(x, 0f), new Vector2(pot, pot * 0.85f), Brown, _roundSprite);
+        }
+
+        // Корень украшения: стоит на земле (якорь — линия земли по центру), pivot снизу.
+        private static GameObject DecorRoot(Transform area, string name, Vector2 position, Vector2 size)
+        {
+            GameObject root = CreateUi(name, area);
+            SetRect(root, new Vector2(0.5f, GroundRatio), new Vector2(0.5f, GroundRatio), new Vector2(0.5f, 0f), position, size);
+            return root;
+        }
+
+        // Деталь рисунка: позиция — от середины нижнего края родителя до середины нижнего края детали.
+        private static Image Part(Transform parent, string name, Vector2 position, Vector2 size, Color color, Sprite sprite, bool sliced = true)
+        {
+            GameObject go = CreateUi(name, parent);
+            SetRect(go, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), position, size);
+            Image image = AddImage(go, color, sprite, sliced);
+            image.raycastTarget = false;
+            return image;
         }
 
         private static CustomerQueue BuildStreet(Transform area, KioskView kiosk)
@@ -764,22 +899,20 @@ namespace ShaurmaTycoon.EditorTools
 
         private static CityPanel BuildCityPanel(Transform parent, ShopItemRowView shopRowPrefab)
         {
-            GameObject panel = BuildListPanel(parent, "CityPanel", "tab.city", out _, out RectTransform list);
+            GameObject panel = BuildListPanel(parent, "CityPanel", "map.title", out _, out RectTransform list);
             var cityPanel = panel.AddComponent<CityPanel>();
 
+            // Одна карточка: карта филиалов, под ней прогресс к следующему городу и кнопка перехода.
             GameObject card = CreateUi("CityCard", list);
             ((RectTransform)card.transform).sizeDelta = new Vector2(1000f, CityCardHeight);
             AddImage(card, RowColor, _roundSprite);
             card.AddComponent<LayoutElement>().preferredHeight = CityCardHeight;
 
-            TMP_Text cityName = AddText(card.transform, "CityName", "", 46, DarkBrown, TextAlignmentOptions.Left, bold: true, autoSize: true);
-            SetCardLine(cityName.gameObject, -24f, 60f);
-            TMP_Text earnedLabel = AddLocalizedText(card.transform, "EarnedLabel", "prestige.earned_label", 30, Muted, bold: false);
-            earnedLabel.alignment = TextAlignmentOptions.Left;
-            SetCardLine(earnedLabel.gameObject, -92f, 40f);
+            CityMapView map = BuildCityMap(card.transform);
 
+            float infoTop = -(20f + MapHeight + 22f);
             GameObject bar = CreateUi("ProgressBar", card.transform);
-            SetCardLine(bar, -140f, 56f);
+            SetCardLine(bar, infoTop, 60f);
             AddImage(bar, BarBack, _roundSprite).raycastTarget = false;
             GameObject fill = CreateUi("Fill", bar.transform);
             var fillRect = (RectTransform)fill.transform;
@@ -792,11 +925,11 @@ namespace ShaurmaTycoon.EditorTools
             Stretch(progress.gameObject, new Vector2(16f, 0f), new Vector2(-16f, 0f));
 
             TMP_Text gain = AddText(card.transform, "GainText", "", 34, Reputation, TextAlignmentOptions.Left, bold: true, autoSize: true);
-            SetCardLine(gain.gameObject, -214f, 48f);
-            TMP_Text bonus = AddText(card.transform, "BonusText", "", 32, DarkBrown, TextAlignmentOptions.Left, autoSize: true);
-            SetCardLine(bonus.gameObject, -266f, 44f);
-            TMP_Text reputation = AddText(card.transform, "ReputationText", "", 32, DarkBrown, TextAlignmentOptions.Left, autoSize: true);
-            SetCardLine(reputation.gameObject, -314f, 44f);
+            SetCardLine(gain.gameObject, infoTop - 70f, 48f);
+            TMP_Text bonus = AddText(card.transform, "BonusText", "", 30, DarkBrown, TextAlignmentOptions.Left, autoSize: true);
+            SetRect(bonus.gameObject, new Vector2(0f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, 1f), new Vector2(30f, infoTop - 122f), new Vector2(-40f, 44f));
+            TMP_Text reputation = AddText(card.transform, "ReputationText", "", 30, DarkBrown, TextAlignmentOptions.Right, autoSize: true);
+            SetRect(reputation.gameObject, new Vector2(0.5f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-30f, infoTop - 122f), new Vector2(-40f, 44f));
 
             GameObject prestige = CreateUi("PrestigeButton", card.transform);
             SetRect(prestige, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 24f), new Vector2(-60f, 100f));
@@ -813,7 +946,7 @@ namespace ShaurmaTycoon.EditorTools
             Stretch(shopTitleText.gameObject, new Vector2(10f, 0f), new Vector2(-10f, 0f));
 
             var so = new SerializedObject(cityPanel);
-            Set(so, "_cityNameText", cityName);
+            Set(so, "_map", map);
             Set(so, "_progressFill", fillRect);
             Set(so, "_progressText", progress);
             Set(so, "_gainText", gain);
@@ -827,6 +960,128 @@ namespace ShaurmaTycoon.EditorTools
 
             panel.SetActive(false);
             return cityPanel;
+        }
+
+        /// <summary>
+        /// Карта: «земля» с озером, холмами и деревьями, плашка выбранного города сверху и область,
+        /// в которую CityMapView ставит города и дорогу (якорями по CityConfig.MapPosition).
+        /// </summary>
+        private static CityMapView BuildCityMap(Transform card)
+        {
+            const float sideInset = 60f;
+            const float bottomInset = 50f;
+            const float bannerHeight = 92f;
+            const float topInset = bannerHeight + 32f;
+
+            GameObject frame = CreateUi("Map", card);
+            SetRect(frame, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -20f), new Vector2(-40f, MapHeight));
+            AddImage(frame, Land, _roundSprite).raycastTarget = false;
+            var map = frame.AddComponent<CityMapView>();
+
+            // Пейзаж — в свободных местах между городами (позиции в долях карты).
+            MapBlob(frame.transform, "Hill_0", new Vector2(0.22f, 0.55f), new Vector2(260f, 120f), Hill);
+            MapBlob(frame.transform, "Hill_1", new Vector2(0.62f, 0.45f), new Vector2(240f, 110f), Hill);
+            MapBlob(frame.transform, "Lake", new Vector2(0.50f, 0.72f), new Vector2(190f, 80f), Water);
+            var trees = new[]
+            {
+                new Vector2(0.05f, 0.70f), new Vector2(0.11f, 0.76f), new Vector2(0.88f, 0.70f), new Vector2(0.94f, 0.62f),
+                new Vector2(0.29f, 0.10f), new Vector2(0.33f, 0.16f), new Vector2(0.71f, 0.10f), new Vector2(0.76f, 0.15f),
+            };
+            for (int i = 0; i < trees.Length; i++)
+                MapBlob(frame.transform, "Tree_" + i, trees[i], new Vector2(46f, 46f), i % 2 == 0 ? Green : LeafDark);
+
+            GameObject area = CreateUi("Area", frame.transform);
+            Stretch(area, new Vector2(sideInset, bottomInset), new Vector2(-sideInset, -topInset));
+
+            GameObject traveler = CreateUi("Traveler", area.transform);
+            SetRect(traveler, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(80f, 70f));
+            Part(traveler.transform, "Body", new Vector2(0f, 26f), new Vector2(70f, 38f), Orange, _roundSprite);
+            Part(traveler.transform, "Window", new Vector2(20f, 44f), new Vector2(20f, 14f), AwningWhite, _roundSprite);
+            Part(traveler.transform, "WheelBack", new Vector2(-20f, 16f), new Vector2(20f, 20f), DarkBrown, _circleSprite, sliced: false);
+            Part(traveler.transform, "WheelFront", new Vector2(20f, 16f), new Vector2(20f, 20f), DarkBrown, _circleSprite, sliced: false);
+
+            GameObject banner = CreateUi("SelectedCity", frame.transform);
+            SetRect(banner, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -12f), new Vector2(-24f, bannerHeight));
+            AddImage(banner, new Color(Cream.r, Cream.g, Cream.b, 0.92f), _roundSprite).raycastTarget = false;
+            TMP_Text selectedName = AddText(banner.transform, "Name", "", 38, DarkBrown, TextAlignmentOptions.Left, bold: true, autoSize: true);
+            SetRect(selectedName.gameObject, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -6f), new Vector2(-48f, 46f));
+            TMP_Text selectedInfo = AddText(banner.transform, "Info", "", 28, Muted, TextAlignmentOptions.Left, autoSize: true);
+            SetRect(selectedInfo.gameObject, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -50f), new Vector2(-48f, 36f));
+
+            var so = new SerializedObject(map);
+            Set(so, "_area", area.transform);
+            Set(so, "_nodePrefab", BuildMapNodePrefab());
+            Set(so, "_roadDotPrefab", BuildRoadDotPrefab());
+            Set(so, "_traveler", traveler.transform);
+            Set(so, "_selectedNameText", selectedName);
+            Set(so, "_selectedInfoText", selectedInfo);
+            // Размер области карты в портрете: карточка 1040 − поля карты 40 − отступы области.
+            so.FindProperty("_referenceSize").vector2Value = new Vector2(1000f - 2f * sideInset, MapHeight - bottomInset - topInset);
+            so.ApplyModifiedPropertiesWithoutUndo();
+            return map;
+        }
+
+        // Пятно пейзажа (холм, озеро, дерево) в точке anchor карты.
+        private static void MapBlob(Transform frame, string name, Vector2 anchor, Vector2 size, Color color)
+        {
+            GameObject go = CreateUi(name, frame);
+            SetRect(go, anchor, anchor, new Vector2(0.5f, 0.5f), Vector2.zero, size);
+            AddImage(go, color, _circleSprite, sliced: false).raycastTarget = false;
+        }
+
+        private static CityMapNodeView BuildMapNodePrefab()
+        {
+            GameObject root = CreateUi("CityMapNode", null);
+            ((RectTransform)root.transform).sizeDelta = new Vector2(200f, 150f);
+            AddImage(root, new Color(1f, 1f, 1f, 0f), null);
+            Button button = AddButton(root, SoundId.Tap);
+            var view = root.AddComponent<CityMapNodeView>();
+
+            GameObject body = CreateUi("Body", root.transform);
+            SetRect(body, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(100f, 100f));
+
+            GameObject selection = CreateUi("Selection", body.transform);
+            SetRect(selection, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(128f, 128f));
+            AddImage(selection, Gold, _circleSprite, sliced: false).raycastTarget = false;
+
+            GameObject circle = CreateUi("Circle", body.transform);
+            SetRect(circle, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(100f, 100f));
+            Image circleImage = AddImage(circle, Green, _circleSprite, sliced: false);
+            circleImage.raycastTarget = false;
+            var pulse = circle.AddComponent<PulseEffect>();
+            TMP_Text number = AddText(circle.transform, "Number", "1", 50, Color.white, TextAlignmentOptions.Center, bold: true);
+            Stretch(number.gameObject, Vector2.zero, Vector2.zero);
+
+            GameObject pin = CreateUi("HerePin", body.transform);
+            SetRect(pin, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0f), new Vector2(0f, 58f), new Vector2(170f, 42f));
+            AddImage(pin, DarkBrown, _roundSprite).raycastTarget = false;
+            TMP_Text pinText = AddLocalizedText(pin.transform, "Label", "map.here", 26, Color.white, bold: true);
+            Stretch(pinText.gameObject, new Vector2(8f, 2f), new Vector2(-8f, -2f));
+
+            TMP_Text nameText = AddText(root.transform, "Name", "Город", 30, DarkBrown, TextAlignmentOptions.Center, bold: true, autoSize: true);
+            SetRect(nameText.gameObject, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 1f), new Vector2(0f, -62f), new Vector2(210f, 40f));
+            nameText.enableWordWrapping = false;
+
+            var so = new SerializedObject(view);
+            Set(so, "_button", button);
+            Set(so, "_circle", circleImage);
+            Set(so, "_numberText", number);
+            Set(so, "_nameText", nameText);
+            Set(so, "_selection", selection);
+            Set(so, "_herePin", pin);
+            Set(so, "_body", body.transform);
+            Set(so, "_pulse", pulse);
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            return SavePrefab(root, MapNodePrefabPath).GetComponent<CityMapNodeView>();
+        }
+
+        private static Image BuildRoadDotPrefab()
+        {
+            GameObject root = CreateUi("RoadDot", null);
+            ((RectTransform)root.transform).sizeDelta = new Vector2(16f, 16f);
+            AddImage(root, BarBack, _circleSprite, sliced: false).raycastTarget = false;
+            return SavePrefab(root, RoadDotPrefabPath).GetComponent<Image>();
         }
 
         // Строка карточки города: растянута по ширине с отступами 30, отсчёт сверху.
@@ -861,6 +1116,169 @@ namespace ShaurmaTycoon.EditorTools
             so.ApplyModifiedPropertiesWithoutUndo();
 
             return SavePrefab(root, ShopRowPrefabPath).GetComponent<ShopItemRowView>();
+        }
+
+        // ---------- Shop tab (bills) ----------
+
+        /// <summary>Вкладка «Магазин»: заголовок и группа паков купюр, заголовок и группа мешков монет (строки — в ShopPanel).</summary>
+        private static ShopPanel BuildShopPanel(Transform parent)
+        {
+            GameObject panel = BuildListPanel(parent, "ShopPanel", "tab.shop", out _, out RectTransform list);
+            var shopPanel = panel.AddComponent<ShopPanel>();
+
+            BuildSectionTitle(list, "BillsTitle", "shop.bills_title");
+            RectTransform billsGroup = BuildRowGroup(list, "BillsGroup");
+            BuildSectionTitle(list, "CoinsTitle", "shop.coins_title");
+            RectTransform coinsGroup = BuildRowGroup(list, "CoinsGroup");
+
+            var so = new SerializedObject(shopPanel);
+            Set(so, "_billsGroup", billsGroup);
+            Set(so, "_coinsGroup", coinsGroup);
+            Set(so, "_rowPrefab", BuildBillShopRowPrefab());
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            panel.SetActive(false);
+            return shopPanel;
+        }
+
+        private static void BuildSectionTitle(Transform list, string name, string key)
+        {
+            GameObject title = CreateUi(name, list);
+            title.AddComponent<LayoutElement>().preferredHeight = 70f;
+            TMP_Text text = AddLocalizedText(title.transform, "Title", key, 42, DarkBrown, bold: true);
+            text.alignment = TextAlignmentOptions.BottomLeft;
+            Stretch(text.gameObject, new Vector2(10f, 0f), new Vector2(-10f, 0f));
+        }
+
+        // Вложенный вертикальный список: его высота складывается из строк, которые добавит код.
+        private static RectTransform BuildRowGroup(Transform list, string name)
+        {
+            GameObject group = CreateUi(name, list);
+            var vertical = group.AddComponent<VerticalLayoutGroup>();
+            vertical.spacing = 16f;
+            vertical.childControlWidth = true;
+            vertical.childControlHeight = true;
+            vertical.childForceExpandWidth = true;
+            vertical.childForceExpandHeight = false;
+            return (RectTransform)group.transform;
+        }
+
+        private static BillShopRowView BuildBillShopRowPrefab()
+        {
+            GameObject root = CreateUi("BillShopRow", null);
+            ((RectTransform)root.transform).sizeDelta = new Vector2(1000f, ShopRowHeight);
+            AddImage(root, RowColor, _roundSprite);
+            root.AddComponent<LayoutElement>().preferredHeight = ShopRowHeight;
+            var view = root.AddComponent<BillShopRowView>();
+
+            GameObject icon = CreateUi("Icon", root.transform);
+            SetRect(icon, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(24f, 0f), new Vector2(120f, 84f));
+            Image iconImage = AddImage(icon, BillGreen, _roundSprite);
+            iconImage.raycastTarget = false;
+            GameObject mark = CreateUi("Mark", icon.transform);
+            SetRect(mark, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(44f, 44f));
+            Image markImage = AddImage(mark, BillLight, _circleSprite, sliced: false);
+            markImage.raycastTarget = false;
+
+            TMP_Text nameText = AddText(root.transform, "NameText", "Item", 40, DarkBrown, TextAlignmentOptions.Left, bold: true, autoSize: true);
+            SetRect(nameText.gameObject, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0f, 1f), new Vector2(166f, -24f), new Vector2(-480f, 52f));
+            TMP_Text description = AddText(root.transform, "DescriptionText", "", 34, Muted, TextAlignmentOptions.Left, bold: true, autoSize: true);
+            SetRect(description.gameObject, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0f, 0f), new Vector2(166f, 30f), new Vector2(-480f, 50f));
+
+            GameObject badge = CreateUi("Badge", root.transform);
+            SetRect(badge, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 0.5f), new Vector2(-30f, -8f), new Vector2(180f, 44f));
+            AddImage(badge, BoothRed, _roundSprite).raycastTarget = false;
+            TMP_Text badgeText = AddLocalizedText(badge.transform, "Label", "shop.best", 28, Color.white, bold: true);
+            Stretch(badgeText.gameObject, new Vector2(8f, 2f), new Vector2(-8f, -2f));
+            badge.SetActive(false);
+
+            Button button = BuildRowButton(root.transform, "BuyButton", BillGreen, new Vector2(270f, 120f), SoundId.Buy, out TMP_Text buttonText);
+
+            var so = new SerializedObject(view);
+            Set(so, "_icon", iconImage);
+            Set(so, "_iconMark", markImage);
+            Set(so, "_nameText", nameText);
+            Set(so, "_descriptionText", description);
+            Set(so, "_badge", badge);
+            Set(so, "_button", button);
+            Set(so, "_buttonText", buttonText);
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            return SavePrefab(root, BillShopRowPrefabPath).GetComponent<BillShopRowView>();
+        }
+
+        // ---------- Settings ----------
+
+        /// <summary>Шестерёнка в HUD (слева сверху, напротив репутации) и окно настроек со звуком и музыкой.</summary>
+        private static SettingsPopup BuildSettingsPopup(Transform parent, Transform hud)
+        {
+            GameObject gear = CreateUi("SettingsButton", hud);
+            SetRect(gear, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(20f, -14f), new Vector2(96f, 96f));
+            AddImage(gear, Brown, _circleSprite, sliced: false);
+            Button openButton = AddButton(gear, SoundId.Tap);
+            for (int i = 0; i < 8; i++)
+            {
+                GameObject tooth = CreateUi("Tooth_" + i, gear.transform);
+                float angle = i * 45f;
+                Vector2 offset = Quaternion.Euler(0f, 0f, angle) * Vector2.up * 27f;
+                SetRect(tooth, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), offset, new Vector2(16f, 18f));
+                tooth.transform.localRotation = Quaternion.Euler(0f, 0f, angle);
+                AddImage(tooth, LightGold, null).raycastTarget = false;
+            }
+            GameObject gearBody = CreateUi("Body", gear.transform);
+            SetRect(gearBody, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(48f, 48f));
+            AddImage(gearBody, LightGold, _circleSprite, sliced: false).raycastTarget = false;
+            GameObject gearHole = CreateUi("Hole", gear.transform);
+            SetRect(gearHole, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(20f, 20f));
+            AddImage(gearHole, Brown, _circleSprite, sliced: false).raycastTarget = false;
+
+            GameObject root = CreateUi("SettingsPopup", parent);
+            Stretch(root, Vector2.zero, Vector2.zero);
+            AddImage(root, new Color(0f, 0f, 0f, 0.6f), null);
+            var popup = root.AddComponent<SettingsPopup>();
+
+            GameObject panel = CreateUi("Panel", root.transform);
+            SetRect(panel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(820f, 640f));
+            AddImage(panel, Cream, _roundSprite);
+
+            TMP_Text title = AddLocalizedText(panel.transform, "Title", "settings.title", 56, DarkBrown, bold: true);
+            SetRect(title.gameObject, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -44f), new Vector2(-80f, 80f));
+
+            Button sound = BuildSettingsRow(panel.transform, "Sound", "settings.sound", 90f, out TMP_Text soundText);
+            Button music = BuildSettingsRow(panel.transform, "Music", "settings.music", -50f, out TMP_Text musicText);
+
+            Button close = BuildPopupButton(panel.transform, "CloseButton", Brown, new Vector2(0f, 50f), SoundId.Tap, out TMP_Text closeText);
+            AddLocalizedKey(closeText, "settings.close");
+
+            var so = new SerializedObject(popup);
+            Set(so, "_root", root);
+            Set(so, "_panel", panel.transform);
+            Set(so, "_openButton", openButton);
+            Set(so, "_closeButton", close);
+            Set(so, "_soundButton", sound);
+            Set(so, "_soundText", soundText);
+            Set(so, "_musicButton", music);
+            Set(so, "_musicText", musicText);
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            root.SetActive(false);
+            return popup;
+        }
+
+        // Строка настроек: подпись слева, переключатель «Вкл/Выкл» справа; y — смещение от центра панели.
+        private static Button BuildSettingsRow(Transform panel, string name, string labelKey, float y, out TMP_Text stateText)
+        {
+            TMP_Text label = AddLocalizedText(panel, name + "Label", labelKey, 44, DarkBrown, bold: true);
+            label.alignment = TextAlignmentOptions.Left;
+            SetRect(label.gameObject, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(60f, y), new Vector2(420f, 80f));
+
+            GameObject toggle = CreateUi(name + "Toggle", panel);
+            SetRect(toggle, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-60f, y), new Vector2(240f, 100f));
+            AddImage(toggle, Green, _roundSprite);
+            Button button = AddButton(toggle, SoundId.Tap);
+            stateText = AddText(toggle.transform, "Label", "", 40, Color.white, TextAlignmentOptions.Center, bold: true, autoSize: true);
+            Stretch(stateText.gameObject, new Vector2(12f, 6f), new Vector2(-12f, -6f));
+            return button;
         }
 
         private static PrestigeConfirmPopup BuildPrestigePopup(Transform parent)
@@ -943,9 +1361,26 @@ namespace ShaurmaTycoon.EditorTools
             Set(so, "_incomeText", income);
             Set(so, "_coinIcon", coinIcon.transform);
 
-            // Репутация — справа сверху (показывается, когда появится).
+            // Купюры — справа сверху, видны всегда; по тапу — магазин.
+            GameObject bills = CreateUi("Bills", hud.transform);
+            SetRect(bills, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-20f, -20f), new Vector2(200f, 64f));
+            AddImage(bills, Brown, _roundSprite);
+            Button billsButton = AddButton(bills, SoundId.Tap);
+            GameObject note = CreateUi("Icon", bills.transform);
+            SetRect(note, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(8f, 0f), new Vector2(54f, 36f));
+            AddImage(note, BillGreen, _roundSprite).raycastTarget = false;
+            GameObject noteMark = CreateUi("Mark", note.transform);
+            SetRect(noteMark, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(18f, 18f));
+            AddImage(noteMark, BillLight, _circleSprite, sliced: false).raycastTarget = false;
+            TMP_Text billsText = AddText(bills.transform, "Text", "0", 38, Color.white, TextAlignmentOptions.Center, bold: true, autoSize: true);
+            Stretch(billsText.gameObject, new Vector2(66f, 4f), new Vector2(-12f, -4f));
+            Set(so, "_billsRoot", bills.transform);
+            Set(so, "_billsText", billsText);
+            Set(so, "_billsButton", billsButton);
+
+            // Репутация — под купюрами (показывается, когда появится).
             GameObject reputation = CreateUi("Reputation", hud.transform);
-            SetRect(reputation, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-20f, -20f), new Vector2(200f, 64f));
+            SetRect(reputation, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-20f, -94f), new Vector2(200f, 64f));
             AddImage(reputation, Brown, _roundSprite).raycastTarget = false;
             GameObject reputationIcon = CreateUi("Icon", reputation.transform);
             SetRect(reputationIcon, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(8f, 0f), new Vector2(48f, 48f));
@@ -972,7 +1407,7 @@ namespace ShaurmaTycoon.EditorTools
             horizontal.childForceExpandHeight = true;
             var tabBar = bar.AddComponent<TabBar>();
 
-            string[] keys = { "tab.stations", "tab.managers", "tab.upgrades", "tab.city" };
+            string[] keys = { "tab.stations", "tab.managers", "tab.upgrades", "tab.city", "tab.shop" };
             buttons = new Button[keys.Length];
             for (int i = 0; i < keys.Length; i++)
             {

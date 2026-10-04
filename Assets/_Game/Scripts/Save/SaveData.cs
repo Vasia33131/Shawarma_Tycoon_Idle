@@ -15,6 +15,9 @@ namespace ShaurmaTycoon.Save
         public int Version = CurrentVersion;
         public double Coins;
 
+        /// <summary>Купюры (донатная валюта) — не сбрасываются при переезде.</summary>
+        public long Bills;
+
         /// <summary>Время последнего сохранения, DateTime.Ticks в UTC (для офлайн-дохода).</summary>
         public long SavedAtUtcTicks;
 
@@ -22,5 +25,6 @@ namespace ShaurmaTycoon.Save
         public List<string> PurchasedUpgrades = new List<string>();
 
         public PrestigeSave Prestige = new PrestigeSave();
+        public SettingsSave Settings = new SettingsSave();
     }
 }

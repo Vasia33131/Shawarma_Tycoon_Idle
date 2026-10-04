@@ -15,7 +15,7 @@ namespace ShaurmaTycoon.UI
     /// уровень, время цикла и веха — обычными строками, они меняются только при покупке.
     /// По завершении цикла из иконки летит монета, над полосой всплывает «+X».
     /// </summary>
-    public sealed class StationRowView : MonoBehaviour
+    public sealed class StationRowView : MonoBehaviour, ISceneBinding
     {
         // Цикл короче этого показываем полной полосой, иначе она мерцает.
         private const double MinVisibleCycleTime = 0.1;
@@ -77,6 +77,7 @@ namespace ShaurmaTycoon.UI
             BuyModeButton buyMode, Color iconColor, CoinFlyEffect coins, FloatingTextEffect floatingText,
             RectTransform hiddenEffectSource)
         {
+            SceneBindings.Track(this);
             _index = index;
             _station = station;
             _controller = controller;
@@ -109,6 +110,11 @@ namespace ShaurmaTycoon.UI
         }
 
         private void OnDestroy()
+        {
+            Unbind();
+        }
+
+        public void Unbind()
         {
             if (_station == null)
                 return;

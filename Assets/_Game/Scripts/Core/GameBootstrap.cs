@@ -1,3 +1,5 @@
+using ShaurmaTycoon.Core.Audio;
+using ShaurmaTycoon.Core.Settings;
 using ShaurmaTycoon.Core.Tweening;
 using ShaurmaTycoon.Economy;
 using ShaurmaTycoon.Localization;
@@ -30,6 +32,7 @@ namespace ShaurmaTycoon.Core
             tickManagerObject.AddComponent<ApplicationEvents>();
             Services.Register(_tickManager);
             Services.Register(new Wallet());
+            Services.Register(new BillWallet());
 
             var tweens = new TweenRunner();
             var pulses = new PulseDriver(tweens);
@@ -37,6 +40,18 @@ namespace ShaurmaTycoon.Core
             Services.Register(pulses);
             _tickManager.Register(tweens);
             _tickManager.Register(pulses);
+
+            // Единственный AudioListener игры: в сценах его нет, а этот объект переживает перезагрузку Game.
+            var audioObject = new GameObject("Audio");
+            DontDestroyOnLoad(audioObject);
+            audioObject.AddComponent<AudioListener>();
+            var music = new MusicService(audioObject);
+            Services.Register(music);
+            _tickManager.Register(music);
+
+            var settings = new GameSettings();
+            Services.Register(settings);
+            settings.Changed += () => music.Muted = !settings.MusicOn;
 
             _platform = CreatePlatform();
             Services.Register(_platform);
@@ -69,6 +84,13 @@ namespace ShaurmaTycoon.Core
             {
                 // Прогресс престижа живёт в Boot и переживает перезагрузку сцены Game.
                 save.Register(new PrestigeSaveParticipant(prestige));
+
+                // Настройки — сразу из сейва; дальше каждое переключение сохраняется сразу.
+                var settings = Services.Get<GameSettings>();
+                save.Register(new SettingsSaveParticipant(settings));
+                settings.Changed += save.SaveNow;
+
+                save.Register(new BillsSaveParticipant(Services.Get<BillWallet>()));
                 OnSaveLoaded();
             });
         }

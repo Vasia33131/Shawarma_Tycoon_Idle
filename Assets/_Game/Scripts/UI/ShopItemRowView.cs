@@ -12,7 +12,7 @@ namespace ShaurmaTycoon.UI
     /// Пункт магазина репутации: название, эффект «сейчас → после покупки», уровень и кнопка покупки за репутацию.
     /// Обновляется только при изменении репутации или языка.
     /// </summary>
-    public sealed class ShopItemRowView : MonoBehaviour
+    public sealed class ShopItemRowView : MonoBehaviour, ISceneBinding
     {
         [SerializeField] private TMP_Text _nameText = null;
         [SerializeField] private TMP_Text _descriptionText = null;
@@ -31,6 +31,7 @@ namespace ShaurmaTycoon.UI
         /// <param name="cityValueScale">Масштаб значений текущего города — для стартового капитала.</param>
         public void Bind(int index, ReputationShop shop, PrestigeState state, Loc loc, double baseOfflineHours, double cityValueScale)
         {
+            SceneBindings.Track(this);
             _index = index;
             _shop = shop;
             _state = state;
@@ -45,6 +46,11 @@ namespace ShaurmaTycoon.UI
         }
 
         private void OnDestroy()
+        {
+            Unbind();
+        }
+
+        public void Unbind()
         {
             if (_state == null)
                 return;

@@ -1,4 +1,5 @@
 using ShaurmaTycoon.Core.Audio;
+using ShaurmaTycoon.Core.Settings;
 using ShaurmaTycoon.Customers;
 using ShaurmaTycoon.Economy;
 using ShaurmaTycoon.Managers;
@@ -6,6 +7,7 @@ using ShaurmaTycoon.Offline;
 using ShaurmaTycoon.Platform;
 using ShaurmaTycoon.Prestige;
 using ShaurmaTycoon.Save;
+using ShaurmaTycoon.Shop;
 using ShaurmaTycoon.Stations;
 using ShaurmaTycoon.Upgrades;
 using UnityEngine;
@@ -24,7 +26,9 @@ namespace ShaurmaTycoon.Core
         [Tooltip("Запасной вариант, если каталог городов не назначен (до Build Game UI).")]
         [SerializeField] private CityConfig _city = null;
         [SerializeField] private ReputationShopConfig _shop = null;
+        [SerializeField] private BillShopConfig _billShop = null;
         [SerializeField] private AudioConfig _audio = null;
+        [SerializeField] private MusicConfig _music = null;
         [SerializeField] private CustomerConfig _customers = null;
 
         private TickManager _tickManager;
@@ -33,6 +37,7 @@ namespace ShaurmaTycoon.Core
         private ManagerController _managers;
         private UpgradeService _upgrades;
         private ReputationShop _reputationShop;
+        private BillShop _billShopService;
         private OfflineIncomeService _offline;
         private PrestigeController _prestigeController;
         private PrestigeState _prestige;
@@ -75,8 +80,11 @@ namespace ShaurmaTycoon.Core
             _reputationShop.Purchased += OnShopPurchased;
             _stations.Earned += _prestige.AddEarned;
 
-            _audioService = new AudioService(_audio);
+            Services.TryGet(out GameSettings settings);
+            _audioService = new AudioService(_audio, settings);
             Services.Register(_audioService);
+            if (_music != null && Services.TryGet(out MusicService music))
+                music.Play(_music.Track, _music.Volume, _music.FadeDuration);
 
             if (_customers != null)
                 Services.Register(_customers);
@@ -94,6 +102,13 @@ namespace ShaurmaTycoon.Core
             _offline = new OfflineIncomeService(wallet, CalculateOfflineIncome(), _balance.OfflineAdMultiplier);
             _offline.Claimed += _prestige.AddEarned;
             Services.Register(_offline);
+
+            Services.TryGet(out IPlatformService platform);
+            SaveService save = _save;
+            _billShopService = new BillShop(_billShop != null ? _billShop.BillPacks : null, _billShop != null ? _billShop.CoinPacks : null,
+                Services.Get<BillWallet>(), wallet, () => _stations.IncomePerSecond, _currentCity.ValueScale, platform,
+                save != null ? save.SaveNow : (System.Action)null);
+            Services.Register(_billShopService);
 
             _prestigeController = new PrestigeController(_prestige, _rules, _currentCity.PrestigeThreshold, cityIndex, cityCount,
                 _save, _saveParticipant, StartCoinsForCity, ReloadScene);
@@ -149,12 +164,15 @@ namespace ShaurmaTycoon.Core
             if (_save != null && _saveParticipant != null)
                 _save.Unregister(_saveParticipant);
             _stations.Earned -= _prestige.AddEarned;
-            _offline.Claimed -= _prestige.AddEarned;
-            _reputationShop.Purchased -= OnShopPurchased;
+            if (_offline != null)
+                _offline.Claimed -= _prestige.AddEarned;
+            if (_reputationShop != null)
+                _reputationShop.Purchased -= OnShopPurchased;
             _audioService?.Dispose();
 
             // Снимаем только свои экземпляры: при перезагрузке сцены новые уже могли зарегистрироваться.
             Services.Unregister(_prestigeController);
+            Services.Unregister(_billShopService);
             Services.Unregister(_offline);
             Services.Unregister(_customers);
             Services.Unregister(_audioService);

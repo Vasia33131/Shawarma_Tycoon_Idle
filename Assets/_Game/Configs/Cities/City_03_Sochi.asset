@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: adbad3b3830a453fa915cc0b44a1fde2, type: 3}
+  m_Name: City_03_Sochi
+  m_EditorClassIdentifier: 
+  _id: sochi
+  _nameKey: city.sochi
+  _stations:
+  - {fileID: 11400000, guid: 5825539e0121788c5b276d8605bd2780, type: 2}
+  - {fileID: 11400000, guid: 6f153927b306cdaea050c9196aaf8f70, type: 2}
+  - {fileID: 11400000, guid: 44c35171e9e20de3b5d4e65eaded2cc4, type: 2}
+  - {fileID: 11400000, guid: 67b55cee9d3cc00c42f3f7b2dd50b50d, type: 2}
+  - {fileID: 11400000, guid: 644df120c115727a2e3001e6acc7ca4f, type: 2}
+  - {fileID: 11400000, guid: babb6c743ca2ae9d6bcf46d6db6cb57f, type: 2}
+  _upgrades:
+  - {fileID: 11400000, guid: 75e00d9ab9b535c5f82efe694328fd50, type: 2}
+  - {fileID: 11400000, guid: 0d2b7acc43ba8fc925bbdf3c96447003, type: 2}
+  - {fileID: 11400000, guid: 071fa53da14e5c7fafcd0f542786f343, type: 2}
+  - {fileID: 11400000, guid: 1bf0e62877b19fcff0ef87647289956f, type: 2}
+  - {fileID: 11400000, guid: fd582ad150b8a6c7d2d74e3eb9de80ac, type: 2}
+  - {fileID: 11400000, guid: bf3aebc569e1896aa9d26bbbd2fc2a2c, type: 2}
+  - {fileID: 11400000, guid: b776c4cbbb53ac3f02d0004f4eeccda4, type: 2}
+  - {fileID: 11400000, guid: a6e9f580ff0877f8012e7c25da4a101a, type: 2}
+  - {fileID: 11400000, guid: da9ffe9a03d54b5c1a7cb9b0e5a806f2, type: 2}
+  - {fileID: 11400000, guid: 7b37cd7920515515cdd4af47a60329f7, type: 2}
+  - {fileID: 11400000, guid: a8dc446dc0aaa9fb293131e0869a32fe, type: 2}
+  - {fileID: 11400000, guid: 1388087ec7d109b12f2fc4ab6cde95f2, type: 2}
+  - {fileID: 11400000, guid: 982da2f52fad8b0ed7a2f57a8d4d1b57, type: 2}
+  - {fileID: 11400000, guid: 455c738d898d118df14020a6d4491be7, type: 2}
+  - {fileID: 11400000, guid: 8daf9108cb6c38b34fccc0375a636eb7, type: 2}
+  - {fileID: 11400000, guid: a41538a5ed85459c787d55044c717412, type: 2}
+  - {fileID: 11400000, guid: 7c851ee0fa374aa58048d28311b37ced, type: 2}
+  - {fileID: 11400000, guid: 351521621dc293dee071867595a13515, type: 2}
+  - {fileID: 11400000, guid: 8c9bd963748ac514d7b47e76372e51df, type: 2}
+  - {fileID: 11400000, guid: 5e16f8f4c6b73cec5bfe160d5243508e, type: 2}
+  _prestigeThreshold: 100000000000
+  _valueScale: 100
+  _skyColor: {r: 0.72, g: 0.93, b: 0.92, a: 1}
+  _boothColor: {r: 0.95, g: 0.52, b: 0.12, a: 1}
+  _mapPosition: {x: 0.5, y: 0.25}

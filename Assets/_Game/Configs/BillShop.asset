@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f9678979ba51d14e8951da2d50f8764, type: 3}
+  m_Name: BillShop
+  m_EditorClassIdentifier: 
+  _billPacks:
+  - Id: bills_small
+    ProductId: bills_small
+    NameKey: shop.bills_small
+    Bills: 20
+    DisplayPrice: 19
+    Best: 0
+  - Id: bills_medium
+    ProductId: bills_medium
+    NameKey: shop.bills_medium
+    Bills: 120
+    DisplayPrice: 99
+    Best: 0
+  - Id: bills_large
+    ProductId: bills_large
+    NameKey: shop.bills_large
+    Bills: 350
+    DisplayPrice: 249
+    Best: 1
+  _coinPacks:
+  - Id: coins_small
+    NameKey: shop.coins_small
+    PriceBills: 5
+    IncomeMinutes: 30
+    MinCoins: 1000
+  - Id: coins_medium
+    NameKey: shop.coins_medium
+    PriceBills: 20
+    IncomeMinutes: 180
+    MinCoins: 10000
+  - Id: coins_large
+    NameKey: shop.coins_large
+    PriceBills: 60
+    IncomeMinutes: 720
+    MinCoins: 50000

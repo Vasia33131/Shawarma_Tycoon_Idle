@@ -1,4 +1,5 @@
 using System;
+using ShaurmaTycoon.Core.Settings;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
@@ -18,10 +19,13 @@ namespace ShaurmaTycoon.Core.Audio
         private readonly float[] _lastPlayTime;
         private readonly float _masterVolume;
         private readonly GameObject _root;
+        private readonly GameSettings _settings;
         private int _nextSource;
 
-        public AudioService(AudioConfig config)
+        /// <param name="settings">Выключатель звуков; null — звуки всегда включены.</param>
+        public AudioService(AudioConfig config, GameSettings settings = null)
         {
+            _settings = settings;
             int soundCount = Enum.GetValues(typeof(SoundId)).Length;
             _entries = new SoundEntry[soundCount];
             _lastPlayTime = new float[soundCount];
@@ -56,6 +60,9 @@ namespace ShaurmaTycoon.Core.Audio
 
         public void Play(SoundId id)
         {
+            if (_settings != null && !_settings.SoundOn)
+                return;
+
             SoundEntry entry = _entries[(int)id];
             if (entry == null || entry.Clips.Length == 0)
                 return;

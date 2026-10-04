@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using ShaurmaTycoon.Core.Audio;
 using ShaurmaTycoon.Customers;
 using ShaurmaTycoon.Prestige;
+using ShaurmaTycoon.Shop;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
@@ -11,7 +12,7 @@ namespace ShaurmaTycoon.EditorTools
 {
     /// <summary>
     /// Готовит контент для сборщика UI: шрифт Rubik → TMP-ассет (шрифт по умолчанию),
-    /// импорт спрайтов клиентов, конфиги звука и клиентов. Уже существующие ассеты не перезаписываются —
+    /// импорт спрайтов клиентов, конфиги звука, музыки и клиентов. Уже существующие ассеты не перезаписываются —
     /// ручные правки в Audio.asset и Customers.asset сохраняются.
     /// </summary>
     public static class ContentSetup
@@ -24,19 +25,25 @@ namespace ShaurmaTycoon.EditorTools
         private const string AudioFolder = "Assets/_Game/Audio/";
         private const string CustomersFolder = "Assets/_Game/Sprites/Customers";
         private const string ReputationShopPath = "Assets/_Game/Configs/ReputationShop.asset";
+        private const string MusicConfigPath = "Assets/_Game/Configs/Music.asset";
+        private const string BillShopPath = "Assets/_Game/Configs/BillShop.asset";
+        private const string DefaultMusicPath = "Assets/_Game/Audio/Music/HappyClappyLoop.wav";
 
         private static readonly string[] CustomerCharacters = { "malePerson", "femalePerson", "femaleAdventurer" };
         private const string SellerCharacter = "maleAdventurer";
         private const int WalkFrames = 8;
         private const int PhraseCount = 10;
 
-        public static void EnsureAll(out AudioConfig audio, out CustomerConfig customers, out ReputationShopConfig shop)
+        public static void EnsureAll(out AudioConfig audio, out MusicConfig music, out CustomerConfig customers,
+            out ReputationShopConfig shop, out BillShopConfig billShop)
         {
             EnsureFont();
             EnsureSpriteImport();
             audio = EnsureAudioConfig();
+            music = EnsureMusicConfig();
             customers = EnsureCustomerConfig();
             shop = EnsureReputationShop();
+            billShop = EnsureBillShop();
             AssetDatabase.SaveAssets();
         }
 
@@ -183,6 +190,79 @@ namespace ShaurmaTycoon.EditorTools
 
             so.ApplyModifiedPropertiesWithoutUndo();
             Debug.Log("[ContentSetup] Created " + AudioConfigPath);
+            return config;
+        }
+
+        // Магазин купюр, согласованный на этапе 08d (дальше правится в ассете). Цены паков — заглушки до каталога Яндекса.
+        private static BillShopConfig EnsureBillShop()
+        {
+            var config = AssetDatabase.LoadAssetAtPath<BillShopConfig>(BillShopPath);
+            if (config != null)
+                return config;
+
+            config = ScriptableObject.CreateInstance<BillShopConfig>();
+            AssetDatabase.CreateAsset(config, BillShopPath);
+
+            var billPacks = new (string id, long bills, int price, bool best)[]
+            {
+                ("bills_small", 20, 19, false),
+                ("bills_medium", 120, 99, false),
+                ("bills_large", 350, 249, true),
+            };
+            var coinPacks = new (string id, long price, double minutes, double minCoins)[]
+            {
+                ("coins_small", 5, 30, 1e3),
+                ("coins_medium", 20, 180, 1e4),
+                ("coins_large", 60, 720, 5e4),
+            };
+
+            var so = new SerializedObject(config);
+            SerializedProperty bills = so.FindProperty("_billPacks");
+            bills.arraySize = billPacks.Length;
+            for (int i = 0; i < billPacks.Length; i++)
+            {
+                SerializedProperty pack = bills.GetArrayElementAtIndex(i);
+                pack.FindPropertyRelative("Id").stringValue = billPacks[i].id;
+                pack.FindPropertyRelative("ProductId").stringValue = billPacks[i].id;
+                pack.FindPropertyRelative("NameKey").stringValue = $"shop.{billPacks[i].id}";
+                pack.FindPropertyRelative("Bills").longValue = billPacks[i].bills;
+                pack.FindPropertyRelative("DisplayPrice").intValue = billPacks[i].price;
+                pack.FindPropertyRelative("Best").boolValue = billPacks[i].best;
+            }
+
+            SerializedProperty coins = so.FindProperty("_coinPacks");
+            coins.arraySize = coinPacks.Length;
+            for (int i = 0; i < coinPacks.Length; i++)
+            {
+                SerializedProperty pack = coins.GetArrayElementAtIndex(i);
+                pack.FindPropertyRelative("Id").stringValue = coinPacks[i].id;
+                pack.FindPropertyRelative("NameKey").stringValue = $"shop.{coinPacks[i].id}";
+                pack.FindPropertyRelative("PriceBills").longValue = coinPacks[i].price;
+                pack.FindPropertyRelative("IncomeMinutes").doubleValue = coinPacks[i].minutes;
+                pack.FindPropertyRelative("MinCoins").doubleValue = coinPacks[i].minCoins;
+            }
+
+            so.ApplyModifiedPropertiesWithoutUndo();
+            Debug.Log("[ContentSetup] Created " + BillShopPath);
+            return config;
+        }
+
+        private static MusicConfig EnsureMusicConfig()
+        {
+            var config = AssetDatabase.LoadAssetAtPath<MusicConfig>(MusicConfigPath);
+            if (config != null)
+                return config;
+
+            config = ScriptableObject.CreateInstance<MusicConfig>();
+            AssetDatabase.CreateAsset(config, MusicConfigPath);
+
+            var track = AssetDatabase.LoadAssetAtPath<AudioClip>(DefaultMusicPath);
+            if (track == null)
+                Debug.LogWarning($"[ContentSetup] Music track '{DefaultMusicPath}' not found.");
+            var so = new SerializedObject(config);
+            so.FindProperty("_track").objectReferenceValue = track;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            Debug.Log("[ContentSetup] Created " + MusicConfigPath);
             return config;
         }
 

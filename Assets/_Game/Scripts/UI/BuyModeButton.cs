@@ -9,7 +9,7 @@ namespace ShaurmaTycoon.UI
     /// <summary>
     /// Кнопка «Купить: ×1 / ×10 / Макс» — по нажатию переключает режим по кругу.
     /// </summary>
-    public sealed class BuyModeButton : MonoBehaviour
+    public sealed class BuyModeButton : MonoBehaviour, ISceneBinding
     {
         [SerializeField] private Button _button = null;
         [SerializeField] private TMP_Text _label = null;
@@ -22,6 +22,7 @@ namespace ShaurmaTycoon.UI
 
         public void Bind(Loc loc)
         {
+            SceneBindings.Track(this);
             _loc = loc;
             _loc.LanguageChanged += Refresh;
             _button.onClick.AddListener(NextMode);
@@ -29,6 +30,11 @@ namespace ShaurmaTycoon.UI
         }
 
         private void OnDestroy()
+        {
+            Unbind();
+        }
+
+        public void Unbind()
         {
             if (_loc != null)
                 _loc.LanguageChanged -= Refresh;

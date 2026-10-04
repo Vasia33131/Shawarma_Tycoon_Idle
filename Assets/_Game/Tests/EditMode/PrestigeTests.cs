@@ -312,6 +312,22 @@ namespace ShaurmaTycoon.Tests
         }
 
         [Test]
+        public void Controller_TryPrestige_KeepsBills()
+        {
+            var world = CreateWorld();
+            var bills = new BillWallet();
+            world.save.Register(new BillsSaveParticipant(bills));
+            bills.Add(50, BillSource.Purchase);
+            world.state.AddEarned(1e9);
+            var controller = new PrestigeController(world.state, Gdd, 1e9, 0, 2, world.save, world.city, _ => 0, () => { });
+
+            Assert.IsTrue(controller.TryPrestige());
+
+            Assert.AreEqual(50, bills.Bills);
+            Assert.AreEqual(50, world.save.Data.Bills);
+        }
+
+        [Test]
         public void Controller_LastCity_RestartsSameCity()
         {
             var world = CreateWorld();

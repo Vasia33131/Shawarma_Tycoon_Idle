@@ -28,12 +28,19 @@ namespace ShaurmaTycoon.Tests
             "time.minutes", "time.hours", "time.hours_minutes",
             "city.kazan", "station.kazan_shawarma", "station.echpochmak_wrap", "station.chak_chak", "station.katyk_tea",
             "station.kazan_xl", "station.plov_plate",
-            "prestige.city_label", "prestige.earned_label", "prestige.gain", "prestige.bonus", "prestige.reputation",
+            "prestige.earned_progress", "prestige.gain", "prestige.bonus", "prestige.reputation",
             "prestige.go_next", "prestige.go_same", "prestige.confirm_title", "prestige.confirm_title_same",
             "prestige.confirm_body", "prestige.confirm_gain", "prestige.confirm_yes", "prestige.confirm_no",
             "shop.title", "shop.level", "shop.buy", "shop.max",
             "shop.offline_limit.name", "shop.offline_limit.desc", "shop.start_coins.name", "shop.start_coins.desc",
             "shop.free_managers.name", "shop.free_managers.desc", "shop.fast_customers.name", "shop.fast_customers.desc",
+            "map.title", "map.here", "map.status_done", "map.status_current", "map.status_next", "map.status_locked", "map.details",
+            "kiosk.upgraded", "city.sochi", "city.piter", "city.moscow",
+            "settings.title", "settings.sound", "settings.music", "settings.on", "settings.off", "settings.close",
+            "bills.name",
+            "tab.shop", "shop.bills_title", "shop.coins_title", "shop.bills_small", "shop.bills_medium", "shop.bills_large",
+            "shop.coins_small", "shop.coins_medium", "shop.coins_large", "shop.bills_amount", "shop.coins_reward",
+            "shop.price_yan", "shop.price_bills", "shop.best",
         };
 
         private static LocTable LoadTable()

@@ -1,6 +1,6 @@
 # PROGRESS
 
-## Текущий этап: 08 — Престиж и города (в работе)
+## Текущий этап: 08d — Магазин купюр (код готов, ждёт проверки в Unity)
 
 ## Журнал
 ### Этап 00 — Каркас (готов, 2026-10-04)
@@ -284,14 +284,97 @@
   - города 3+ — LiveOps (добавить `CityConfig` в каталог);
   - `DebugMenu` заменить отладочным окном на этапе 11.
 
+### Этап 08+ — Карта городов, рост ларька, города 3–5 (код готов, 2026-10-04; ждёт Build Game UI и проверки в Unity)
+- Проверено: runtime, editor и тесты компилируются без ошибок (вне редактора). Тесты вне Unity: 229 зелёных, 42 падают только из-за среды (String.Split(char) из netstandard 2.1 и JsonUtility недоступны в .NET Framework) — в Unity их нужно прогнать. Новые CityAssetsTests: 6/6. Ключи локализации проверены скриптом.
+- Сделано:
+  - вкладка «Город» — карта филиалов (`CityMapView`, `CityMapNodeView`): города по `CityConfig.MapPosition`, дорога из точек (пройденные — зелёные, путь к следующему закрашивается по прогрессу), фургон на дороге = прогресс к порогу, метка «Вы здесь», следующий город пульсирует; тап по городу — плашка с названием, статусом, порогом и масштабом;
+  - на той же карточке под картой: прогресс «Заработано: X / порог», репутация за переезд, бонус и свободная репутация, кнопка перехода; ниже магазин репутации;
+  - ларёк растёт с менеджерами (`KioskView.BindManagers`): 6 ламп над вывеской + украшения по числу нанятых — гирлянда, меню-доска, столик под зонтом, рамка вывески, цветы, флаги (в цвете города); появление с анимацией, отскок ларька и надпись «Ларёк преобразился!»;
+  - города 3–5: Сочи (порог 1e11, ×100), Санкт-Петербург (1e12, ×1000), Москва (1e13, ×10000) — по 6 станций и 20 улучшений (значения Казани ×10 за шаг), свои цвета;
+  - Debug-меню: «Add City Threshold Earned», «Hire Next Manager».
+- Файлы: `UI/CityMapView.cs`, `UI/CityMapNodeView.cs`, `Tests/EditMode/CityAssetsTests.cs`; изменены `CityConfig`, `CityPanel`, `GameScreen`, `KioskView`, `PrestigeController` (+`CityIndex`), `GameUiBuilder`, `DebugMenu`, `strings.txt`; ассеты `Configs/Cities/City_03..05`, `Configs/Stations|Upgrades/City03..05`.
+- Решения:
+  - раскладка карты — якорями в долях области, без зависимости от размера экрана; шаг точек дороги — по `_referenceSize`;
+  - `prestige.city_label` и `prestige.earned_label` удалены, вместо них `prestige.earned_progress`.
+- Известные проблемы / TODO:
+  - нужно выполнить ShaurmaTycoon/Build Game UI (пересоберёт экран и префабы CityMapNode, RoadDot);
+  - баланс городов 3–5 — копия Казани ×10, прогнать на этапе 11.
+
+### Этап 08a — Звук и фоновая музыка (код готов, 2026-10-04; ждёт Build Game UI и проверки в Unity)
+- Проверено: runtime, editor и тесты компилируются без ошибок (вне редактора). В Unity не запускалось.
+- Причина тишины: ни в одной сцене не было `AudioListener`, а музыки в коде не было совсем.
+- Сделано:
+  - `GameBootstrap` создаёт `DontDestroyOnLoad`-объект «Audio» с единственным `AudioListener` и `MusicService`;
+  - `Core/Audio/MusicService`: зацикленный трек, плавное появление, смена трека через затухание, повторный `Play` того же трека игнорируется (переезд не обрывает музыку), `Muted` для этапа 08b (затухание → пауза → продолжение с того же места), пауза на `GameEvents.GamePaused`;
+  - `Core/Audio/MusicConfig` (SO) + `Configs/Music.asset` создаёт `ContentSetup`; `GameSceneInstaller._music` назначает Build Game UI;
+  - музыка: `Audio/Music/HappyClappyLoop.wav` (OwlishMedia, CC0, OpenGameArt), импорт Streaming + Vorbis 50%; лицензии — `Audio/LICENSES.md`.
+- Решения:
+  - слушатель создаётся кодом, а не в сценах: так он ровно один и переживает перезагрузку Game (`ProjectSetupTool` не трогали);
+  - отдельный звук заработка не добавлен: каждая монета, прилетевшая в счётчик, уже звенит (`SoundId.Coin`, фишки Kenney). Пользователь одобрил только скачивание музыки;
+  - звук нажатия — существующий `click_002` на всех кнопках через `ButtonFeedback`;
+  - в WebGL браузер включает звук после первого клика игрока — Unity делает это сама.
+- Известные проблемы / TODO:
+  - выполнить ShaurmaTycoon/Build Game UI (создаст `Music.asset` и назначит его);
+  - трек короткий (~17 с) — если надоест, добавить второй и чередовать.
+
+### Этап 08b — Настройки: звук и музыка (код готов, 2026-10-04; ждёт Build Game UI и проверки в Unity)
+- Проверено: runtime, editor и тесты компилируются без ошибок. Тесты вне Unity: 233 зелёных, 42 падают только из-за среды (как на 08+). Новые SettingsTests: 4/4. Ключи строк проверены скриптом.
+- Сделано:
+  - `Core/Settings/GameSettings` (SoundOn, MusicOn, `Changed`), `SettingsSaveParticipant`, `Save/SettingsSave` (по умолчанию всё включено), `SaveData.Settings` + нормализация в `SaveMigrator` (версия не повышалась — поле совместимое);
+  - `GameBootstrap`: `GameSettings` в Boot, музыка слушает `Changed` (`MusicService.Muted`), каждое переключение сразу сохраняется (`SaveNow`);
+  - `AudioService` получает `GameSettings` и молчит, когда звуки выключены;
+  - UI: шестерёнка в HUD слева сверху, `SettingsPopup` с переключателями «Звуки» и «Музыка» (зелёный Вкл / серый Выкл), кнопка «Готово»;
+  - строки `settings.*` ru/en.
+- Решения: выключенная музыка затухает и встаёт на паузу; при включении продолжается с того же места.
+- Известные проблемы / TODO: выполнить ShaurmaTycoon/Build Game UI.
+
+### Этап 08c — Купюры (код готов, 2026-10-04; ждёт Build Game UI и проверки в Unity)
+- Проверено: runtime, editor и тесты компилируются без ошибок. Тесты вне Unity: 245 зелёных, 42 падают только из-за среды. Новые: BillWalletTests 11/11, `PrestigeTests.Controller_TryPrestige_KeepsBills`.
+- Сделано:
+  - `Economy/BillWallet` (long, без минуса, переполнение → MaxValue, событие `BillsChanged(bills, delta)`), enum `BillSource` / `BillSink` для будущей аналитики;
+  - `Economy/BillsSaveParticipant`, `SaveData.Bills` (по умолчанию 0, отрицательное → 0 в `SaveMigrator`), регистрация в Boot — переезд купюры не трогает;
+  - HUD: счётчик купюр справа сверху (зелёная банкнота), репутация сдвинута под него; при начислении — отскок и «+N»; тап поднимает `HudView.BillsClicked` (магазин подключит этап 08d);
+  - Debug-меню: «Add 100 Bills»; строка `bills.name`.
+- Решения: отдельный класс `BillsSave` не заводили — достаточно поля `SaveData.Bills`.
+- Известные проблемы / TODO: выполнить ShaurmaTycoon/Build Game UI.
+
+### Этап 08d — Магазин купюр (код готов, 2026-10-04; ждёт Build Game UI и проверки в Unity)
+- Проверено: runtime, editor и тесты компилируются без ошибок. Тесты вне Unity: 254 зелёных, 42 падают только из-за среды. Новые BillShopTests: 9/9. Ключи строк проверены скриптом.
+- Сделано:
+  - `Shop/BillShopConfig` (SO: паки купюр — productId, купюры, цена для показа, «Выгодно!»; мешки монет — цена в купюрах, минуты дохода, минимум) + `Configs/BillShop.asset` создаёт `ContentSetup`;
+  - `Shop/BillShop`:
+    - мешок = max(доход/с × минуты, минимум × масштаб города);
+    - паки — через `IPlatformService.Purchase`, купюры только после успеха, одна покупка за раз;
+    - после любой покупки — `SaveNow`;
+    - создаётся в `GameSceneInstaller`;
+  - 5-я вкладка «Магазин» (`ShopPanel`, префаб `BillShopRow`): секции «Купюры» (20/120/350 за 19/99/249 ян) и «Монеты за купюры» (5/20/60 купюр → доход за 30 мин / 3 ч / 12 ч); награда пересчитывается раз в секунду без аллокаций; при покупке монеты летят в HUD;
+  - тап по купюрам в HUD открывает вкладку «Магазин» (`GameScreen._tabBar`, `_shopTabIndex` = 4).
+- Решения: купленные монеты идут прямо в `Wallet` и не считаются заработком для престижа (как стартовый капитал).
+- Известные проблемы / TODO:
+  - выполнить ShaurmaTycoon/Build Game UI;
+  - TODO(YANDEX) этап 09: завести товары `bills_small/medium/large` в консоли, брать цены из каталога вместо `DisplayPrice`, обрабатывать неподтверждённые покупки при старте (consume).
+
+### Исправление: падение при переезде в новый город (2026-10-04)
+- Симптом: после «Переезжаем!» — `MissingReferenceException` в `UpgradeRowView.RefreshAffordable`, затем `Service PrestigeController is not registered` в `GameScreen.Start` и NRE в `GameSceneInstaller.OnDestroy`.
+- Причина (ошибка этапа 08):
+  - Unity не вызывает `OnDestroy` у объектов, которые ни разу не были активны (строки закрытых вкладок, скрытые попапы), поэтому их подписки на сервисы Boot (`Wallet`, `Loc`, `PrestigeState`, …) переживали сцену;
+  - в новой сцене `CitySaveParticipant.Apply` → `Wallet.SetCoins` вызывал уничтоженную строку, исключение обрывало `GameSceneInstaller.Awake`, и `PrestigeController` с остальными сервисами не регистрировались.
+- Исправление:
+  - `UI/SceneBindings` + `ISceneBinding`: 10 вью с подписками на Boot-сервисы регистрируются в `Bind`, тело `OnDestroy` вынесено в `Unbind()`;
+  - `GameScreen.OnDestroy` (всегда активен) вызывает `SceneBindings.UnbindAll()`;
+  - `GameSceneInstaller.OnDestroy` устойчив к недостроенному городу;
+  - тест SceneBindingsTests.
+- Проверено: компиляция, тесты вне Unity 255 зелёных (+42 средовых). В Unity не проверено — повторить переезд.
+
 ## Важные решения (архитектура)
 - Unity 2022.3.62f1, 2D, URP 2D, Color Space Gamma, старый Input Manager.
 - Сборки: `ShaurmaTycoon` (runtime), `ShaurmaTycoon.Editor`, `ShaurmaTycoon.Tests.EditMode` (Assets/_Game/Tests/EditMode). Namespace `ShaurmaTycoon.<Модуль>`, для редакторского кода `ShaurmaTycoon.EditorTools`.
 - Сервисы регистрируются в `GameBootstrap` через `Services.Register<T>`, единственный Update в игре — в `TickManager`.
-- Сервисы Boot: `TickManager` (+ `ApplicationEvents`), `Wallet`, `TweenRunner`, `PulseDriver`, `IPlatformService`, `Loc`, `SaveService`, `PrestigeState`. Сервисы сцены Game (`GameSceneInstaller`): `BalanceConfig`, `CityConfig` (текущий), `CityCatalog`, `StationController`, `ManagerController`, `UpgradeService`, `ReputationShop`, `AudioService`, `CustomerConfig`, `OfflineIncomeService`, `PrestigeController`; снимаются через `Services.Unregister(instance)`. Вью связываются в `GameScreen.Start`.
+- Сервисы Boot: `TickManager` (+ `ApplicationEvents`), `MusicService` (+ единственный `AudioListener` на объекте «Audio»), `GameSettings`, `Wallet`, `BillWallet`, `TweenRunner`, `PulseDriver`, `IPlatformService`, `Loc`, `SaveService`, `PrestigeState`. Сервисы сцены Game (`GameSceneInstaller`): `BalanceConfig`, `CityConfig` (текущий), `CityCatalog`, `StationController`, `ManagerController`, `UpgradeService`, `ReputationShop`, `BillShop`, `AudioService`, `CustomerConfig`, `OfflineIncomeService`, `PrestigeController`; снимаются через `Services.Unregister(instance)`. Вью связываются в `GameScreen.Start`.
 - Все тексты UI — ключи из `Configs/Localization/strings.txt` (TSV: key, ru, en); новые ключи добавлять туда и в `StringsFileTests.RequiredKeys`.
 - Тексты, которые меняются в Tick, выводить через `NumberText` + `TMP_Text.SetNumberText`, шаблоны — `Loc.GetTemplate(key)` (без string.Format).
 - Новая система с состоянием → реализовать `ISaveParticipant` и зарегистрировать в `SaveService`; новые поля `SaveData` — со значением по умолчанию, при несовместимых изменениях повышать `SaveData.CurrentVersion` и добавлять шаг в `SaveMigrator`.
+- Вью сцены Game, подписанная на сервис Boot (`Wallet`, `BillWallet`, `Loc`, `PrestigeState`, `GameSettings`), реализует `ISceneBinding` и вызывает `SceneBindings.Track(this)` в `Bind` — `OnDestroy` у ни разу не активных объектов не вызывается.
 - Новый город = новый `CityConfig` (свои станции и улучшения) в `Configs/Cities/CityCatalog.asset`; переход между городами перезагружает сцену Game.
 
 ## TODO(YANDEX)

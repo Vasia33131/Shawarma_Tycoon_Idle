@@ -41,6 +41,7 @@ namespace ShaurmaTycoon.Prestige
         }
 
         public double Threshold { get; }
+        public int CityIndex => _cityIndex;
         public bool IsLastCity => _cityIndex >= _cityCount - 1;
         public int NextCityIndex => IsLastCity ? _cityIndex : _cityIndex + 1;
 

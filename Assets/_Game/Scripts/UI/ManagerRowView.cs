@@ -12,7 +12,7 @@ namespace ShaurmaTycoon.UI
     /// <summary>
     /// Строка менеджера: станция, описание и кнопка «Нанять за X» / «Нанят» / «Открой станцию».
     /// </summary>
-    public sealed class ManagerRowView : MonoBehaviour
+    public sealed class ManagerRowView : MonoBehaviour, ISceneBinding
     {
         private enum State
         {
@@ -43,6 +43,7 @@ namespace ShaurmaTycoon.UI
 
         public void Bind(int index, StationModel station, ManagerController managers, Wallet wallet, Loc loc)
         {
+            SceneBindings.Track(this);
             _index = index;
             _station = station;
             _managers = managers;
@@ -62,6 +63,11 @@ namespace ShaurmaTycoon.UI
         }
 
         private void OnDestroy()
+        {
+            Unbind();
+        }
+
+        public void Unbind()
         {
             if (_station == null)
                 return;

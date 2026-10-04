@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b395ecc20bdf41ca98367935b3d48f57, type: 3}
+  m_Name: ReputationShop
+  m_EditorClassIdentifier: 
+  _items:
+  - Id: offline_limit
+    NameKey: shop.offline_limit.name
+    DescriptionKey: shop.offline_limit.desc
+    Effect: 0
+    Values:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    Prices: 05000000000000000a00000000000000140000000000000028000000000000005000000000000000a000000000000000
+  - Id: start_coins
+    NameKey: shop.start_coins.name
+    DescriptionKey: shop.start_coins.desc
+    Effect: 1
+    Values:
+    - 1000
+    - 100000
+    - 10000000
+    Prices: 03000000000000000f000000000000004b00000000000000
+  - Id: free_managers
+    NameKey: shop.free_managers.name
+    DescriptionKey: shop.free_managers.desc
+    Effect: 2
+    Values:
+    - 1
+    - 2
+    - 3
+    Prices: 0a000000000000003200000000000000fa00000000000000
+  - Id: fast_customers
+    NameKey: shop.fast_customers.name
+    DescriptionKey: shop.fast_customers.desc
+    Effect: 3
+    Values:
+    - 0.9
+    - 0.8
+    - 0.7
+    Prices: 140000000000000050000000000000004001000000000000
