@@ -181,10 +181,10 @@
 - Сервисы регистрируются в `GameBootstrap` через `Services.Register<T>`, единственный Update в игре — в `TickManager`.
 - Сервисы Boot: `TickManager`, `Wallet`, `TweenRunner`, `PulseDriver`, `IPlatformService`, `Loc`. Сервисы сцены Game (`GameSceneInstaller`): `StationController`, `ManagerController`, `UpgradeService`, `AudioService`, `CustomerConfig`. Вью связываются в `GameScreen.Start`.
 - Все тексты UI — ключи из `Configs/Localization/strings.txt` (TSV: key, ru, en); новые ключи добавлять туда и в `StringsFileTests.RequiredKeys`.
+- Тексты, которые меняются в Tick, выводить через `NumberText` + `TMP_Text.SetNumberText`, шаблоны — `Loc.GetTemplate(key)` (без string.Format).
 
 ## TODO(YANDEX)
 - Выбрать PluginYG2 или свой jslib-мост (этап 09).
 - `GameBootstrap.CreatePlatform`: в WebGL создавать `YandexPlatformService`.
 - Уточнить сигнатуры лидерборда и покупок в `IPlatformService`.
 - WebGL-шаблон на весь экран (дефолтный шаблон Unity даёт канвас фиксированного размера).
-- Тексты, которые меняются в Tick, выводить через `NumberText` + `TMP_Text.SetNumberText`, шаблоны — `Loc.GetTemplate(key)` (без string.Format).
