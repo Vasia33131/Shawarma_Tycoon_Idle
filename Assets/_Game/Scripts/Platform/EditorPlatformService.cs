@@ -8,7 +8,8 @@ namespace ShaurmaTycoon.Platform
     /// </summary>
     public sealed class EditorPlatformService : IPlatformService
     {
-        private const string SaveKey = "shaurma_tycoon_save";
+        /// <summary>Ключ PlayerPrefs с сохранением (меню ShaurmaTycoon/Save).</summary>
+        public const string SaveKey = "shaurma_tycoon_save";
         private const string DefaultLanguage = "ru";
 
         /// <summary>Ключ EditorPrefs с языком редактора (меню ShaurmaTycoon/Editor Language).</summary>

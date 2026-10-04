@@ -65,6 +65,36 @@ namespace ShaurmaTycoon.Upgrades
             return true;
         }
 
+        /// <summary>Восстановление из сохранения: купленными становятся ровно улучшения из списка (неизвестные id игнорируются).</summary>
+        public void Restore(IReadOnlyList<string> purchasedIds)
+        {
+            for (int i = 0; i < _upgrades.Count; i++)
+                _purchased[i] = Contains(purchasedIds, _upgrades[i].Id);
+            ApplyMultipliers();
+        }
+
+        /// <summary>Добавляет в output id купленных улучшений.</summary>
+        public void CollectPurchasedIds(List<string> output)
+        {
+            for (int i = 0; i < _upgrades.Count; i++)
+            {
+                if (_purchased[i])
+                    output.Add(_upgrades[i].Id);
+            }
+        }
+
+        private static bool Contains(IReadOnlyList<string> ids, string id)
+        {
+            if (ids == null)
+                return false;
+            for (int i = 0; i < ids.Count; i++)
+            {
+                if (string.Equals(ids[i], id, StringComparison.Ordinal))
+                    return true;
+            }
+            return false;
+        }
+
         private void ApplyMultipliers()
         {
             IReadOnlyList<StationModel> stations = _stations.Stations;

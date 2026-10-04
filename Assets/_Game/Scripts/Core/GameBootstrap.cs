@@ -2,6 +2,7 @@ using ShaurmaTycoon.Core.Tweening;
 using ShaurmaTycoon.Economy;
 using ShaurmaTycoon.Localization;
 using ShaurmaTycoon.Platform;
+using ShaurmaTycoon.Save;
 using ShaurmaTycoon.UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -9,7 +10,7 @@ using UnityEngine.SceneManagement;
 namespace ShaurmaTycoon.Core
 {
     /// <summary>
-    /// Точка входа (сцена Boot): создаёт и регистрирует сервисы, затем загружает сцену Game.
+    /// Точка входа (сцена Boot): создаёт и регистрирует сервисы, загружает сейв, затем загружает сцену Game.
     /// </summary>
     public sealed class GameBootstrap : MonoBehaviour
     {
@@ -17,22 +18,24 @@ namespace ShaurmaTycoon.Core
         [Tooltip("TSV-таблица строк (Configs/Localization/strings.txt).")]
         [SerializeField] private TextAsset _strings = null;
 
+        private TickManager _tickManager;
         private IPlatformService _platform;
 
         private void Awake()
         {
             var tickManagerObject = new GameObject(nameof(TickManager));
             DontDestroyOnLoad(tickManagerObject);
-            var tickManager = tickManagerObject.AddComponent<TickManager>();
-            Services.Register(tickManager);
+            _tickManager = tickManagerObject.AddComponent<TickManager>();
+            tickManagerObject.AddComponent<ApplicationEvents>();
+            Services.Register(_tickManager);
             Services.Register(new Wallet());
 
             var tweens = new TweenRunner();
             var pulses = new PulseDriver(tweens);
             Services.Register(tweens);
             Services.Register(pulses);
-            tickManager.Register(tweens);
-            tickManager.Register(pulses);
+            _tickManager.Register(tweens);
+            _tickManager.Register(pulses);
 
             _platform = CreatePlatform();
             Services.Register(_platform);
@@ -49,6 +52,21 @@ namespace ShaurmaTycoon.Core
         {
             Services.Register(new Loc(LoadStrings(), _platform.Language));
 
+            IPlatformService platform = _platform;
+            var save = new SaveService(new PlatformSaveStorage(platform), new JsonSaveSerializer(), () => platform.ServerTimeUtc);
+            save.LoadFailed += error => Debug.LogWarning($"[Save] Save is corrupted, starting a new game: {error.Message}");
+            save.SaveFailed += () => Debug.LogWarning("[Save] Storage failed to write the save.");
+            GameEvents.ApplicationFocusChanged += save.OnApplicationFocusChanged;
+            GameEvents.ApplicationPaused += save.OnApplicationPaused;
+            GameEvents.ApplicationQuitting += save.OnApplicationQuitting;
+            Services.Register(save);
+            _tickManager.Register(save);
+
+            save.Load(OnSaveLoaded);
+        }
+
+        private void OnSaveLoaded()
+        {
             Debug.Log("Bootstrap OK");
             SceneManager.LoadScene(_gameSceneName);
         }

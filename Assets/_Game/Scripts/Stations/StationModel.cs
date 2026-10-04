@@ -122,6 +122,21 @@ namespace ShaurmaTycoon.Stations
             return earned;
         }
 
+        /// <summary>
+        /// Восстановление из сохранения. Некорректные значения исправляются:
+        /// уровень не меньше 0, менеджер и цикл только у открытой станции, прогресс в [0, 1).
+        /// </summary>
+        public void Restore(int level, bool automated, double progress, bool running)
+        {
+            Level = Math.Max(0, level);
+            _speedMultiplier = _milestones.GetSpeedMultiplier(Level);
+            _isAutomated = automated && IsUnlocked;
+            IsRunning = running && IsUnlocked;
+            Progress = IsRunning && progress >= 0 && progress < 1 ? progress : 0;
+
+            Changed?.Invoke(this);
+        }
+
         public double GetCost(int count)
         {
             return EconomyMath.BulkCost(_definition.BaseCost, _definition.CostGrowth, Level, count);

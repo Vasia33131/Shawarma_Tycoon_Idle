@@ -3,6 +3,7 @@ using ShaurmaTycoon.Customers;
 using ShaurmaTycoon.Economy;
 using ShaurmaTycoon.Managers;
 using ShaurmaTycoon.Prestige;
+using ShaurmaTycoon.Save;
 using ShaurmaTycoon.Stations;
 using ShaurmaTycoon.Upgrades;
 using UnityEngine;
@@ -22,6 +23,8 @@ namespace ShaurmaTycoon.Core
         private TickManager _tickManager;
         private StationController _stations;
         private AudioService _audioService;
+        private SaveService _save;
+        private CitySaveParticipant _saveParticipant;
 
         private void Awake()
         {
@@ -37,7 +40,8 @@ namespace ShaurmaTycoon.Core
             _stations = new StationController(_city.Stations, _balance.CreateMilestoneTable(), wallet);
             Services.Register(_stations);
             Services.Register(new ManagerController(_stations, wallet, _balance.ManagerCostMultiplier));
-            Services.Register(new UpgradeService(_city.Upgrades, _stations, wallet));
+            var upgrades = new UpgradeService(_city.Upgrades, _stations, wallet);
+            Services.Register(upgrades);
 
             _audioService = new AudioService(_audio);
             Services.Register(_audioService);
@@ -46,6 +50,13 @@ namespace ShaurmaTycoon.Core
                 Services.Register(_customers);
             else
                 Debug.LogWarning($"{nameof(GameSceneInstaller)}: CustomerConfig is not assigned, no customers.", this);
+
+            // Состояние из сейва восстанавливается здесь, до того как UI в Start прочитает модели.
+            if (Services.TryGet(out _save))
+            {
+                _saveParticipant = new CitySaveParticipant(wallet, _stations, upgrades);
+                _save.Register(_saveParticipant);
+            }
 
             _tickManager = Services.Get<TickManager>();
             _tickManager.Register(_stations);
@@ -58,6 +69,8 @@ namespace ShaurmaTycoon.Core
 
             if (_tickManager != null)
                 _tickManager.Unregister(_stations);
+            if (_save != null && _saveParticipant != null)
+                _save.Unregister(_saveParticipant);
             _audioService?.Dispose();
 
             Services.Unregister<CustomerConfig>();

@@ -175,13 +175,42 @@
   - атласы спрайтов (меньше draw calls) — этап 12;
   - WebGL-билд всё ещё не подтверждён.
 
+### Этап 06 — Сохранения (код готов, 2026-10-04; ждёт проверки в Unity)
+- Проверено: runtime, editor и тестовая сборка компилируются без warnings (вне редактора). Чистая логика и тесты вне Unity: 213/213 зелёные. `JsonSaveSerializerTests` (JsonUtility), `AllocationTests`, `TweenRunnerTests` — только в Test Runner. В Unity ещё не запускалось.
+- Сделано:
+  - `Save/`:
+    - `SaveData` (Version, Coins, SavedAtUtcTicks, Stations, PurchasedUpgrades), `StationSave`;
+    - `SaveMigrator` (версия 0 → 1, нормализация значений);
+    - `ISaveStorage` + `PlatformSaveStorage` (через `IPlatformService`), `ISaveSerializer` + `JsonSaveSerializer` (JsonUtility);
+    - `ISaveParticipant` + `CitySaveParticipant` (монеты, станции по id, улучшения по id);
+    - `SaveService` (загрузка, участники, автосейв каждые 10 с, сохранение при потере фокуса, паузе и выходе, события `LoadFailed`/`SaveFailed`);
+  - `StationModel.Restore`, `UpgradeService.Restore` и `CollectPurchasedIds`;
+  - `Core/ApplicationEvents` (OnApplicationFocus/Pause/Quit → `GameEvents`), новые события в `GameEvents`;
+  - `GameBootstrap`: платформа → Loc → `SaveService.Load` → сцена Game; `GameSceneInstaller` регистрирует `CitySaveParticipant` в Awake (до того как UI прочитает модели);
+  - меню `ShaurmaTycoon/Save/`: Print, Delete, Write Legacy Test Save (`{"Coins":500}`), Write Corrupt Test Save.
+- Файлы:
+  - `Scripts/Save/`: `SaveData.cs`, `StationSave.cs`, `SaveMigrator.cs`, `ISaveStorage.cs`, `PlatformSaveStorage.cs`, `ISaveSerializer.cs`, `JsonSaveSerializer.cs`, `ISaveParticipant.cs`, `CitySaveParticipant.cs`, `SaveService.cs`
+  - `Scripts/Core/ApplicationEvents.cs`, `Scripts/Editor/SaveMenu.cs`
+  - `Tests/EditMode/`: `SaveMigratorTests.cs`, `CitySaveParticipantTests.cs`, `SaveServiceTests.cs`, `JsonSaveSerializerTests.cs`
+  - изменены: `StationModel.cs`, `UpgradeService.cs`, `GameEvents.cs`, `GameBootstrap.cs`, `GameSceneInstaller.cs`, `EditorPlatformService.cs` (публичный `SaveKey`)
+- Решения:
+  - имена полей JSON = имена полей C# (`Coins`, `Stations`…), переименовывать нельзя без миграции;
+  - станции и улучшения ищутся по `Id`; станции без записи в сейве остаются как в конфиге; неизвестные id игнорируются;
+  - `SaveService` — чистый C#: события Unity подключаются к нему в `GameBootstrap`, логирование — через его события;
+  - испорченный сейв → предупреждение в консоли и новая игра; резервной копии нет, автосейв его перезапишет (резерв — этап 09 вместе с облаком);
+  - время сохранения берётся из `IPlatformService.ServerTimeUtc` (для этапа 07);
+  - автосейв считает игровое время `TickManager`, на паузе (реклама) не идёт; аллокация при сохранении раз в 10 с допустима.
+- Известные проблемы / TODO:
+  - сейв из более новой версии игры (Version > 1) загрузится, но при записи станет версии 1 — защиту добавим, когда появится версия 2.
+
 ## Важные решения (архитектура)
 - Unity 2022.3.62f1, 2D, URP 2D, Color Space Gamma, старый Input Manager.
 - Сборки: `ShaurmaTycoon` (runtime), `ShaurmaTycoon.Editor`, `ShaurmaTycoon.Tests.EditMode` (Assets/_Game/Tests/EditMode). Namespace `ShaurmaTycoon.<Модуль>`, для редакторского кода `ShaurmaTycoon.EditorTools`.
 - Сервисы регистрируются в `GameBootstrap` через `Services.Register<T>`, единственный Update в игре — в `TickManager`.
-- Сервисы Boot: `TickManager`, `Wallet`, `TweenRunner`, `PulseDriver`, `IPlatformService`, `Loc`. Сервисы сцены Game (`GameSceneInstaller`): `StationController`, `ManagerController`, `UpgradeService`, `AudioService`, `CustomerConfig`. Вью связываются в `GameScreen.Start`.
+- Сервисы Boot: `TickManager` (+ `ApplicationEvents`), `Wallet`, `TweenRunner`, `PulseDriver`, `IPlatformService`, `Loc`, `SaveService`. Сервисы сцены Game (`GameSceneInstaller`): `StationController`, `ManagerController`, `UpgradeService`, `AudioService`, `CustomerConfig`. Вью связываются в `GameScreen.Start`.
 - Все тексты UI — ключи из `Configs/Localization/strings.txt` (TSV: key, ru, en); новые ключи добавлять туда и в `StringsFileTests.RequiredKeys`.
 - Тексты, которые меняются в Tick, выводить через `NumberText` + `TMP_Text.SetNumberText`, шаблоны — `Loc.GetTemplate(key)` (без string.Format).
+- Новая система с состоянием → реализовать `ISaveParticipant` и зарегистрировать в `SaveService`; новые поля `SaveData` — со значением по умолчанию, при несовместимых изменениях повышать `SaveData.CurrentVersion` и добавлять шаг в `SaveMigrator`.
 
 ## TODO(YANDEX)
 - Выбрать PluginYG2 или свой jslib-мост (этап 09).
