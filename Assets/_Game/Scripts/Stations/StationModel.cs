@@ -30,6 +30,9 @@ namespace ShaurmaTycoon.Stations
         /// <summary>Изменилось что-то, что видно игроку: уровень, автоматизация или множитель дохода.</summary>
         public event Action<StationModel> Changed;
 
+        /// <summary>Завершился один или несколько циклов за кадр; аргументы — станция и доход за эти циклы.</summary>
+        public event Action<StationModel, double> CycleCompleted;
+
         public IStationDefinition Definition => _definition;
         public int Level { get; private set; }
         public bool IsUnlocked => Level > 0;
@@ -100,17 +103,23 @@ namespace ShaurmaTycoon.Stations
             if (Progress < 1)
                 return 0;
 
+            double earned;
             if (!IsAutomated)
             {
                 Progress = 0;
                 IsRunning = false;
-                return IncomePerCycle;
+                earned = IncomePerCycle;
+            }
+            else
+            {
+                // На высоких вехах цикл может быть короче кадра — считаем все завершённые циклы.
+                double cycles = Math.Floor(Progress);
+                Progress -= cycles;
+                earned = cycles * IncomePerCycle;
             }
 
-            // На высоких вехах цикл может быть короче кадра — считаем все завершённые циклы.
-            double cycles = Math.Floor(Progress);
-            Progress -= cycles;
-            return cycles * IncomePerCycle;
+            CycleCompleted?.Invoke(this, earned);
+            return earned;
         }
 
         public double GetCost(int count)

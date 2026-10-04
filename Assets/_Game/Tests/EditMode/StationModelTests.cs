@@ -219,6 +219,28 @@ namespace ShaurmaTycoon.Tests
         }
 
         [Test]
+        public void CycleCompleted_ReportsIncome_ForManualAndAutomated()
+        {
+            StationModel station = CreateStation();
+            double reported = 0;
+            int events = 0;
+            station.CycleCompleted += (_, income) =>
+            {
+                reported += income;
+                events++;
+            };
+
+            station.TryStartCycle();
+            station.Advance(0.3);
+            station.Advance(0.4);
+            station.IsAutomated = true;
+            station.Advance(3.1);
+
+            Assert.AreEqual(2, events);
+            Assert.AreEqual(1 + 5, reported);
+        }
+
+        [Test]
         public void NullWallet_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => CreateStation().TryBuy(null, 1));

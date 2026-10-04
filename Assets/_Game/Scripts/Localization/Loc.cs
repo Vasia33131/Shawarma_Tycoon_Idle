@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 
 namespace ShaurmaTycoon.Localization
@@ -13,6 +14,7 @@ namespace ShaurmaTycoon.Localization
         public const string English = "en";
 
         private readonly LocTable _table;
+        private readonly Dictionary<string, LocTemplate> _templates = new Dictionary<string, LocTemplate>(32);
 
         public Loc(LocTable table, string platformLanguage)
         {
@@ -32,7 +34,24 @@ namespace ShaurmaTycoon.Localization
                 return;
 
             Language = normalized;
+            foreach (var pair in _templates)
+                pair.Value.Set(Get(pair.Key));
             LanguageChanged?.Invoke();
+        }
+
+        /// <summary>
+        /// Шаблон с одним «{0}» для сборки текста без аллокаций. Один объект на ключ;
+        /// при смене языка обновляется на месте (до события LanguageChanged).
+        /// </summary>
+        public LocTemplate GetTemplate(string key)
+        {
+            if (!_templates.TryGetValue(key, out LocTemplate template))
+            {
+                template = new LocTemplate();
+                template.Set(Get(key));
+                _templates.Add(key, template);
+            }
+            return template;
         }
 
         public string Get(string key)

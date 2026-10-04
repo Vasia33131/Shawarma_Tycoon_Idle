@@ -8,7 +8,8 @@ using UnityEngine;
 namespace ShaurmaTycoon.UI
 {
     /// <summary>
-    /// Верхняя панель: монеты и доход/сек. Тексты обновляются не чаще 10 раз в секунду и только при изменении.
+    /// Верхняя панель: монеты и доход/сек. Тексты обновляются не чаще 10 раз в секунду,
+    /// только при изменении и без аллокаций (NumberText → SetCharArray).
     /// </summary>
     public sealed class HudView : MonoBehaviour, ITickable
     {
@@ -16,19 +17,28 @@ namespace ShaurmaTycoon.UI
 
         [SerializeField] private TMP_Text _coinsText = null;
         [SerializeField] private TMP_Text _incomeText = null;
+        [Tooltip("Иконка монет: цель летящих монет, подпрыгивает при их прилёте.")]
+        [SerializeField] private RectTransform _coinIcon = null;
+
+        private readonly NumberText _coins = new NumberText();
+        private readonly NumberText _income = new NumberText();
 
         private Wallet _wallet;
         private StationController _stations;
         private Loc _loc;
+        private LocTemplate _incomeTemplate;
         private double _shownCoins = double.NaN;
         private double _shownIncome = double.NaN;
         private float _timer;
+
+        public RectTransform CoinIcon => _coinIcon;
 
         public void Bind(Wallet wallet, StationController stations, Loc loc)
         {
             _wallet = wallet;
             _stations = stations;
             _loc = loc;
+            _incomeTemplate = loc.GetTemplate("hud.income_per_sec");
             _loc.LanguageChanged += ForceRefresh;
             ForceRefresh();
         }
@@ -60,7 +70,7 @@ namespace ShaurmaTycoon.UI
             if (force || coins != _shownCoins)
             {
                 _shownCoins = coins;
-                _coinsText.text = BigNumberFormatter.Format(coins);
+                _coinsText.SetNumberText(_coins.Clear().AppendNumber(coins));
             }
 
             double income = _stations.IncomePerSecond;
@@ -68,9 +78,13 @@ namespace ShaurmaTycoon.UI
             {
                 _shownIncome = income;
                 bool hasIncome = income > 0;
-                _incomeText.gameObject.SetActive(hasIncome);
+                if (_incomeText.gameObject.activeSelf != hasIncome)
+                    _incomeText.gameObject.SetActive(hasIncome);
                 if (hasIncome)
-                    _incomeText.text = _loc.Format("hud.income_per_sec", BigNumberFormatter.Format(income));
+                {
+                    _income.Clear().Append(_incomeTemplate.Prefix).AppendNumber(income).Append(_incomeTemplate.Suffix);
+                    _incomeText.SetNumberText(_income);
+                }
             }
         }
     }

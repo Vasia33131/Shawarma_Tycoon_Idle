@@ -26,6 +26,9 @@ namespace ShaurmaTycoon.Stations
 
         public IReadOnlyList<StationModel> Stations => _stations;
 
+        /// <summary>Сколько монет станции принесли за тик (только если больше нуля).</summary>
+        public event Action<double> Earned;
+
         /// <summary>Доход в секунду станций, которые работают сами (с менеджером).</summary>
         public double IncomePerSecond
         {
@@ -48,12 +51,27 @@ namespace ShaurmaTycoon.Stations
                 earned += _stations[i].Advance(deltaTime);
 
             if (earned > 0)
+            {
                 _wallet.Add(earned);
+                Earned?.Invoke(earned);
+            }
         }
 
         public bool Tap(int index)
         {
             return IsValidIndex(index) && _stations[index].TryStartCycle();
+        }
+
+        /// <summary>Тап по клиенту (GDD §4): запускает все открытые станции без менеджера, которые простаивают.</summary>
+        public int TapAllIdle()
+        {
+            int started = 0;
+            for (int i = 0; i < _stations.Count; i++)
+            {
+                if (!_stations[i].IsAutomated && _stations[i].TryStartCycle())
+                    started++;
+            }
+            return started;
         }
 
         public bool TryBuy(int index, int count)

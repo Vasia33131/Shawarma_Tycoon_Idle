@@ -66,6 +66,40 @@ namespace ShaurmaTycoon.Tests
         }
 
         [Test]
+        public void Earned_ReportsTotalPerTick()
+        {
+            double earned = 0;
+            int events = 0;
+            _controller.Earned += amount =>
+            {
+                earned += amount;
+                events++;
+            };
+            _controller.Tap(0);
+            _controller.Tap(1);
+
+            _controller.Tick(0.5f);
+            _controller.Tick(0.6f);
+
+            Assert.AreEqual(11, earned);
+            Assert.AreEqual(1, events);
+        }
+
+        [Test]
+        public void TapAllIdle_StartsOnlyIdleManualUnlockedStations()
+        {
+            _controller.Stations[1].IsAutomated = true;
+            _controller.Tap(0);
+
+            Assert.AreEqual(0, _controller.TapAllIdle());
+
+            _controller.Tick(1f);
+            Assert.AreEqual(1, _controller.TapAllIdle());
+            Assert.IsTrue(_controller.Stations[0].IsRunning);
+            Assert.IsFalse(_controller.Stations[2].IsRunning);
+        }
+
+        [Test]
         public void InvalidIndex_ReturnsFalse()
         {
             Assert.IsFalse(_controller.Tap(-1));

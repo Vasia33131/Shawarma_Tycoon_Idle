@@ -1,4 +1,7 @@
 using System.IO;
+using ShaurmaTycoon.Core;
+using ShaurmaTycoon.Core.Audio;
+using ShaurmaTycoon.Customers;
 using ShaurmaTycoon.Localization;
 using ShaurmaTycoon.UI;
 using TMPro;
@@ -29,13 +32,28 @@ namespace ShaurmaTycoon.EditorTools
         private const float ManagerRowHeight = 180f;
         private const float UpgradeRowHeight = 160f;
         private const float HeaderHeight = 110f;
+        private const float GroundRatio = 0.2f;
+        private const int CustomerPoolSize = 9;
+        private const int CoinPoolSize = 24;
+        private const int FloatingTextPoolSize = 12;
 
         private static readonly Color Cream = new Color(1f, 0.95f, 0.88f);
         private static readonly Color RowColor = new Color(1f, 0.99f, 0.96f);
         private static readonly Color DarkBrown = new Color(0.36f, 0.18f, 0.07f);
         private static readonly Color Brown = new Color(0.45f, 0.25f, 0.12f);
         private static readonly Color Orange = new Color(0.95f, 0.55f, 0.15f);
-        private static readonly Color Kiosk = new Color(1f, 0.72f, 0.38f);
+        private static readonly Color Sky = new Color(1f, 0.87f, 0.68f);
+        private static readonly Color Pavement = new Color(0.78f, 0.60f, 0.45f);
+        private static readonly Color Curb = new Color(0.62f, 0.45f, 0.32f);
+        private static readonly Color BoothRed = new Color(0.85f, 0.30f, 0.20f);
+        private static readonly Color WindowDark = new Color(0.25f, 0.14f, 0.09f);
+        private static readonly Color Wood = new Color(0.60f, 0.38f, 0.20f);
+        private static readonly Color Meat = new Color(0.62f, 0.36f, 0.16f);
+        private static readonly Color MeatDark = new Color(0.45f, 0.24f, 0.10f);
+        private static readonly Color AwningWhite = new Color(0.98f, 0.96f, 0.92f);
+        private static readonly Color Steel = new Color(0.62f, 0.62f, 0.66f);
+        private static readonly Color CoinInner = new Color(1f, 0.65f, 0.10f);
+        private static readonly Color FloatText = new Color(0.85f, 0.42f, 0.05f);
         private static readonly Color Green = new Color(0.30f, 0.69f, 0.31f);
         private static readonly Color BarBack = new Color(0.36f, 0.18f, 0.07f, 0.25f);
         private static readonly Color Gold = new Color(1f, 0.80f, 0.20f);
@@ -49,8 +67,7 @@ namespace ShaurmaTycoon.EditorTools
         [MenuItem("ShaurmaTycoon/Build Game UI")]
         public static void Build()
         {
-            _font = TMP_Settings.defaultFontAsset;
-            if (_font == null)
+            if (TMP_Settings.instance == null)
             {
                 EditorUtility.DisplayDialog("Build Game UI",
                     "TMP Essentials не найдены. Импортируй их: Window → TextMeshPro → Import TMP Essential Resources.", "OK");
@@ -60,6 +77,8 @@ namespace ShaurmaTycoon.EditorTools
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
                 return;
 
+            ContentSetup.EnsureAll(out AudioConfig audioConfig, out CustomerConfig customerConfig);
+            _font = TMP_Settings.defaultFontAsset;
             _roundSprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
             _circleSprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
 
@@ -84,12 +103,30 @@ namespace ShaurmaTycoon.EditorTools
             if (debugLabel != null)
                 Object.DestroyImmediate(debugLabel.gameObject);
 
+            AssignInstallerConfigs(scene, audioConfig, customerConfig);
+
             StationRowView rowPrefab = BuildRowPrefab();
             BuildScreen(canvas, rowPrefab, BuildManagerRowPrefab(), BuildUpgradeRowPrefab());
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             Debug.Log("[Build Game UI] Done");
+        }
+
+        private static void AssignInstallerConfigs(Scene scene, AudioConfig audio, CustomerConfig customers)
+        {
+            GameObject installerObject = FindRoot(scene, nameof(GameSceneInstaller));
+            GameSceneInstaller installer = installerObject != null ? installerObject.GetComponent<GameSceneInstaller>() : null;
+            if (installer == null)
+            {
+                Debug.LogError("[Build Game UI] GameSceneInstaller not found in the Game scene.");
+                return;
+            }
+
+            var so = new SerializedObject(installer);
+            Set(so, "_audio", audio);
+            Set(so, "_customers", customers);
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         // ---------- Station row prefab ----------
@@ -109,7 +146,7 @@ namespace ShaurmaTycoon.EditorTools
             GameObject icon = CreateUi("IconButton", root.transform);
             SetRect(icon, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(20f, 0f), new Vector2(180f, 180f));
             Image iconImage = AddImage(icon, Orange, _circleSprite, sliced: false);
-            Button iconButton = AddButton(icon);
+            Button iconButton = AddButton(icon, SoundId.Tap);
             TMP_Text iconLabel = AddText(icon.transform, "IconLabel", "1", 80, Color.white, TextAlignmentOptions.Center, bold: true);
             Stretch(iconLabel.gameObject, new Vector2(0f, 30f), Vector2.zero);
 
@@ -126,7 +163,8 @@ namespace ShaurmaTycoon.EditorTools
             GameObject bar = CreateUi("ProgressBar", root.transform);
             SetRect(bar, new Vector2(0f, 0.5f), new Vector2(1f, 0.5f), new Vector2(0f, 0.5f), new Vector2(220f, -4f), new Vector2(-490f, 72f));
             AddImage(bar, BarBack, _roundSprite);
-            Button barButton = AddButton(bar);
+            Button barButton = AddButton(bar, SoundId.Tap);
+            PulseEffect tapPulse = bar.AddComponent<PulseEffect>();
 
             GameObject fill = CreateUi("Fill", bar.transform);
             var fillRect = (RectTransform)fill.transform;
@@ -148,7 +186,7 @@ namespace ShaurmaTycoon.EditorTools
             GameObject buy = CreateUi("BuyButton", root.transform);
             SetRect(buy, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-20f, 0f), new Vector2(230f, 180f));
             AddImage(buy, Green, _roundSprite);
-            Button buyButton = AddButton(buy);
+            Button buyButton = AddButton(buy, SoundId.Buy);
             TMP_Text buyCount = AddText(buy.transform, "BuyCountText", "×1", 34, Color.white, TextAlignmentOptions.Center, bold: true, autoSize: true);
             SetRect(buyCount.gameObject, new Vector2(0f, 0.5f), new Vector2(1f, 1f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(-20f, 0f));
             TMP_Text buyCost = AddText(buy.transform, "BuyCostText", "4", 42, Color.white, TextAlignmentOptions.Center, bold: true, autoSize: true);
@@ -163,7 +201,8 @@ namespace ShaurmaTycoon.EditorTools
             GameObject unlock = CreateUi("UnlockButton", locked.transform);
             SetRect(unlock, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-20f, 0f), new Vector2(300f, 170f));
             AddImage(unlock, Orange, _roundSprite);
-            Button unlockButton = AddButton(unlock);
+            Button unlockButton = AddButton(unlock, SoundId.Unlock);
+            AddPulseWhileInteractable(unlock, unlockButton);
             TMP_Text unlockCost = AddText(unlock.transform, "UnlockCostText", "Открыть\n60", 38, Color.white, TextAlignmentOptions.Center, bold: true, autoSize: true);
             Stretch(unlockCost.gameObject, new Vector2(12f, 8f), new Vector2(-12f, -8f));
 
@@ -177,6 +216,7 @@ namespace ShaurmaTycoon.EditorTools
             Set(so, "_incomeText", incomeText);
             Set(so, "_cycleTimeText", cycleText);
             Set(so, "_milestoneText", milestoneText);
+            Set(so, "_tapPulse", tapPulse);
             Set(so, "_buyButton", buyButton);
             Set(so, "_buyCountText", buyCount);
             Set(so, "_buyCostText", buyCost);
@@ -208,7 +248,7 @@ namespace ShaurmaTycoon.EditorTools
             TMP_Text description = AddText(root.transform, "DescriptionText", "", 30, Muted, TextAlignmentOptions.TopLeft, autoSize: true);
             SetRect(description.gameObject, new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(0f, 0f), new Vector2(180f, 18f), new Vector2(-470f, -94f));
 
-            Button hireButton = BuildRowButton(root.transform, "HireButton", Green, new Vector2(270f, 140f), out TMP_Text hireText);
+            Button hireButton = BuildRowButton(root.transform, "HireButton", Green, new Vector2(270f, 140f), SoundId.Hire, out TMP_Text hireText);
 
             var so = new SerializedObject(view);
             Set(so, "_icon", icon);
@@ -235,7 +275,7 @@ namespace ShaurmaTycoon.EditorTools
             TMP_Text description = AddText(root.transform, "DescriptionText", "Station: income ×3", 38, DarkBrown, TextAlignmentOptions.Left, bold: true, autoSize: true);
             SetRect(description.gameObject, new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(0f, 0.5f), new Vector2(160f, 0f), new Vector2(-450f, -30f));
 
-            Button buyButton = BuildRowButton(root.transform, "BuyButton", Orange, new Vector2(270f, 120f), out TMP_Text buyText);
+            Button buyButton = BuildRowButton(root.transform, "BuyButton", Orange, new Vector2(270f, 120f), SoundId.Upgrade, out TMP_Text buyText);
 
             var so = new SerializedObject(view);
             Set(so, "_icon", icon);
@@ -259,12 +299,13 @@ namespace ShaurmaTycoon.EditorTools
             return image;
         }
 
-        private static Button BuildRowButton(Transform parent, string name, Color color, Vector2 size, out TMP_Text label)
+        private static Button BuildRowButton(Transform parent, string name, Color color, Vector2 size, SoundId sound, out TMP_Text label)
         {
             GameObject buttonObject = CreateUi(name, parent);
             SetRect(buttonObject, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-20f, 0f), size);
             AddImage(buttonObject, color, _roundSprite);
-            Button button = AddButton(buttonObject);
+            Button button = AddButton(buttonObject, sound);
+            AddPulseWhileInteractable(buttonObject, button);
             label = AddText(buttonObject.transform, "Label", "", 36, Color.white, TextAlignmentOptions.Center, bold: true, autoSize: true);
             Stretch(label.gameObject, new Vector2(12f, 8f), new Vector2(-12f, -8f));
             return button;
@@ -291,14 +332,13 @@ namespace ShaurmaTycoon.EditorTools
             Stretch(background, Vector2.zero, Vector2.zero);
             AddImage(background, Cream, null).raycastTarget = false;
 
-            // Ларёк (заглушка до этапа 05).
+            // Ларёк и улица с клиентами.
             GameObject kiosk = CreateUi("KioskArea", screen.transform);
             Stretch(kiosk, Vector2.zero, Vector2.zero);
-            AddImage(kiosk, Kiosk, null).raycastTarget = false;
-            TMP_Text title = AddLocalizedText(kiosk.transform, "Title", "game.title", 80, DarkBrown, bold: true);
-            SetRect(title.gameObject, new Vector2(0f, 0.5f), new Vector2(1f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 40f), new Vector2(-80f, 110f));
-            TMP_Text placeholder = AddLocalizedText(kiosk.transform, "Placeholder", "kiosk.placeholder", 34, Brown, bold: false);
-            SetRect(placeholder.gameObject, new Vector2(0f, 0.5f), new Vector2(1f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -50f), new Vector2(-80f, 60f));
+            AddImage(kiosk, Sky, null).raycastTarget = false;
+            kiosk.AddComponent<RectMask2D>();
+            KioskView kioskView = BuildKiosk(kiosk.transform);
+            CustomerQueue customers = BuildStreet(kiosk.transform, kioskView);
 
             // Контент: панели вкладок.
             GameObject content = CreateUi("ContentArea", screen.transform);
@@ -311,6 +351,7 @@ namespace ShaurmaTycoon.EditorTools
 
             HudView hud = BuildHud(screen.transform);
             TabBar tabBar = BuildTabBar(screen.transform, out Button[] tabButtons);
+            BuildEffects(screen.transform, hud.CoinIcon, out CoinFlyEffect coinFly, out FloatingTextEffect floatingText);
 
             var tabSo = new SerializedObject(tabBar);
             SetArray(tabSo, "_buttons", tabButtons);
@@ -322,6 +363,10 @@ namespace ShaurmaTycoon.EditorTools
             Set(screenSo, "_stationsPanel", stationsPanel);
             Set(screenSo, "_managersPanel", managersPanel);
             Set(screenSo, "_upgradesPanel", upgradesPanel);
+            Set(screenSo, "_kiosk", kioskView);
+            Set(screenSo, "_customers", customers);
+            Set(screenSo, "_coinFly", coinFly);
+            Set(screenSo, "_floatingText", floatingText);
             screenSo.ApplyModifiedPropertiesWithoutUndo();
 
             var layoutSo = new SerializedObject(layout);
@@ -394,7 +439,7 @@ namespace ShaurmaTycoon.EditorTools
             GameObject buyMode = CreateUi("BuyModeButton", header);
             SetRect(buyMode, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-20f, 0f), new Vector2(330f, 86f));
             AddImage(buyMode, Brown, _roundSprite);
-            Button buyModeButton = AddButton(buyMode);
+            Button buyModeButton = AddButton(buyMode, SoundId.Tap);
             TMP_Text buyModeLabel = AddText(buyMode.transform, "Label", "Купить: ×1", 36, Color.white, TextAlignmentOptions.Center, bold: true, autoSize: true);
             Stretch(buyModeLabel.gameObject, new Vector2(12f, 0f), new Vector2(-12f, 0f));
             var buyModeView = buyMode.AddComponent<BuyModeButton>();
@@ -454,6 +499,191 @@ namespace ShaurmaTycoon.EditorTools
             return panel;
         }
 
+        // ---------- Kiosk, street, effects ----------
+
+        private const string SellerIdlePath = "Assets/_Game/Sprites/Customers/maleAdventurer/character_maleAdventurer_idle.png";
+        private const string CustomerIdlePath = "Assets/_Game/Sprites/Customers/malePerson/character_malePerson_idle.png";
+
+        private static KioskView BuildKiosk(Transform area)
+        {
+            GameObject pavement = CreateUi("Pavement", area);
+            StretchAnchors(pavement, Vector2.zero, new Vector2(1f, GroundRatio));
+            AddImage(pavement, Pavement, null).raycastTarget = false;
+            GameObject curb = CreateUi("Curb", pavement.transform);
+            SetRect(curb, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f), Vector2.zero, new Vector2(0f, 10f));
+            AddImage(curb, Curb, null).raycastTarget = false;
+
+            GameObject booth = CreateUi("Booth", area);
+            SetRect(booth, new Vector2(0.5f, GroundRatio), new Vector2(0.5f, GroundRatio), new Vector2(0.5f, 0f), Vector2.zero, new Vector2(560f, 370f));
+            var kioskView = booth.AddComponent<KioskView>();
+
+            GameObject body = CreateUi("Body", booth.transform);
+            SetRect(body, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0.5f, 0f), Vector2.zero, new Vector2(0f, 250f));
+            AddImage(body, BoothRed, _roundSprite).raycastTarget = false;
+
+            GameObject window = CreateUi("Window", body.transform);
+            SetRect(window, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -24f), new Vector2(400f, 160f));
+            AddImage(window, WindowDark, _roundSprite).raycastTarget = false;
+            window.AddComponent<RectMask2D>();
+
+            GameObject pole = CreateUi("SpitPole", window.transform);
+            SetRect(pole, new Vector2(0.5f, 0f), new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(125f, 0f), new Vector2(8f, -16f));
+            AddImage(pole, Steel, null).raycastTarget = false;
+
+            GameObject spit = CreateUi("Spit", window.transform);
+            SetRect(spit, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(125f, 0f), new Vector2(76f, 120f));
+            AddImage(spit, Meat, _roundSprite).raycastTarget = false;
+            spit.AddComponent<RectMask2D>();
+            var stripes = new RectTransform[5];
+            for (int i = 0; i < stripes.Length; i++)
+            {
+                GameObject stripe = CreateUi("Stripe_" + i, spit.transform);
+                SetRect(stripe, new Vector2(0f, 0.5f), new Vector2(1f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(0f, 10f));
+                AddImage(stripe, MeatDark, null).raycastTarget = false;
+                stripes[i] = (RectTransform)stripe.transform;
+            }
+
+            GameObject seller = CreateUi("Seller", window.transform);
+            SetRect(seller, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(-70f, -70f), new Vector2(165f, 220f));
+            Image sellerImage = AddImage(seller, Color.white, AssetDatabase.LoadAssetAtPath<Sprite>(SellerIdlePath), sliced: false);
+            sellerImage.preserveAspect = true;
+            sellerImage.raycastTarget = false;
+
+            GameObject counter = CreateUi("Counter", body.transform);
+            SetRect(counter, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -180f), new Vector2(460f, 26f));
+            AddImage(counter, Wood, _roundSprite).raycastTarget = false;
+
+            GameObject awning = CreateUi("Awning", booth.transform);
+            SetRect(awning, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 245f), new Vector2(620f, 56f));
+            var awningLayout = awning.AddComponent<HorizontalLayoutGroup>();
+            awningLayout.childControlWidth = true;
+            awningLayout.childControlHeight = true;
+            awningLayout.childForceExpandWidth = true;
+            awningLayout.childForceExpandHeight = true;
+            for (int i = 0; i < 8; i++)
+            {
+                GameObject stripe = CreateUi("AwningStripe_" + i, awning.transform);
+                AddImage(stripe, i % 2 == 0 ? BoothRed : AwningWhite, null).raycastTarget = false;
+            }
+
+            GameObject sign = CreateUi("Sign", booth.transform);
+            SetRect(sign, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 304f), new Vector2(460f, 66f));
+            AddImage(sign, Gold, _roundSprite).raycastTarget = false;
+            TMP_Text signText = AddLocalizedText(sign.transform, "Text", "game.title", 40, DarkBrown, bold: true);
+            Stretch(signText.gameObject, new Vector2(16f, 4f), new Vector2(-16f, -4f));
+
+            var so = new SerializedObject(kioskView);
+            Set(so, "_seller", sellerImage);
+            Set(so, "_spit", spit.transform);
+            SetArray(so, "_spitStripes", stripes);
+            Set(so, "_window", window.transform);
+            so.ApplyModifiedPropertiesWithoutUndo();
+            return kioskView;
+        }
+
+        private static CustomerQueue BuildStreet(Transform area, KioskView kiosk)
+        {
+            GameObject street = CreateUi("Street", area);
+            Stretch(street, Vector2.zero, Vector2.zero);
+            var queue = street.AddComponent<CustomerQueue>();
+
+            Sprite previewSprite = AssetDatabase.LoadAssetAtPath<Sprite>(CustomerIdlePath);
+            var pool = new CustomerView[CustomerPoolSize];
+            for (int i = 0; i < pool.Length; i++)
+            {
+                GameObject customer = CreateUi("Customer_" + i, street.transform);
+                SetRect(customer, new Vector2(0.5f, GroundRatio), new Vector2(0.5f, GroundRatio), new Vector2(0.5f, 0f), new Vector2(0f, -12f), new Vector2(165f, 220f));
+
+                GameObject body = CreateUi("Body", customer.transform);
+                Stretch(body, Vector2.zero, Vector2.zero);
+                body.transform.localScale = new Vector3(-1f, 1f, 1f);
+                Image bodyImage = AddImage(body, Color.white, previewSprite, sliced: false);
+                bodyImage.preserveAspect = true;
+
+                var button = customer.AddComponent<Button>();
+                button.targetGraphic = bodyImage;
+                button.transition = Selectable.Transition.None;
+
+                var view = customer.AddComponent<CustomerView>();
+                var viewSo = new SerializedObject(view);
+                Set(viewSo, "_body", bodyImage);
+                Set(viewSo, "_button", button);
+                viewSo.ApplyModifiedPropertiesWithoutUndo();
+
+                customer.SetActive(false);
+                pool[i] = view;
+            }
+
+            GameObject bubble = CreateUi("Bubble", street.transform);
+            SetRect(bubble, new Vector2(0.5f, GroundRatio), new Vector2(0.5f, GroundRatio), new Vector2(0.15f, 0f), new Vector2(0f, 250f), new Vector2(400f, 110f));
+            AddImage(bubble, Color.white, _roundSprite).raycastTarget = false;
+            TMP_Text bubbleText = AddText(bubble.transform, "Text", "", 32, DarkBrown, TextAlignmentOptions.Center, bold: true, autoSize: true);
+            Stretch(bubbleText.gameObject, new Vector2(18f, 10f), new Vector2(-18f, -10f));
+            bubble.SetActive(false);
+
+            var so = new SerializedObject(queue);
+            Set(so, "_street", street.transform);
+            SetArray(so, "_pool", pool);
+            Set(so, "_bubble", bubble.transform);
+            Set(so, "_bubbleText", bubbleText);
+            Set(so, "_kiosk", kiosk);
+            so.ApplyModifiedPropertiesWithoutUndo();
+            return queue;
+        }
+
+        private static void BuildEffects(Transform parent, RectTransform coinTarget, out CoinFlyEffect coinFly,
+            out FloatingTextEffect floatingText)
+        {
+            GameObject layer = CreateUi("EffectsLayer", parent);
+            Stretch(layer, Vector2.zero, Vector2.zero);
+
+            var coins = new RectTransform[CoinPoolSize];
+            for (int i = 0; i < coins.Length; i++)
+            {
+                GameObject coin = CreateUi("Coin_" + i, layer.transform);
+                SetRect(coin, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(64f, 64f));
+                AddImage(coin, Gold, _circleSprite, sliced: false).raycastTarget = false;
+                GameObject inner = CreateUi("Inner", coin.transform);
+                SetRect(inner, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(38f, 38f));
+                AddImage(inner, CoinInner, _circleSprite, sliced: false).raycastTarget = false;
+                coin.SetActive(false);
+                coins[i] = (RectTransform)coin.transform;
+            }
+
+            var texts = new TMP_Text[FloatingTextPoolSize];
+            for (int i = 0; i < texts.Length; i++)
+            {
+                TMP_Text text = AddText(layer.transform, "FloatingText_" + i, "+1", 44, FloatText, TextAlignmentOptions.Center, bold: true);
+                SetRect(text.gameObject, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(360f, 64f));
+                text.enableWordWrapping = false;
+                text.gameObject.SetActive(false);
+                texts[i] = text;
+            }
+
+            coinFly = layer.AddComponent<CoinFlyEffect>();
+            var coinSo = new SerializedObject(coinFly);
+            Set(coinSo, "_layer", layer.transform);
+            SetArray(coinSo, "_coins", coins);
+            Set(coinSo, "_target", coinTarget);
+            coinSo.ApplyModifiedPropertiesWithoutUndo();
+
+            floatingText = layer.AddComponent<FloatingTextEffect>();
+            var textSo = new SerializedObject(floatingText);
+            Set(textSo, "_layer", layer.transform);
+            SetArray(textSo, "_texts", texts);
+            textSo.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void StretchAnchors(GameObject go, Vector2 anchorMin, Vector2 anchorMax)
+        {
+            var rect = (RectTransform)go.transform;
+            rect.anchorMin = anchorMin;
+            rect.anchorMax = anchorMax;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+        }
+
         private static HudView BuildHud(Transform parent)
         {
             GameObject hud = CreateUi("Hud", parent);
@@ -487,6 +717,7 @@ namespace ShaurmaTycoon.EditorTools
             var so = new SerializedObject(hudView);
             Set(so, "_coinsText", coins);
             Set(so, "_incomeText", income);
+            Set(so, "_coinIcon", coinIcon.transform);
             so.ApplyModifiedPropertiesWithoutUndo();
             return hudView;
         }
@@ -511,7 +742,7 @@ namespace ShaurmaTycoon.EditorTools
             {
                 GameObject tab = CreateUi("Tab_" + keys[i].Substring(4), bar.transform);
                 AddImage(tab, Brown, _roundSprite);
-                buttons[i] = AddButton(tab);
+                buttons[i] = AddButton(tab, SoundId.Tab);
                 TMP_Text label = AddLocalizedText(tab.transform, "Label", keys[i], 36, Color.white, bold: true);
                 Stretch(label.gameObject, new Vector2(8f, 0f), new Vector2(-8f, 0f));
             }
@@ -573,11 +804,24 @@ namespace ShaurmaTycoon.EditorTools
             return image;
         }
 
-        private static Button AddButton(GameObject go)
+        private static Button AddButton(GameObject go, SoundId sound)
         {
             var button = go.AddComponent<Button>();
             button.targetGraphic = go.GetComponent<Image>();
+
+            var feedback = go.AddComponent<ButtonFeedback>();
+            var so = new SerializedObject(feedback);
+            so.FindProperty("_sound").enumValueIndex = (int)sound;
+            so.ApplyModifiedPropertiesWithoutUndo();
             return button;
+        }
+
+        private static void AddPulseWhileInteractable(GameObject go, Button button)
+        {
+            var pulse = go.AddComponent<PulseEffect>();
+            var so = new SerializedObject(pulse);
+            Set(so, "_whileInteractable", button);
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static TMP_Text AddText(Transform parent, string name, string text, float size, Color color,

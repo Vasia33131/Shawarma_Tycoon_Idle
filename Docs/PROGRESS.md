@@ -139,11 +139,47 @@
 - Известные проблемы / TODO:
   - менеджеры и апгрейды не сохраняются (этап 06).
 
+### Этап 05 — Клиенты и «сочность» (код готов, 2026-10-04; ждёт Build Game UI и проверки в Unity)
+- Проверено: runtime, editor и тестовая сборка компилируются без warnings (вне редактора). Чистая логика и тесты вне Unity: 193/193 зелёные. `AllocationTests` и `TweenRunnerTests` используют Unity и запускаются только в Test Runner. В Unity ещё не запускалось.
+- Решения пользователя: свой мини-твинер вместо DOTween; звуки и персонажи — Kenney CC0; шрифт Rubik (OFL). Скачаны 4 файла с разрешения пользователя, в проект скопировано только нужное (≈0.85 МБ), источники и лицензии — в `Assets/_Game/CREDITS.md`.
+- Сделано:
+  - `NumberText` (сборка текста в `char[]`, единственная реализация форматирования; `BigNumberFormatter` теперь обёртка над ним), `LocTemplate` + `Loc.GetTemplate`, `TextExtensions.SetNumberText` → тексты HUD, строк станций и найма без аллокаций;
+  - твинер `Core/Tweening`: `TweenRunner` (scale, позиция с дугой, альфа; пул структур; колбэк через `ITweenListener`), `Ease`/`EaseFunctions`;
+  - звук `Core/Audio`: `AudioService` (6 AudioSource по кругу, случайный клип и питч, минимальный интервал, пауза по `GameEvents.GamePaused`), `AudioConfig`/`SoundEntry`/`SoundId`;
+  - клиенты `Customers/`: `CustomerQueue` (очередь, реплика в облачке, оплата монетой, уход; тап по клиенту → `StationController.TapAllIdle`), `CustomerView`, `KioskView` (продавец, «вращающийся» вертел), `CustomerConfig`/`CustomerSkin`, `CustomerDemand` и `IncomeRateTracker` (чистый C#);
+  - эффекты UI: `CoinFlyEffect` (монеты по дуге в HUD, иконка подпрыгивает, «дзынь»), `FloatingTextEffect` («+X»), `ButtonFeedback` (сжатие/отскок + звук), `PulseEffect` + `PulseDriver`;
+  - события: `StationModel.CycleCompleted`, `StationController.Earned`;
+  - редактор: `ContentSetup` (TMP-ассет Rubik и шрифт по умолчанию с fallback LiberationSans; `Configs/Audio.asset`, `Configs/Customers.asset`, если их нет), `SpriteImportSettings` (PNG из `Sprites/` → Sprite);
+  - `GameUiBuilder`: нарисованный ларёк (тротуар, будка, окно, продавец, вертел, прилавок, полосатый навес, вывеска), улица с пулом из 9 клиентов и облачком, слой эффектов (24 монеты, 12 текстов), звуки и пульс на кнопках;
+  - строки: 10 реплик клиентов ru/en; ключ `kiosk.placeholder` удалён.
+- Файлы:
+  - `Audio/*.ogg` (10), `Sprites/Customers/*/` (44 PNG), `Fonts/Rubik-Variable.ttf` + `Rubik-OFL.txt`, `CREDITS.md`
+  - `Scripts/Core/Tweening/`: `Ease.cs`, `EaseFunctions.cs`, `TweenProperty.cs`, `ITweenListener.cs`, `TweenRunner.cs`
+  - `Scripts/Core/Audio/`: `SoundId.cs`, `SoundEntry.cs`, `AudioConfig.cs`, `AudioService.cs`
+  - `Scripts/Customers/`: `CustomerSkin.cs`, `CustomerConfig.cs`, `CustomerDemand.cs`, `IncomeRateTracker.cs`, `CustomerView.cs`, `CustomerQueue.cs`, `KioskView.cs`
+  - `Scripts/Economy/NumberText.cs`, `Scripts/Localization/LocTemplate.cs`
+  - `Scripts/UI/`: `TextExtensions.cs`, `CoinFlyEffect.cs`, `FloatingTextEffect.cs`, `ButtonFeedback.cs`, `PulseEffect.cs`, `PulseDriver.cs`
+  - `Scripts/Editor/`: `ContentSetup.cs`, `SpriteImportSettings.cs`
+  - `Tests/EditMode/`: `NumberTextTests.cs`, `EaseTests.cs`, `TweenRunnerTests.cs`, `AllocationTests.cs`, `CustomerLogicTests.cs` (+ тесты в `StationModelTests`, `StationControllerTests`, `LocTests`)
+  - изменены: `BigNumberFormatter`, `Loc`, `StationModel`, `StationController`, `GameBootstrap`, `GameSceneInstaller`, `GameScreen`, `HudView`, `StationsPanel`, `StationRowView`, `ManagerRowView`, `GameUiBuilder`, тестовый asmdef (+ `UnityEngine.UI`), `strings.txt`, `StringsFileTests`
+- Решения:
+  - `TweenRunner` и `PulseDriver` живут в Boot (нужны до загрузки сцены), `AudioService` и `CustomerConfig` — в сцене Game (`GameSceneInstaller`, ссылки назначает Build Game UI);
+  - тап по клиенту запускает **все** простаивающие станции без менеджера;
+  - очередь: размер = 1 + ⌊log10(доход/с + 1) × 1.2⌋, не больше 7; обслуживание = 3 с / (1 + 0.6 × log10(доход/с + 1)), от 0.7 до 3 с; доход/с — сглаженный фактический (τ = 5 с). Всё визуально, коэффициенты в `Customers.asset`;
+  - монеты от станции не чаще раза в 0.25 с: из иконки строки, если вкладка «Станции» открыта, иначе из окна ларька. Монета от оплаты клиента — только визуал, денег не добавляет;
+  - звуки: тап `click_002`, монета `chips-collide-1..3`, покупка `confirmation_001`, открытие `maximize_006`, найм `confirmation_002`, улучшение `confirmation_003`, вкладка `switch_002`, облачко `pluck_001` (меняются в `Audio.asset`);
+  - суффиксов aa…zz хватает на весь диапазон double (max ≈ «179dt»), научная запись не нужна;
+  - тексты, которые меняются только при покупке (уровень, время цикла, веха), остаются обычными строками: аллокация допустима в момент покупки.
+- Известные проблемы / TODO:
+  - Rubik — вариативный шрифт, TMP берёт его начертание по умолчанию, жирный — синтетический. Если будет выглядеть тонко, на этапе 12 можно запечь статический атлас;
+  - атласы спрайтов (меньше draw calls) — этап 12;
+  - WebGL-билд всё ещё не подтверждён.
+
 ## Важные решения (архитектура)
 - Unity 2022.3.62f1, 2D, URP 2D, Color Space Gamma, старый Input Manager.
 - Сборки: `ShaurmaTycoon` (runtime), `ShaurmaTycoon.Editor`, `ShaurmaTycoon.Tests.EditMode` (Assets/_Game/Tests/EditMode). Namespace `ShaurmaTycoon.<Модуль>`, для редакторского кода `ShaurmaTycoon.EditorTools`.
 - Сервисы регистрируются в `GameBootstrap` через `Services.Register<T>`, единственный Update в игре — в `TickManager`.
-- Сервисы Boot: `TickManager`, `Wallet`, `IPlatformService`, `Loc`. Сервисы сцены Game (`GameSceneInstaller`): `StationController`, `ManagerController`, `UpgradeService`. Вью связываются в `GameScreen.Start`.
+- Сервисы Boot: `TickManager`, `Wallet`, `TweenRunner`, `PulseDriver`, `IPlatformService`, `Loc`. Сервисы сцены Game (`GameSceneInstaller`): `StationController`, `ManagerController`, `UpgradeService`, `AudioService`, `CustomerConfig`. Вью связываются в `GameScreen.Start`.
 - Все тексты UI — ключи из `Configs/Localization/strings.txt` (TSV: key, ru, en); новые ключи добавлять туда и в `StringsFileTests.RequiredKeys`.
 
 ## TODO(YANDEX)
@@ -151,3 +187,4 @@
 - `GameBootstrap.CreatePlatform`: в WebGL создавать `YandexPlatformService`.
 - Уточнить сигнатуры лидерборда и покупок в `IPlatformService`.
 - WebGL-шаблон на весь экран (дефолтный шаблон Unity даёт канвас фиксированного размера).
+- Тексты, которые меняются в Tick, выводить через `NumberText` + `TMP_Text.SetNumberText`, шаблоны — `Loc.GetTemplate(key)` (без string.Format).

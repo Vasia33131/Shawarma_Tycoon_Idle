@@ -1,6 +1,8 @@
+using ShaurmaTycoon.Core.Tweening;
 using ShaurmaTycoon.Economy;
 using ShaurmaTycoon.Localization;
 using ShaurmaTycoon.Platform;
+using ShaurmaTycoon.UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -21,8 +23,16 @@ namespace ShaurmaTycoon.Core
         {
             var tickManagerObject = new GameObject(nameof(TickManager));
             DontDestroyOnLoad(tickManagerObject);
-            Services.Register(tickManagerObject.AddComponent<TickManager>());
+            var tickManager = tickManagerObject.AddComponent<TickManager>();
+            Services.Register(tickManager);
             Services.Register(new Wallet());
+
+            var tweens = new TweenRunner();
+            var pulses = new PulseDriver(tweens);
+            Services.Register(tweens);
+            Services.Register(pulses);
+            tickManager.Register(tweens);
+            tickManager.Register(pulses);
 
             _platform = CreatePlatform();
             Services.Register(_platform);

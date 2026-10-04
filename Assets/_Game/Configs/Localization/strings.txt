@@ -1,7 +1,6 @@
 # Таблица локализации: key 	 ru 	 en (разделитель — табуляция). \n — перенос строки, {0} — подстановка.
 key	ru	en
 game.title	Шаурма Тайкун	Shawarma Tycoon
-kiosk.placeholder	Здесь будет ларёк и очередь клиентов	Your kiosk and customers will be here
 city.home	Родной город	Hometown
 hud.income_per_sec	{0}/с	{0}/s
 tab.stations	Станции	Stations
@@ -32,3 +31,13 @@ upgrade.station	{0}: доход ×{1}	{0}: income ×{1}
 upgrade.all	Все станции: доход ×{0}	All stations: income ×{0}
 upgrade.buy	Купить\n{0}	Buy\n{0}
 upgrade.none	Все улучшения куплены!	All upgrades purchased!
+customer.phrase_01	Мне без лука, братан!	No onions, bro!
+customer.phrase_02	Двойную, пожалуйста!	A double, please!
+customer.phrase_03	А с сыром есть?	Got one with cheese?
+customer.phrase_04	Побольше соуса!	Extra sauce!
+customer.phrase_05	Как обычно!	The usual!
+customer.phrase_06	Острую, но не очень	Spicy, but not too much
+customer.phrase_07	Сдачи не надо!	Keep the change!
+customer.phrase_08	Можно с собой?	To go, please!
+customer.phrase_09	Ммм, как пахнет!	Mmm, smells great!
+customer.phrase_10	Лучшая шаурма в городе!	Best shawarma in town!

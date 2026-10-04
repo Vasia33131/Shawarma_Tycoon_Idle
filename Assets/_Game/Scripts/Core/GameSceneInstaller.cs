@@ -1,3 +1,5 @@
+using ShaurmaTycoon.Core.Audio;
+using ShaurmaTycoon.Customers;
 using ShaurmaTycoon.Economy;
 using ShaurmaTycoon.Managers;
 using ShaurmaTycoon.Prestige;
@@ -14,9 +16,12 @@ namespace ShaurmaTycoon.Core
     {
         [SerializeField] private BalanceConfig _balance = null;
         [SerializeField] private CityConfig _city = null;
+        [SerializeField] private AudioConfig _audio = null;
+        [SerializeField] private CustomerConfig _customers = null;
 
         private TickManager _tickManager;
         private StationController _stations;
+        private AudioService _audioService;
 
         private void Awake()
         {
@@ -34,6 +39,14 @@ namespace ShaurmaTycoon.Core
             Services.Register(new ManagerController(_stations, wallet, _balance.ManagerCostMultiplier));
             Services.Register(new UpgradeService(_city.Upgrades, _stations, wallet));
 
+            _audioService = new AudioService(_audio);
+            Services.Register(_audioService);
+
+            if (_customers != null)
+                Services.Register(_customers);
+            else
+                Debug.LogWarning($"{nameof(GameSceneInstaller)}: CustomerConfig is not assigned, no customers.", this);
+
             _tickManager = Services.Get<TickManager>();
             _tickManager.Register(_stations);
         }
@@ -45,6 +58,10 @@ namespace ShaurmaTycoon.Core
 
             if (_tickManager != null)
                 _tickManager.Unregister(_stations);
+            _audioService?.Dispose();
+
+            Services.Unregister<CustomerConfig>();
+            Services.Unregister<AudioService>();
             Services.Unregister<UpgradeService>();
             Services.Unregister<ManagerController>();
             Services.Unregister<StationController>();

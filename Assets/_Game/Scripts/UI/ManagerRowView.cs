@@ -29,7 +29,10 @@ namespace ShaurmaTycoon.UI
         [SerializeField] private Button _hireButton = null;
         [SerializeField] private TMP_Text _hireText = null;
 
+        private readonly NumberText _hireBuilder = new NumberText();
+
         private int _index;
+        private LocTemplate _hireTemplate;
         private StationModel _station;
         private ManagerController _managers;
         private Wallet _wallet;
@@ -45,6 +48,7 @@ namespace ShaurmaTycoon.UI
             _managers = managers;
             _wallet = wallet;
             _loc = loc;
+            _hireTemplate = loc.GetTemplate("manager.hire");
 
             _icon.color = StationColors.Get(index);
             _iconLabel.text = (index + 1).ToString(CultureInfo.InvariantCulture);
@@ -109,7 +113,8 @@ namespace ShaurmaTycoon.UI
                     _hireButton.interactable = false;
                     break;
                 case State.CanHire:
-                    _hireText.text = _loc.Format("manager.hire", BigNumberFormatter.Format(_managers.GetCost(_index)));
+                    _hireBuilder.Clear().Append(_hireTemplate.Prefix).AppendNumber(_managers.GetCost(_index)).Append(_hireTemplate.Suffix);
+                    _hireText.SetNumberText(_hireBuilder);
                     _hireButton.interactable = affordable;
                     break;
                 default:

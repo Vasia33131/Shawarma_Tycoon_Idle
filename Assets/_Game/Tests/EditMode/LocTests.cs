@@ -53,6 +53,20 @@ namespace ShaurmaTycoon.Tests
         }
 
         [Test]
+        public void GetTemplate_IsCached_AndUpdatedOnLanguageChange()
+        {
+            var loc = new Loc(Table, "ru");
+            LocTemplate template = loc.GetTemplate("level");
+
+            Assert.AreSame(template, loc.GetTemplate("level"));
+            Assert.AreEqual("Ур. ", template.Prefix);
+
+            loc.SetLanguage("en");
+
+            Assert.AreEqual("Lv. ", template.Prefix);
+        }
+
+        [Test]
         public void SetLanguage_RaisesEventOnlyOnChange()
         {
             var loc = new Loc(Table, "ru");
