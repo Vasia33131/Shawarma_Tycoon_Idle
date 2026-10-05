@@ -39,12 +39,14 @@ namespace ShaurmaTycoon.UI
         [SerializeField] private Button _buyButton = null;
         [SerializeField] private TMP_Text _buyCountText = null;
         [SerializeField] private TMP_Text _buyCostText = null;
+        [SerializeField] private BillOfferTrigger _buyOffer = null;
 
         [Header("Locked")]
         [SerializeField] private GameObject _lockedRoot = null;
         [SerializeField] private TMP_Text _lockedNameText = null;
         [SerializeField] private Button _unlockButton = null;
         [SerializeField] private TMP_Text _unlockCostText = null;
+        [SerializeField] private BillOfferTrigger _unlockOffer = null;
 
         private readonly NumberText _incomeBuilder = new NumberText();
         private readonly NumberText _countBuilder = new NumberText();
@@ -60,6 +62,7 @@ namespace ShaurmaTycoon.UI
         private CoinFlyEffect _coins;
         private FloatingTextEffect _floatingText;
         private RectTransform _hiddenEffectSource;
+        private BillOfferPopup _offers;
 
         private LocTemplate _tapTemplate;
         private LocTemplate _countTemplate;
@@ -73,9 +76,10 @@ namespace ShaurmaTycoon.UI
         private float _lastEffectTime = float.NegativeInfinity;
 
         /// <param name="hiddenEffectSource">Откуда летят монеты, когда строка не видна (окно ларька).</param>
+        /// <param name="offers">Покупка за купюры, когда не хватает монет; null — без неё.</param>
         public void Bind(int index, StationModel station, StationController controller, Wallet wallet, Loc loc,
             BuyModeButton buyMode, Color iconColor, CoinFlyEffect coins, FloatingTextEffect floatingText,
-            RectTransform hiddenEffectSource)
+            RectTransform hiddenEffectSource, BillOfferPopup offers)
         {
             SceneBindings.Track(this);
             _index = index;
@@ -87,6 +91,7 @@ namespace ShaurmaTycoon.UI
             _coins = coins;
             _floatingText = floatingText;
             _hiddenEffectSource = hiddenEffectSource;
+            _offers = offers;
 
             _tapTemplate = loc.GetTemplate("station.tap_to_earn");
             _countTemplate = loc.GetTemplate("station.buy_count");
@@ -99,6 +104,10 @@ namespace ShaurmaTycoon.UI
                 _tapButtons[i].onClick.AddListener(OnTap);
             _buyButton.onClick.AddListener(OnBuy);
             _unlockButton.onClick.AddListener(OnUnlock);
+            if (_buyOffer != null)
+                _buyOffer.Clicked += OnBuyOffer;
+            if (_unlockOffer != null)
+                _unlockOffer.Clicked += OnUnlockOffer;
 
             _station.Changed += OnStationChanged;
             _station.CycleCompleted += OnCycleCompleted;
@@ -162,6 +171,16 @@ namespace ShaurmaTycoon.UI
         private void OnUnlock()
         {
             _controller.TryBuy(_index, 1);
+        }
+
+        private void OnBuyOffer()
+        {
+            _offers.OfferStation(_index, _buyCount, _loc.Get(_station.Definition.NameKey), unlock: false);
+        }
+
+        private void OnUnlockOffer()
+        {
+            _offers.OfferStation(_index, 1, _loc.Get(_station.Definition.NameKey), unlock: true);
         }
 
         private void OnStationChanged(StationModel station)
@@ -239,6 +258,15 @@ namespace ShaurmaTycoon.UI
             _incomeText.SetNumberText(_incomeBuilder);
         }
 
+        // Монет не хватает — кнопка выключена, но с предложением купить за купюры (если оно подключено).
+        private void SetAffordable(Button button, BillOfferTrigger offer, bool affordable)
+        {
+            if (offer != null)
+                offer.Set(affordable, _offers != null);
+            else
+                button.interactable = affordable;
+        }
+
         private void RefreshBuy(bool force)
         {
             if (!_station.IsUnlocked)
@@ -247,7 +275,7 @@ namespace ShaurmaTycoon.UI
                 if (force || canUnlock != _shownAffordable)
                 {
                     _shownAffordable = canUnlock;
-                    _unlockButton.interactable = canUnlock;
+                    SetAffordable(_unlockButton, _unlockOffer, canUnlock);
                     _costBuilder.Clear().Append(_unlockTemplate.Prefix).AppendNumber(_station.GetCost(1)).Append(_unlockTemplate.Suffix);
                     _unlockCostText.SetNumberText(_costBuilder);
                 }
@@ -268,7 +296,7 @@ namespace ShaurmaTycoon.UI
             if (force || affordable != _shownAffordable)
             {
                 _shownAffordable = affordable;
-                _buyButton.interactable = affordable;
+                SetAffordable(_buyButton, _buyOffer, affordable);
             }
         }
 

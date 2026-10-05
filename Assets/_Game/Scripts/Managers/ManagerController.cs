@@ -49,6 +49,15 @@ namespace ShaurmaTycoon.Managers
             if (!CanHire(index) || !_wallet.TrySpend(GetCost(index)))
                 return false;
 
+            return Grant(index);
+        }
+
+        /// <summary>Найм без оплаты монетами (оплачено купюрами).</summary>
+        public bool Grant(int index)
+        {
+            if (!CanHire(index))
+                return false;
+
             _stations.Stations[index].IsAutomated = true;
             ManagerHired?.Invoke(index);
             return true;
@@ -85,11 +94,7 @@ namespace ShaurmaTycoon.Managers
 
         private void GrantFree(int index)
         {
-            if (!CanHire(index))
-                return;
-
-            _stations.Stations[index].IsAutomated = true;
-            ManagerHired?.Invoke(index);
+            Grant(index);
         }
 
         private bool IsValidIndex(int index)

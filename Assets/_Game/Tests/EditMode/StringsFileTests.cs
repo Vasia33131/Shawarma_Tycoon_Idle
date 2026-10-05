@@ -41,6 +41,8 @@ namespace ShaurmaTycoon.Tests
             "tab.shop", "shop.bills_title", "shop.coins_title", "shop.bills_small", "shop.bills_medium", "shop.bills_large",
             "shop.coins_small", "shop.coins_medium", "shop.coins_large", "shop.bills_amount", "shop.coins_reward",
             "shop.price_yan", "shop.price_bills", "shop.best",
+            "bills.offer_title", "bills.offer_body", "bills.offer_poor", "bills.offer_buy", "bills.offer_shop", "bills.offer_cancel",
+            "bills.item_unlock", "bills.item_levels", "bills.item_upgrade", "bills.item_manager",
         };
 
         private static LocTable LoadTable()

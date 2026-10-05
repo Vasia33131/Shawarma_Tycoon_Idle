@@ -54,9 +54,22 @@ namespace ShaurmaTycoon.Upgrades
 
         public bool TryBuy(int index)
         {
-            if (index < 0 || index >= _upgrades.Count || _purchased[index])
+            if (!CanGrant(index) || !_wallet.TrySpend(_upgrades[index].Cost))
                 return false;
-            if (!_wallet.TrySpend(_upgrades[index].Cost))
+
+            return Grant(index);
+        }
+
+        /// <summary>Улучшение существует и ещё не куплено.</summary>
+        public bool CanGrant(int index)
+        {
+            return index >= 0 && index < _upgrades.Count && !_purchased[index];
+        }
+
+        /// <summary>Покупка без оплаты монетами (оплачено купюрами).</summary>
+        public bool Grant(int index)
+        {
+            if (!CanGrant(index))
                 return false;
 
             _purchased[index] = true;

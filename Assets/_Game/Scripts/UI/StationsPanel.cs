@@ -19,7 +19,7 @@ namespace ShaurmaTycoon.UI
         private readonly List<StationRowView> _rows = new List<StationRowView>(8);
 
         public void Bind(StationController stations, Wallet wallet, Loc loc, CoinFlyEffect coins,
-            FloatingTextEffect floatingText, RectTransform hiddenEffectSource)
+            FloatingTextEffect floatingText, RectTransform hiddenEffectSource, BillOfferPopup offers)
         {
             _buyModeButton.Bind(loc);
 
@@ -28,7 +28,7 @@ namespace ShaurmaTycoon.UI
                 StationRowView row = Instantiate(_rowPrefab, _content);
                 row.name = $"StationRow_{i + 1}";
                 row.Bind(i, stations.Stations[i], stations, wallet, loc, _buyModeButton, StationColors.Get(i),
-                    coins, floatingText, hiddenEffectSource);
+                    coins, floatingText, hiddenEffectSource, offers);
                 _rows.Add(row);
             }
         }

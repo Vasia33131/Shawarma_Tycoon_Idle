@@ -19,6 +19,7 @@ namespace ShaurmaTycoon.UI
         [SerializeField] private TMP_Text _descriptionText = null;
         [SerializeField] private Button _buyButton = null;
         [SerializeField] private TMP_Text _buyText = null;
+        [SerializeField] private BillOfferTrigger _buyOffer = null;
 
         private int _index;
         private UpgradeService _upgrades;
@@ -26,8 +27,10 @@ namespace ShaurmaTycoon.UI
         private Wallet _wallet;
         private Loc _loc;
         private bool _shownAffordable;
+        private BillOfferPopup _offers;
 
-        public void Bind(int index, UpgradeService upgrades, StationController stations, Wallet wallet, Loc loc)
+        /// <param name="offers">Покупка за купюры, когда не хватает монет; null — без неё.</param>
+        public void Bind(int index, UpgradeService upgrades, StationController stations, Wallet wallet, Loc loc, BillOfferPopup offers)
         {
             SceneBindings.Track(this);
             _index = index;
@@ -35,11 +38,14 @@ namespace ShaurmaTycoon.UI
             _stations = stations;
             _wallet = wallet;
             _loc = loc;
+            _offers = offers;
 
             int target = upgrades.GetTargetStationIndex(index);
             _icon.color = StationColors.Get(target);
             _iconLabel.text = "×" + FormatMultiplier(upgrades.GetDefinition(index).IncomeMultiplier);
             _buyButton.onClick.AddListener(OnBuy);
+            if (_buyOffer != null)
+                _buyOffer.Clicked += OnBuyOffer;
 
             _wallet.CoinsChanged += OnCoinsChanged;
             _loc.LanguageChanged += ForceRefresh;
@@ -64,6 +70,11 @@ namespace ShaurmaTycoon.UI
         private void OnBuy()
         {
             _upgrades.TryBuy(_index);
+        }
+
+        private void OnBuyOffer()
+        {
+            _offers.OfferUpgrade(_index, _descriptionText.text);
         }
 
         private void OnCoinsChanged(double coins)
@@ -95,7 +106,10 @@ namespace ShaurmaTycoon.UI
                 return;
 
             _shownAffordable = affordable;
-            _buyButton.interactable = affordable;
+            if (_buyOffer != null)
+                _buyOffer.Set(affordable, _offers != null);
+            else
+                _buyButton.interactable = affordable;
         }
 
         private static string FormatMultiplier(double multiplier)

@@ -86,6 +86,16 @@ namespace ShaurmaTycoon.Stations
             return IsValidIndex(index) && _stations[index].TryBuy(_wallet, count);
         }
 
+        /// <summary>Уровни без оплаты монетами (оплачено купюрами).</summary>
+        public bool GrantLevels(int index, int count)
+        {
+            if (!IsValidIndex(index) || count <= 0)
+                return false;
+
+            _stations[index].AddLevels(count);
+            return true;
+        }
+
         private bool IsValidIndex(int index)
         {
             return index >= 0 && index < _stations.Count;

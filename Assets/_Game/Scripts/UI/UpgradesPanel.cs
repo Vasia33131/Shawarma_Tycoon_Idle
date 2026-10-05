@@ -20,7 +20,7 @@ namespace ShaurmaTycoon.UI
         private readonly List<UpgradeRowView> _rows = new List<UpgradeRowView>(32);
         private UpgradeService _upgrades;
 
-        public void Bind(UpgradeService upgrades, StationController stations, Wallet wallet, Loc loc)
+        public void Bind(UpgradeService upgrades, StationController stations, Wallet wallet, Loc loc, BillOfferPopup offers)
         {
             _upgrades = upgrades;
 
@@ -36,7 +36,7 @@ namespace ShaurmaTycoon.UI
             {
                 UpgradeRowView row = Instantiate(_rowPrefab, _content);
                 row.name = $"UpgradeRow_{upgrades.GetDefinition(index).Id}";
-                row.Bind(index, upgrades, stations, wallet, loc);
+                row.Bind(index, upgrades, stations, wallet, loc, offers);
                 _rows[index] = row;
             }
 

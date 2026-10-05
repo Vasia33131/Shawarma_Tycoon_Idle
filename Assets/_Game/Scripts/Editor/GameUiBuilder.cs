@@ -248,6 +248,8 @@ namespace ShaurmaTycoon.EditorTools
             Set(so, "_lockedRoot", locked);
             Set(so, "_lockedNameText", lockedName);
             Set(so, "_unlockButton", unlockButton);
+            Set(so, "_buyOffer", AddBillOffer(buyButton));
+            Set(so, "_unlockOffer", AddBillOffer(unlockButton));
             Set(so, "_unlockCostText", unlockCost);
             so.ApplyModifiedPropertiesWithoutUndo();
 
@@ -282,6 +284,7 @@ namespace ShaurmaTycoon.EditorTools
             Set(so, "_descriptionText", description);
             Set(so, "_hireButton", hireButton);
             Set(so, "_hireText", hireText);
+            Set(so, "_hireOffer", AddBillOffer(hireButton));
             so.ApplyModifiedPropertiesWithoutUndo();
 
             return SavePrefab(root, ManagerRowPrefabPath).GetComponent<ManagerRowView>();
@@ -308,6 +311,7 @@ namespace ShaurmaTycoon.EditorTools
             Set(so, "_descriptionText", description);
             Set(so, "_buyButton", buyButton);
             Set(so, "_buyText", buyText);
+            Set(so, "_buyOffer", AddBillOffer(buyButton));
             so.ApplyModifiedPropertiesWithoutUndo();
 
             return SavePrefab(root, UpgradeRowPrefabPath).GetComponent<UpgradeRowView>();
@@ -381,6 +385,7 @@ namespace ShaurmaTycoon.EditorTools
             OfflineIncomePopup offlinePopup = BuildOfflinePopup(screen.transform);
             PrestigeConfirmPopup prestigePopup = BuildPrestigePopup(screen.transform);
             SettingsPopup settingsPopup = BuildSettingsPopup(screen.transform, hud.transform);
+            BillOfferPopup billOfferPopup = BuildBillOfferPopup(screen.transform);
             var cityPanelSo = new SerializedObject(cityPanel);
             Set(cityPanelSo, "_confirmPopup", prestigePopup);
             cityPanelSo.ApplyModifiedPropertiesWithoutUndo();
@@ -402,6 +407,7 @@ namespace ShaurmaTycoon.EditorTools
             Set(screenSo, "_settingsPopup", settingsPopup);
             Set(screenSo, "_shopPanel", shopPanel);
             Set(screenSo, "_tabBar", tabBar);
+            Set(screenSo, "_billOfferPopup", billOfferPopup);
             screenSo.FindProperty("_shopTabIndex").intValue = 4;
             Set(screenSo, "_kiosk", kioskView);
             Set(screenSo, "_customers", customers);
@@ -1205,6 +1211,73 @@ namespace ShaurmaTycoon.EditorTools
             so.ApplyModifiedPropertiesWithoutUndo();
 
             return SavePrefab(root, BillShopRowPrefabPath).GetComponent<BillShopRowView>();
+        }
+
+        // ---------- Bills instead of coins (08e) ----------
+
+        /// <summary>
+        /// Значок банкноты в углу кнопки покупки и BillOfferTrigger: нажатие на выключенную кнопку
+        /// (монет не хватает) предлагает купить за купюры.
+        /// </summary>
+        private static BillOfferTrigger AddBillOffer(Button button)
+        {
+            GameObject go = button.gameObject;
+            GameObject hint = CreateUi("BillHint", go.transform);
+            SetRect(hint, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 0.5f), new Vector2(-6f, -6f), new Vector2(54f, 36f));
+            AddImage(hint, BillGreen, _roundSprite).raycastTarget = false;
+            GameObject mark = CreateUi("Mark", hint.transform);
+            SetRect(mark, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(18f, 18f));
+            AddImage(mark, BillLight, _circleSprite, sliced: false).raycastTarget = false;
+            hint.SetActive(false);
+
+            var trigger = go.AddComponent<BillOfferTrigger>();
+            var so = new SerializedObject(trigger);
+            Set(so, "_button", button);
+            Set(so, "_hint", hint);
+            so.ApplyModifiedPropertiesWithoutUndo();
+            return trigger;
+        }
+
+        /// <summary>Окно «Не хватает монет»: «Купить» слева, «Отмена» справа — под частыми тапами по кнопкам строк справа.</summary>
+        private static BillOfferPopup BuildBillOfferPopup(Transform parent)
+        {
+            GameObject root = CreateUi("BillOfferPopup", parent);
+            Stretch(root, Vector2.zero, Vector2.zero);
+            AddImage(root, new Color(0f, 0f, 0f, 0.6f), null);
+            var popup = root.AddComponent<BillOfferPopup>();
+
+            GameObject panel = CreateUi("Panel", root.transform);
+            SetRect(panel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(860f, 600f));
+            AddImage(panel, Cream, _roundSprite);
+
+            TMP_Text title = AddLocalizedText(panel.transform, "Title", "bills.offer_title", 52, DarkBrown, bold: true);
+            SetRect(title.gameObject, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -40f), new Vector2(-80f, 80f));
+
+            GameObject note = CreateUi("Icon", panel.transform);
+            SetRect(note, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -136f), new Vector2(120f, 80f));
+            AddImage(note, BillGreen, _roundSprite).raycastTarget = false;
+            GameObject noteMark = CreateUi("Mark", note.transform);
+            SetRect(noteMark, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(40f, 40f));
+            AddImage(noteMark, BillLight, _circleSprite, sliced: false).raycastTarget = false;
+
+            TMP_Text body = AddText(panel.transform, "Body", "", 36, DarkBrown, TextAlignmentOptions.Center, autoSize: true);
+            SetRect(body.gameObject, new Vector2(0f, 0.5f), new Vector2(1f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -10f), new Vector2(-80f, 140f));
+
+            Button confirm = BuildPopupButton(panel.transform, "ConfirmButton", BillGreen, new Vector2(-195f, 50f), SoundId.Buy, out TMP_Text confirmText);
+            Button cancel = BuildPopupButton(panel.transform, "CancelButton", Brown, new Vector2(195f, 50f), SoundId.Tap, out TMP_Text cancelText);
+            AddLocalizedKey(cancelText, "bills.offer_cancel");
+
+            var so = new SerializedObject(popup);
+            Set(so, "_root", root);
+            Set(so, "_panel", panel.transform);
+            Set(so, "_bodyText", body);
+            Set(so, "_confirmButton", confirm);
+            Set(so, "_confirmText", confirmText);
+            Set(so, "_cancelButton", cancel);
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            root.SetActive(false);
+            return popup;
         }
 
         // ---------- Settings ----------

@@ -130,3 +130,13 @@ shop.coins_reward	+{0} монет	+{0} coins
 shop.price_yan	{0} ян	{0} YAN
 shop.price_bills	{0} купюр	{0} bills
 shop.best	Выгодно!	Best value!
+bills.offer_title	Не хватает монет	Not enough coins
+bills.offer_body	Купить {0}?\nЦена в купюрах: {1}	Buy {0}?\nPrice in bills: {1}
+bills.offer_poor	Нужно купюр: {0}, у вас: {1}.\nКупюры есть в магазине.	You need {0} bills, you have {1}.\nGet more in the shop.
+bills.offer_buy	За купюры: {0}	For bills: {0}
+bills.offer_shop	В магазин	To the shop
+bills.offer_cancel	Отмена	Cancel
+bills.item_unlock	«{0}»	"{0}"
+bills.item_levels	«{0}» +{1} ур.	"{0}" +{1} lv.
+bills.item_upgrade	улучшение «{0}»	upgrade "{0}"
+bills.item_manager	менеджера: {0}	a manager: {0}

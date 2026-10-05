@@ -177,11 +177,20 @@ namespace ShaurmaTycoon.Stations
             if (count <= 0 || !wallet.TrySpend(GetCost(count)))
                 return false;
 
+            AddLevels(count);
+            return true;
+        }
+
+        /// <summary>Уровни без оплаты монетами (уже оплачено купюрами).</summary>
+        public void AddLevels(int count)
+        {
+            if (count <= 0)
+                return;
+
             Level += count;
             _speedMultiplier = _milestones.GetSpeedMultiplier(Level);
             LevelChanged?.Invoke(this);
             Changed?.Invoke(this);
-            return true;
         }
     }
 }

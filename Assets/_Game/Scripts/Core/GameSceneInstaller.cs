@@ -38,6 +38,7 @@ namespace ShaurmaTycoon.Core
         private UpgradeService _upgrades;
         private ReputationShop _reputationShop;
         private BillShop _billShopService;
+        private BillPurchases _billPurchases;
         private OfflineIncomeService _offline;
         private PrestigeController _prestigeController;
         private PrestigeState _prestige;
@@ -110,6 +111,13 @@ namespace ShaurmaTycoon.Core
                 save != null ? save.SaveNow : (System.Action)null);
             Services.Register(_billShopService);
 
+            double minCoinsPerBill = (_billShop != null ? _billShop.MinCoinsPerBill : 200) * _currentCity.ValueScale;
+            var pricing = new BillPricing(() => _stations.IncomePerSecond, _billShop != null ? _billShop.SecondsPerBill : 360,
+                minCoinsPerBill > 0 ? minCoinsPerBill : 1);
+            _billPurchases = new BillPurchases(_stations, _upgrades, _managers, Services.Get<BillWallet>(), pricing,
+                save != null ? save.SaveNow : (System.Action)null);
+            Services.Register(_billPurchases);
+
             _prestigeController = new PrestigeController(_prestige, _rules, _currentCity.PrestigeThreshold, cityIndex, cityCount,
                 _save, _saveParticipant, StartCoinsForCity, ReloadScene);
             Services.Register(_prestigeController);
@@ -173,6 +181,7 @@ namespace ShaurmaTycoon.Core
             // Снимаем только свои экземпляры: при перезагрузке сцены новые уже могли зарегистрироваться.
             Services.Unregister(_prestigeController);
             Services.Unregister(_billShopService);
+            Services.Unregister(_billPurchases);
             Services.Unregister(_offline);
             Services.Unregister(_customers);
             Services.Unregister(_audioService);

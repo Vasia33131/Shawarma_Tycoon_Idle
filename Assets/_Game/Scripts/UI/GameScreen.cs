@@ -33,6 +33,7 @@ namespace ShaurmaTycoon.UI
         [SerializeField] private SettingsPopup _settingsPopup = null;
         [SerializeField] private ShopPanel _shopPanel = null;
         [SerializeField] private TabBar _tabBar = null;
+        [SerializeField] private BillOfferPopup _billOfferPopup = null;
         [Tooltip("Индекс вкладки «Магазин» в TabBar — её открывает тап по купюрам в HUD.")]
         [SerializeField] private int _shopTabIndex = 4;
 
@@ -64,11 +65,17 @@ namespace ShaurmaTycoon.UI
             _kiosk.ApplyTheme(city.SkyColor, city.BoothColor);
 
             _hud.Bind(wallet, _stations, loc, prestige, Services.Get<BillWallet>(), tweens, _floatingText);
-            _stationsPanel.Bind(_stations, wallet, loc, _coinFly, _floatingText, _kiosk.Window);
+            BillOfferPopup offers = null;
+            if (_billOfferPopup != null && Services.TryGet(out BillPurchases billPurchases))
+            {
+                _billOfferPopup.Bind(billPurchases, tweens, loc, OpenShop);
+                offers = _billOfferPopup;
+            }
+            _stationsPanel.Bind(_stations, wallet, loc, _coinFly, _floatingText, _kiosk.Window, offers);
             var managers = Services.Get<ManagerController>();
-            _managersPanel.Bind(managers, _stations, wallet, loc);
+            _managersPanel.Bind(managers, _stations, wallet, loc, offers);
             _kiosk.BindManagers(managers, tweens, _floatingText, loc);
-            _upgradesPanel.Bind(Services.Get<UpgradeService>(), _stations, wallet, loc);
+            _upgradesPanel.Bind(Services.Get<UpgradeService>(), _stations, wallet, loc, offers);
             BindCityPanel(prestige, city, tweens, loc);
             _settingsPopup.Bind(Services.Get<GameSettings>(), tweens, loc);
             _shopPanel.Bind(Services.Get<BillShop>(), Services.Get<BillWallet>(), loc, _coinFly);
