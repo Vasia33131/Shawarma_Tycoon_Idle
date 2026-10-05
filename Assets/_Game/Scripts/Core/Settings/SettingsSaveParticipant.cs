@@ -18,12 +18,13 @@ namespace ShaurmaTycoon.Core.Settings
             SettingsSave save = data.Settings ?? (data.Settings = new SettingsSave());
             save.SoundOn = _settings.SoundOn;
             save.MusicOn = _settings.MusicOn;
+            save.EffectsOn = _settings.EffectsOn;
         }
 
         public void Apply(SaveData data)
         {
             SettingsSave save = data.Settings ?? new SettingsSave();
-            _settings.Load(save.SoundOn, save.MusicOn);
+            _settings.Load(save.SoundOn, save.MusicOn, save.EffectsOn);
         }
     }
 }

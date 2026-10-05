@@ -65,6 +65,32 @@ namespace ShaurmaTycoon.EditorTools
             ShiftSaveTime(TimeSpan.FromHours(1));
         }
 
+        /// <summary>
+        /// «Прошли сутки» для удержания: календарь, задания дня и подарок сдвигаются на день назад —
+        /// при следующем Play доступна награда следующего дня и выдаются новые задания.
+        /// </summary>
+        [MenuItem("ShaurmaTycoon/Save/Shift Retention Day −1 d")]
+        private static void ShiftRetentionDay()
+        {
+            if (!PlayerPrefs.HasKey(EditorPlatformService.SaveKey))
+            {
+                Debug.LogWarning("[Save] No save to shift. Play at least 10 seconds first.");
+                return;
+            }
+
+            var serializer = new JsonSaveSerializer();
+            SaveData data = SaveMigrator.Migrate(serializer.Deserialize(PlayerPrefs.GetString(EditorPlatformService.SaveKey)));
+            RetentionSave retention = data.Retention;
+            long day = TimeSpan.TicksPerDay;
+            if (retention.DailyLastClaimDayTicks > day)
+                retention.DailyLastClaimDayTicks -= day;
+            if (retention.QuestsDayTicks > day)
+                retention.QuestsDayTicks -= day;
+            if (retention.GiftLastClaimUtcTicks > day)
+                retention.GiftLastClaimUtcTicks -= day;
+            Write(serializer.Serialize(data), "save with retention day shifted by −1 d");
+        }
+
         /// <summary>Сдвигает время последнего сохранения — имитация отсутствия игрока.</summary>
         private static void ShiftSaveTime(TimeSpan shift)
         {

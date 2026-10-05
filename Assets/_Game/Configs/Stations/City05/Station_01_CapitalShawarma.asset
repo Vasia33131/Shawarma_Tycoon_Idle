@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _id: capital_shawarma
   _nameKey: station.capital_shawarma
-  _icon: {fileID: 0}
+  _icon: {fileID: 21300000, guid: b6d340eb94cb1e14a95814701275968c, type: 3}
   _baseCost: 40000
   _costGrowth: 1.07
   _baseIncome: 10000

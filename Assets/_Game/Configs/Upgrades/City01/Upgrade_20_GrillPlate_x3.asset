@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Upgrade_20_GrillPlate_x3
   m_EditorClassIdentifier: 
   _id: grill_plate_x3_3
-  _cost: 3110400000000
+  _cost: 31104000000000
   _targetStation: {fileID: 11400000, guid: 394c67b36f004621bddb37bd68624464, type: 2}
   _incomeMultiplier: 3

@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Upgrade_20_BusinessLunch_x3
   m_EditorClassIdentifier: 
   _id: business_lunch_x3_3
-  _cost: 31104000000000000
+  _cost: 311040000000000000
   _targetStation: {fileID: 11400000, guid: aa51a90cdb3060718445ed52d18bf976, type: 2}
   _incomeMultiplier: 3

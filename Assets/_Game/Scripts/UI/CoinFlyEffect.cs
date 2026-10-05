@@ -34,10 +34,13 @@ namespace ShaurmaTycoon.UI
                 _coins[i].gameObject.SetActive(false);
         }
 
-        /// <summary>Запускает монету из точки в мировых координатах. false — свободных монет нет.</summary>
+        /// <summary>Режим любования (V7): монеты в HUD не летят и не звенят — HUD спрятан.</summary>
+        public bool Suppressed { get; set; }
+
+        /// <summary>Запускает монету из точки в мировых координатах. false — свободных монет нет или эффект выключен.</summary>
         public bool Fly(Vector3 worldFrom)
         {
-            if (_busy == null)
+            if (_busy == null || Suppressed)
                 return false;
 
             for (int i = 0; i < _coins.Length; i++)

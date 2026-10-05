@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Upgrade_04_KoryushkaWrap_x3
   m_EditorClassIdentifier: 
   _id: koryushka_wrap_x3_1
-  _cost: 180000000
+  _cost: 1800000000
   _targetStation: {fileID: 11400000, guid: 5d24973dfe6577584358133e3ce01003, type: 2}
   _incomeMultiplier: 3

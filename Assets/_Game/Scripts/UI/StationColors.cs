@@ -3,22 +3,23 @@ using UnityEngine;
 namespace ShaurmaTycoon.UI
 {
     /// <summary>
-    /// Цвета кругов-иконок станций по порядку (пока нет графики, этап 05). Общие для всех вкладок.
+    /// Цвета кругов-иконок станций по порядку. Общие для всех вкладок.
+    /// Вечерняя гамма (Docs/Visual/ART_DIRECTION.md): тёплые, на ~15% приглушённее чистых цветов.
     /// </summary>
     public static class StationColors
     {
         private static readonly Color[] Palette =
         {
-            new Color(0.91f, 0.45f, 0.18f),
-            new Color(0.96f, 0.73f, 0.15f),
-            new Color(0.85f, 0.62f, 0.25f),
-            new Color(0.30f, 0.65f, 0.80f),
-            new Color(0.80f, 0.30f, 0.25f),
-            new Color(0.45f, 0.30f, 0.20f),
+            new Color32(0xE0, 0x7B, 0x45, 0xFF),
+            new Color32(0xF0, 0xBE, 0x4E, 0xFF),
+            new Color32(0xD9, 0xA3, 0x5A, 0xFF),
+            new Color32(0x6F, 0xA9, 0xC4, 0xFF),
+            new Color32(0xD2, 0x67, 0x5A, 0xFF),
+            new Color32(0x9A, 0x6A, 0x4E, 0xFF),
         };
 
-        /// <summary>Цвет «все станции» (улучшения для всего города).</summary>
-        public static Color All { get; } = new Color(0.30f, 0.69f, 0.31f);
+        /// <summary>Цвет «все станции» (улучшения для всего города) — Primary из UiTheme.</summary>
+        public static Color All { get; } = new Color32(0x7C, 0xC4, 0x7F, 0xFF);
 
         public static Color Get(int stationIndex)
         {

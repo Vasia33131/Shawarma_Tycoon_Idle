@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _id: kazan_shawarma
   _nameKey: station.kazan_shawarma
-  _icon: {fileID: 0}
+  _icon: {fileID: 21300000, guid: 249c6c5638f4b714182707b1c562c917, type: 3}
   _baseCost: 40
   _costGrowth: 1.07
   _baseIncome: 10

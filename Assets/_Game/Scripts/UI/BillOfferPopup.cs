@@ -17,13 +17,14 @@ namespace ShaurmaTycoon.UI
     {
         [SerializeField] private GameObject _root = null;
         [SerializeField] private RectTransform _panel = null;
+        private PopupAnimator _animator;
+        private PopupAnimator Animator => _animator != null ? _animator : _animator = PopupAnimator.For(_root, _panel);
         [SerializeField] private TMP_Text _bodyText = null;
         [SerializeField] private Button _confirmButton = null;
         [SerializeField] private TMP_Text _confirmText = null;
         [SerializeField] private Button _cancelButton = null;
 
         private BillPurchases _purchases;
-        private TweenRunner _tweens;
         private Loc _loc;
         private Action _openShop;
         private Func<long, bool> _buy;
@@ -32,7 +33,6 @@ namespace ShaurmaTycoon.UI
         public void Bind(BillPurchases purchases, TweenRunner tweens, Loc loc, Action openShop)
         {
             _purchases = purchases;
-            _tweens = tweens;
             _loc = loc;
             _openShop = openShop;
             _confirmButton.onClick.AddListener(OnConfirm);
@@ -79,8 +79,7 @@ namespace ShaurmaTycoon.UI
                 _confirmText.text = _loc.Get("bills.offer_shop");
             }
 
-            _root.SetActive(true);
-            _tweens.Scale(_panel, Vector3.one * 0.6f, Vector3.one, 0.35f, Ease.OutBack);
+            Animator.Show();
         }
 
         private void OnConfirm()
@@ -95,7 +94,7 @@ namespace ShaurmaTycoon.UI
         private void Hide()
         {
             _buy = null;
-            _root.SetActive(false);
+            Animator.Hide();
         }
     }
 }

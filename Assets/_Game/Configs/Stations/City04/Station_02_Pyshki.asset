@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _id: pyshki
   _nameKey: station.pyshki
-  _icon: {fileID: 0}
+  _icon: {fileID: 21300000, guid: 201d828ba0a58d4478ead4790b13f0d7, type: 3}
   _baseCost: 60000
-  _costGrowth: 1.07
+  _costGrowth: 1.15
   _baseIncome: 60000
   _cycleTime: 3
   _startLevel: 0

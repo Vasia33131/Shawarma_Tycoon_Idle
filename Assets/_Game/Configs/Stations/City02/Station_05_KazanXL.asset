@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _id: kazan_xl
   _nameKey: station.kazan_xl
-  _icon: {fileID: 0}
+  _icon: {fileID: 21300000, guid: 4cceb5f57c735904b9595eefa2c177ba, type: 3}
   _baseCost: 1036800
-  _costGrowth: 1.07
+  _costGrowth: 1.15
   _baseIncome: 518400
   _cycleTime: 24
   _startLevel: 0

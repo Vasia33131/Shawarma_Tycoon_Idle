@@ -1,8 +1,11 @@
 using System.Collections.Generic;
+using ShaurmaTycoon.Ambient;
 using ShaurmaTycoon.Core.Audio;
 using ShaurmaTycoon.Customers;
 using ShaurmaTycoon.Prestige;
+using ShaurmaTycoon.Retention;
 using ShaurmaTycoon.Shop;
+using ShaurmaTycoon.UI;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
@@ -20,14 +23,19 @@ namespace ShaurmaTycoon.EditorTools
         private const string FontTtfPath = "Assets/_Game/Fonts/Rubik-Variable.ttf";
         private const string FontAssetPath = "Assets/_Game/Fonts/Rubik SDF.asset";
         private const string FallbackFontPath = "Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF.asset";
-        private const string AudioConfigPath = "Assets/_Game/Configs/Audio.asset";
+        public const string AudioConfigPath = "Assets/_Game/Configs/Audio.asset";
         private const string CustomerConfigPath = "Assets/_Game/Configs/Customers.asset";
         private const string AudioFolder = "Assets/_Game/Audio/";
         private const string CustomersFolder = "Assets/_Game/Sprites/Customers";
         private const string ReputationShopPath = "Assets/_Game/Configs/ReputationShop.asset";
-        private const string MusicConfigPath = "Assets/_Game/Configs/Music.asset";
+        public const string MusicConfigPath = "Assets/_Game/Configs/Music.asset";
         private const string BillShopPath = "Assets/_Game/Configs/BillShop.asset";
+        private const string RetentionPath = "Assets/_Game/Configs/Retention.asset";
+        public const string AmbientPath = "Assets/_Game/Configs/Ambient.asset";
         private const string DefaultMusicPath = "Assets/_Game/Audio/Music/HappyClappyLoop.wav";
+        private const string ThemePath = "Assets/_Game/Configs/UiTheme.asset";
+        private const string OutlineMaterialPath = "Assets/_Game/Fonts/Rubik SDF - Outline.mat";
+        private const float OutlineMaterialWidth = 0.18f;
 
         private static readonly string[] CustomerCharacters = { "malePerson", "femalePerson", "femaleAdventurer" };
         private const string SellerCharacter = "maleAdventurer";
@@ -85,6 +93,48 @@ namespace ShaurmaTycoon.EditorTools
                 defaultFont.objectReferenceValue = fontAsset;
                 settings.ApplyModifiedPropertiesWithoutUndo();
             }
+        }
+
+        // ---------- UI theme (V1) ----------
+
+        public static UiTheme EnsureTheme()
+        {
+            var theme = AssetDatabase.LoadAssetAtPath<UiTheme>(ThemePath);
+            if (theme != null)
+                return theme;
+
+            theme = ScriptableObject.CreateInstance<UiTheme>();
+            AssetDatabase.CreateAsset(theme, ThemePath);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[ContentSetup] Created " + ThemePath);
+            return theme;
+        }
+
+        /// <summary>
+        /// Материал «Rubik SDF - Outline»: шрифт с обводкой цвета Outline — цифры HUD и подписи на цветных кнопках
+        /// читаются на любом фоне. Создаётся один раз, цвет и толщина обновляются из темы при каждой сборке.
+        /// </summary>
+        public static Material EnsureOutlineMaterial(UiTheme theme)
+        {
+            var fontAsset = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(FontAssetPath);
+            if (fontAsset == null || fontAsset.material == null)
+                return null;
+
+            var material = AssetDatabase.LoadAssetAtPath<Material>(OutlineMaterialPath);
+            if (material == null)
+            {
+                material = new Material(fontAsset.material) { name = "Rubik SDF - Outline" };
+                AssetDatabase.CreateAsset(material, OutlineMaterialPath);
+                Debug.Log("[ContentSetup] Created " + OutlineMaterialPath);
+            }
+
+            material.SetTexture(ShaderUtilities.ID_MainTex, fontAsset.material.GetTexture(ShaderUtilities.ID_MainTex));
+            material.EnableKeyword(ShaderUtilities.Keyword_Outline);
+            material.SetColor(ShaderUtilities.ID_OutlineColor, theme.Outline);
+            material.SetFloat(ShaderUtilities.ID_OutlineWidth, OutlineMaterialWidth);
+            EditorUtility.SetDirty(material);
+            AssetDatabase.SaveAssets();
+            return material;
         }
 
         // ---------- Sprites ----------
@@ -244,6 +294,49 @@ namespace ShaurmaTycoon.EditorTools
 
             so.ApplyModifiedPropertiesWithoutUndo();
             Debug.Log("[ContentSetup] Created " + BillShopPath);
+            return config;
+        }
+
+        /// <summary>Баланс удержания (этап 10): значения по умолчанию из RetentionConfig, дальше правится в ассете.</summary>
+        public static RetentionConfig EnsureRetention()
+        {
+            var config = AssetDatabase.LoadAssetAtPath<RetentionConfig>(RetentionPath);
+            if (config != null)
+                return config;
+
+            config = ScriptableObject.CreateInstance<RetentionConfig>();
+            AssetDatabase.CreateAsset(config, RetentionPath);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[ContentSetup] Created " + RetentionPath);
+            return config;
+        }
+
+        public static AmbientConfig EnsureAmbient()
+        {
+            var config = AssetDatabase.LoadAssetAtPath<AmbientConfig>(AmbientPath);
+            if (config != null)
+                return config;
+
+            config = ScriptableObject.CreateInstance<AmbientConfig>();
+            AssetDatabase.CreateAsset(config, AmbientPath);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[ContentSetup] Created " + AmbientPath);
+            return config;
+        }
+
+        public const string AmbientAudioPath = "Assets/_Game/Configs/AmbientAudio.asset";
+
+        /// <summary>Звуковая атмосфера (V6); клипы раскладывает Art/Assign Icons.</summary>
+        public static AmbientAudioConfig EnsureAmbientAudio()
+        {
+            var config = AssetDatabase.LoadAssetAtPath<AmbientAudioConfig>(AmbientAudioPath);
+            if (config != null)
+                return config;
+
+            config = ScriptableObject.CreateInstance<AmbientAudioConfig>();
+            AssetDatabase.CreateAsset(config, AmbientAudioPath);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[ContentSetup] Created " + AmbientAudioPath);
             return config;
         }
 

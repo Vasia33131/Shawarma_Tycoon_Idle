@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _id: fries
   _nameKey: station.fries
-  _icon: {fileID: 0}
+  _icon: {fileID: 21300000, guid: f0d817e442aff0846b7bcc2b10263e6a, type: 3}
   _baseCost: 720
-  _costGrowth: 1.07
+  _costGrowth: 1.15
   _baseIncome: 540
   _cycleTime: 6
   _startLevel: 0

@@ -28,6 +28,9 @@ namespace ShaurmaTycoon.Save
         public SettingsSave Settings = new SettingsSave();
         public AdRewardSave AdBills = new AdRewardSave();
 
+        /// <summary>Удержание (этап 10): календарь, задания дня, буст ×2, подарок, скин. Не сбрасывается при переезде.</summary>
+        public RetentionSave Retention = new RetentionSave();
+
         /// <summary>Куплен «Стартовый набор» (постоянная покупка, не повторяется).</summary>
         public bool StarterPackBought;
 
@@ -36,5 +39,11 @@ namespace ShaurmaTycoon.Save
 
         /// <summary>Куплен «Постоянный ×2» (постоянная покупка).</summary>
         public bool IncomeX2Bought;
+
+        /// <summary>
+        /// Шаг онбординга (Onboarding.TutorialStep, 4 — пройден). Старые сейвы читаются как 0 — туториал
+        /// сам пропускает шаги, которые игрок уже сделал. Не сбрасывается при переезде.
+        /// </summary>
+        public int TutorialStep;
     }
 }

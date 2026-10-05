@@ -15,17 +15,17 @@ namespace ShaurmaTycoon.UI
     {
         [SerializeField] private GameObject _root = null;
         [SerializeField] private RectTransform _panel = null;
+        private PopupAnimator _animator;
+        private PopupAnimator Animator => _animator != null ? _animator : _animator = PopupAnimator.For(_root, _panel);
         [SerializeField] private TMP_Text _titleText = null;
         [SerializeField] private TMP_Text _gainText = null;
         [SerializeField] private Button _confirmButton = null;
         [SerializeField] private Button _cancelButton = null;
 
-        private TweenRunner _tweens;
         private PrestigeController _controller;
 
         public void Bind(TweenRunner tweens)
         {
-            _tweens = tweens;
             _confirmButton.onClick.AddListener(OnConfirm);
             _cancelButton.onClick.AddListener(Hide);
             _root.SetActive(false);
@@ -41,8 +41,7 @@ namespace ShaurmaTycoon.UI
                 bonusPercent.ToString("0", CultureInfo.InvariantCulture));
 
             _confirmButton.interactable = controller.CanPrestige;
-            _root.SetActive(true);
-            _tweens.Scale(_panel, Vector3.one * 0.6f, Vector3.one, 0.35f, Ease.OutBack);
+            Animator.Show();
         }
 
         private void OnConfirm()
@@ -54,7 +53,7 @@ namespace ShaurmaTycoon.UI
 
         private void Hide()
         {
-            _root.SetActive(false);
+            Animator.Hide();
         }
     }
 }

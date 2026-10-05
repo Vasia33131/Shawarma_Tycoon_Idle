@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _id: churchkhela
   _nameKey: station.churchkhela
-  _icon: {fileID: 0}
+  _icon: {fileID: 21300000, guid: b4efe3f0583ec31438157329c10c2f0c, type: 3}
   _baseCost: 72000
-  _costGrowth: 1.07
+  _costGrowth: 1.15
   _baseIncome: 54000
   _cycleTime: 6
   _startLevel: 0

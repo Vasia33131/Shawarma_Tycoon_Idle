@@ -39,6 +39,7 @@ namespace ShaurmaTycoon.Save
             if (data.Settings == null)
                 data.Settings = new SettingsSave();
             data.AdBills = NormalizeAdBills(data.AdBills);
+            data.Retention = NormalizeRetention(data.Retention);
         }
 
         private static AdRewardSave NormalizeAdBills(AdRewardSave save)
@@ -52,6 +53,40 @@ namespace ShaurmaTycoon.Save
             if (save.ClaimsToday < 0)
                 save.ClaimsToday = 0;
             return save;
+        }
+
+        private static RetentionSave NormalizeRetention(RetentionSave save)
+        {
+            if (save == null)
+                return new RetentionSave();
+
+            if (save.DailyNextDay < 0)
+                save.DailyNextDay = 0;
+            save.DailyLastClaimDayTicks = NormalizeTicks(save.DailyLastClaimDayTicks);
+            save.QuestsDayTicks = NormalizeTicks(save.QuestsDayTicks);
+            save.GiftLastClaimUtcTicks = NormalizeTicks(save.GiftLastClaimUtcTicks);
+            if (!(save.BoostSeconds >= 0) || double.IsInfinity(save.BoostSeconds))
+                save.BoostSeconds = 0;
+
+            var quests = new List<QuestSave>();
+            if (save.Quests != null)
+            {
+                foreach (QuestSave quest in save.Quests)
+                {
+                    if (quest == null)
+                        continue;
+                    if (quest.Progress < 0)
+                        quest.Progress = 0;
+                    quests.Add(quest);
+                }
+            }
+            save.Quests = quests;
+            return save;
+        }
+
+        private static long NormalizeTicks(long ticks)
+        {
+            return ticks < 0 || ticks > DateTime.MaxValue.Ticks ? 0 : ticks;
         }
 
         private static PrestigeSave NormalizePrestige(PrestigeSave prestige)
@@ -71,6 +106,10 @@ namespace ShaurmaTycoon.Save
                 prestige.ReputationSpent = 0;
             if (prestige.ReputationSpent > prestige.ReputationEarned)
                 prestige.ReputationSpent = prestige.ReputationEarned;
+            if (prestige.ReputationBonus < 0)
+                prestige.ReputationBonus = 0;
+            if (prestige.ReputationBonus > prestige.ReputationEarned)
+                prestige.ReputationBonus = prestige.ReputationEarned;
 
             var levels = new List<ShopLevelSave>();
             var seen = new HashSet<string>(StringComparer.Ordinal);

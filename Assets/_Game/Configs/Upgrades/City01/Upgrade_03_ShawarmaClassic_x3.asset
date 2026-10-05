@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Upgrade_03_ShawarmaClassic_x3
   m_EditorClassIdentifier: 
   _id: shawarma_classic_x3_2
-  _cost: 100000
+  _cost: 1000000
   _targetStation: {fileID: 11400000, guid: 933c9d936c564f57943a219d746ba176, type: 2}
   _incomeMultiplier: 3

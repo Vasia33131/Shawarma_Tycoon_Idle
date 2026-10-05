@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _id: pelmeni
   _nameKey: station.pelmeni
-  _icon: {fileID: 0}
+  _icon: {fileID: 21300000, guid: b62035a9ba13da94ea6ba4adff072804, type: 3}
   _baseCost: 600000
-  _costGrowth: 1.07
+  _costGrowth: 1.15
   _baseIncome: 600000
   _cycleTime: 3
   _startLevel: 0

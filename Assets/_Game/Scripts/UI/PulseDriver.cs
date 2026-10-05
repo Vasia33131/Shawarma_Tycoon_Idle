@@ -4,10 +4,10 @@ using ShaurmaTycoon.Core.Tweening;
 
 namespace ShaurmaTycoon.UI
 {
-    /// <summary>Тикает все включённые PulseEffect — один цикл вместо Update на каждом объекте.</summary>
+    /// <summary>Тикает все включённые анимации интерфейса (IUiAnimated) — один цикл вместо Update на каждом объекте.</summary>
     public sealed class PulseDriver : ITickable
     {
-        private readonly List<PulseEffect> _effects = new List<PulseEffect>(32);
+        private readonly List<IUiAnimated> _effects = new List<IUiAnimated>(32);
         private readonly TweenRunner _tweens;
         private float _time;
 
@@ -16,13 +16,13 @@ namespace ShaurmaTycoon.UI
             _tweens = tweens;
         }
 
-        public void Register(PulseEffect effect)
+        public void Register(IUiAnimated effect)
         {
             if (effect != null && !_effects.Contains(effect))
                 _effects.Add(effect);
         }
 
-        public void Unregister(PulseEffect effect)
+        public void Unregister(IUiAnimated effect)
         {
             _effects.Remove(effect);
         }
@@ -32,10 +32,11 @@ namespace ShaurmaTycoon.UI
             _time += deltaTime;
             for (int i = _effects.Count - 1; i >= 0; i--)
             {
-                if (_effects[i] == null)
+                // Уничтоженный компонент: сравнение через UnityEngine.Object видит «фейковый null».
+                if (_effects[i] is UnityEngine.Object unityObject && unityObject == null)
                     _effects.RemoveAt(i);
                 else
-                    _effects[i].Pulse(_time, _tweens);
+                    _effects[i].Animate(_time, deltaTime, _tweens);
             }
         }
     }

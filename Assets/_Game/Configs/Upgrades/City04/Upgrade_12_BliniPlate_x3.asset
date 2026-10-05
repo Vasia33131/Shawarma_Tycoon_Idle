@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Upgrade_12_BliniPlate_x3
   m_EditorClassIdentifier: 
   _id: blini_plate_x3_1
-  _cost: 311040000000
+  _cost: 3110400000000
   _targetStation: {fileID: 11400000, guid: 6ae84596562b1d26465d98ccf5aa296c, type: 2}
   _incomeMultiplier: 3

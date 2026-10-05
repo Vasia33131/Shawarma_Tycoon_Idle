@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Upgrade_13_All_x2
   m_EditorClassIdentifier: 
   _id: piter_all_x2_1
-  _cost: 500000000000
+  _cost: 5000000000000
   _targetStation: {fileID: 0}
   _incomeMultiplier: 2

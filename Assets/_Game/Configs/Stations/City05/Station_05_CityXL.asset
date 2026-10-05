@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _id: city_xl
   _nameKey: station.city_xl
-  _icon: {fileID: 0}
+  _icon: {fileID: 21300000, guid: 8cbb60c8f7b5b414cbdee0771af205a8, type: 3}
   _baseCost: 1036800000
-  _costGrowth: 1.07
+  _costGrowth: 1.15
   _baseIncome: 518400000
   _cycleTime: 24
   _startLevel: 0

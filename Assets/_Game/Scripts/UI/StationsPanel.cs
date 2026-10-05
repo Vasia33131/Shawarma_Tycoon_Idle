@@ -33,6 +33,12 @@ namespace ShaurmaTycoon.UI
             }
         }
 
+        /// <summary>Строка станции index; null — такой строки нет.</summary>
+        public StationRowView GetRow(int index)
+        {
+            return index >= 0 && index < _rows.Count ? _rows[index] : null;
+        }
+
         public void Tick(float deltaTime)
         {
             for (int i = 0; i < _rows.Count; i++)

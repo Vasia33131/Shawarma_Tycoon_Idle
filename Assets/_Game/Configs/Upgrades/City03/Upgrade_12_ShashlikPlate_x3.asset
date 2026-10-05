@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Upgrade_12_ShashlikPlate_x3
   m_EditorClassIdentifier: 
   _id: shashlik_plate_x3_1
-  _cost: 31104000000
+  _cost: 311040000000
   _targetStation: {fileID: 11400000, guid: babb6c743ca2ae9d6bcf46d6db6cb57f, type: 2}
   _incomeMultiplier: 3

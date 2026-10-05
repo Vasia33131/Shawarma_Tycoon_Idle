@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _id: katyk_tea
   _nameKey: station.katyk_tea
-  _icon: {fileID: 0}
+  _icon: {fileID: 21300000, guid: 6714e2599c6f7b64783419a751a60e7e, type: 3}
   _baseCost: 86400
-  _costGrowth: 1.07
+  _costGrowth: 1.15
   _baseIncome: 43200
   _cycleTime: 12
   _startLevel: 0

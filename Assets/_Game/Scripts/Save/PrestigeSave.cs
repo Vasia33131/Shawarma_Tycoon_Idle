@@ -12,6 +12,9 @@ namespace ShaurmaTycoon.Save
         public double LifetimeEarned;
         public long ReputationEarned;
         public long ReputationSpent;
+
+        /// <summary>Часть ReputationEarned из наград (задания дня), не из переездов.</summary>
+        public long ReputationBonus;
         public List<ShopLevelSave> ShopLevels = new List<ShopLevelSave>();
     }
 }

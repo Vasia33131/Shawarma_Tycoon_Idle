@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Upgrade_19_ResortXL_x3
   m_EditorClassIdentifier: 
   _id: resort_xl_x3_3
-  _cost: 25920000000000
+  _cost: 259200000000000
   _targetStation: {fileID: 11400000, guid: 644df120c115727a2e3001e6acc7ca4f, type: 2}
   _incomeMultiplier: 3

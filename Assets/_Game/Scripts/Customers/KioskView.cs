@@ -20,6 +20,10 @@ namespace ShaurmaTycoon.Customers
         private const float BoothPunchDuration = 0.3f;
 
         [SerializeField] private Image _seller = null;
+        [Tooltip("Сколько секунд продавец показывает «класс».")]
+        [SerializeField] private float _sellerHappyDuration = 1.2f;
+        [Tooltip("«Дыхание» продавца: доля роста (0 — выключено).")]
+        [SerializeField] private float _sellerBreath = 0.015f;
         [SerializeField] private RectTransform _spit = null;
         [SerializeField] private RectTransform[] _spitStripes = new RectTransform[0];
         [Tooltip("Скорость полос вертела, доля высоты вертела в секунду.")]
@@ -39,6 +43,13 @@ namespace ShaurmaTycoon.Customers
         [SerializeField] private Image[] _levelLamps = new Image[0];
         [SerializeField] private Color _lampOnColor = new Color(1f, 0.80f, 0.20f);
         [SerializeField] private Color _lampOffColor = new Color(0.25f, 0.14f, 0.09f, 0.45f);
+        [Tooltip("Ореолы ламп (по индексу ламп): видны у горящих, мягко «дышат». Можно оставить пустым.")]
+        [SerializeField] private Graphic[] _lampGlows = new Graphic[0];
+
+        [Header("Drawn spit (V3)")]
+        [Tooltip("Нарисованный вертел без полос: «вращение» — покачивание ширины и яркости.")]
+        [SerializeField] private float _spitWobble = 0.06f;
+        [SerializeField] private float _spitPeriod = 1.6f;
 
         private readonly NumberText _upgradedText = new NumberText();
 
@@ -49,6 +60,10 @@ namespace ShaurmaTycoon.Customers
         private FloatingTextEffect _floatingText;
         private Loc _loc;
         private int _shownManagers = -1;
+        private float _time;
+        private Graphic _spitGraphic;
+        private bool _serving;
+        private float _happyLeft;
 
         public RectTransform Window => _window;
 
@@ -89,19 +104,67 @@ namespace ShaurmaTycoon.Customers
 
         public void SetServing(bool serving)
         {
+            _serving = serving;
+            RefreshSeller();
+        }
+
+        /// <summary>Продавец показывает «класс» на _sellerHappyDuration секунд (каждый N-й заказ, найм менеджера, улучшение).</summary>
+        public void ShowHappy()
+        {
+            if (_sellerSkin == null || _sellerSkin.Cheer == null)
+                return;
+            _happyLeft = _sellerHappyDuration;
+            RefreshSeller();
+        }
+
+        // Поза продавца: «класс» → работает (идёт заказ) → стоит. Смена позы — с маленьким подскоком.
+        private void RefreshSeller()
+        {
             if (_sellerSkin == null)
                 return;
 
-            Sprite sprite = serving && _sellerSkin.Interact != null ? _sellerSkin.Interact : _sellerSkin.Idle;
-            if (sprite != null)
-                _seller.sprite = sprite;
+            Sprite sprite = _happyLeft > 0f && _sellerSkin.Cheer != null ? _sellerSkin.Cheer
+                : _serving && _sellerSkin.Interact != null ? _sellerSkin.Interact
+                : _sellerSkin.Idle;
+            if (sprite == null || _seller.sprite == sprite)
+                return;
+
+            bool changed = _seller.sprite != null;
+            _seller.sprite = sprite;
+            if (changed && _tweens != null)
+                _tweens.Punch(_seller.rectTransform, 0.04f, 0.12f);
+        }
+
+        // «Дыхание» продавца: чуть тянется вверх, пока на нём нет твина подскока.
+        private void BreatheSeller(float deltaTime)
+        {
+            if (_happyLeft > 0f)
+            {
+                _happyLeft -= deltaTime;
+                if (_happyLeft <= 0f)
+                    RefreshSeller();
+            }
+
+            RectTransform rect = _seller.rectTransform;
+            if (_sellerBreath <= 0f || (_tweens != null && _tweens.IsTweening(rect, TweenProperty.Scale)))
+                return;
+            float wave = 0.5f + 0.5f * Mathf.Sin(_time * (2f * Mathf.PI / 3f));
+            rect.localScale = new Vector3(1f, 1f + _sellerBreath * wave, 1f);
         }
 
         public void Tick(float deltaTime)
         {
+            _time += deltaTime;
+            if (_seller != null)
+                BreatheSeller(deltaTime);
+            AnimateLampGlows();
+
             int count = _spitStripes.Length;
             if (count == 0)
+            {
+                WobbleSpit();
                 return;
+            }
 
             float height = _spit.rect.height;
             float spacing = 1f / count;
@@ -114,9 +177,33 @@ namespace ShaurmaTycoon.Customers
             }
         }
 
+        // Нарисованный вертел «вращается»: ширина и яркость слегка пульсируют.
+        private void WobbleSpit()
+        {
+            if (_spit == null || _spitPeriod <= 0f)
+                return;
+            float wave = 0.5f + 0.5f * Mathf.Sin(_time * (2f * Mathf.PI / _spitPeriod));
+            _spit.localScale = new Vector3(1f - _spitWobble * wave, 1f, 1f);
+            if (_spitGraphic != null || _spit.TryGetComponent(out _spitGraphic))
+                _spitGraphic.canvasRenderer.SetColor(Color.Lerp(Color.white, new Color(0.9f, 0.86f, 0.82f), wave));
+        }
+
+        // Ореолы горящих ламп «дышат» вразнобой (своя фаза у каждой).
+        private void AnimateLampGlows()
+        {
+            for (int i = 0; i < _lampGlows.Length; i++)
+            {
+                Graphic glow = _lampGlows[i];
+                if (glow == null || !glow.enabled)
+                    continue;
+                glow.canvasRenderer.SetAlpha(0.6f + 0.3f * (0.5f + 0.5f * Mathf.Sin(_time * 1.6f + i * 1.3f)));
+            }
+        }
+
         private void OnManagerHired(int index)
         {
             ShowManagers(CountHired(), animate: true);
+            ShowHappy();
         }
 
         private int CountHired()
@@ -152,6 +239,8 @@ namespace ShaurmaTycoon.Customers
             {
                 if (_levelLamps[i] != null)
                     _levelLamps[i].color = i < count ? _lampOnColor : _lampOffColor;
+                if (i < _lampGlows.Length && _lampGlows[i] != null)
+                    _lampGlows[i].enabled = i < count;
             }
 
             if (!animate || !grew || _tweens == null)

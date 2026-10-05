@@ -19,5 +19,5 @@ MonoBehaviour:
   _offlineLimitHours: 2
   _offlineMinAwaySeconds: 60
   _offlineAdMultiplier: 2
-  _reputationDivisor: 1000000
+  _reputationDivisor: 10000000
   _incomeBonusPerReputation: 0.02

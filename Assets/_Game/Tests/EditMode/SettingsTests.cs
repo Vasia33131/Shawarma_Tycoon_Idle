@@ -61,6 +61,28 @@ namespace ShaurmaTycoon.Tests
             Assert.IsNotNull(migrated.Settings);
             Assert.IsTrue(settings.SoundOn);
             Assert.IsTrue(settings.MusicOn);
+            Assert.IsTrue(settings.EffectsOn);
+        }
+
+        [Test]
+        public void Effects_OnByDefault_AndSurviveRoundTrip()
+        {
+            var source = new GameSettings();
+            Assert.IsTrue(source.EffectsOn);
+            int changed = 0;
+            source.Changed += () => changed++;
+
+            source.SetEffects(false);
+            source.SetEffects(false);
+            Assert.AreEqual(1, changed);
+
+            var data = new SaveData();
+            new SettingsSaveParticipant(source).Capture(data);
+            var restored = new GameSettings();
+            new SettingsSaveParticipant(restored).Apply(data);
+
+            Assert.IsFalse(restored.EffectsOn);
+            Assert.IsTrue(restored.SoundOn);
         }
     }
 }

@@ -22,6 +22,7 @@ namespace ShaurmaTycoon.Prestige
             save.LifetimeEarned = _state.LifetimeEarned;
             save.ReputationEarned = _state.ReputationEarned;
             save.ReputationSpent = _state.ReputationSpent;
+            save.ReputationBonus = _state.ReputationBonus;
 
             save.ShopLevels.Clear();
             foreach (var pair in _state.ShopLevels)
@@ -35,7 +36,8 @@ namespace ShaurmaTycoon.Prestige
             foreach (ShopLevelSave level in save.ShopLevels)
                 levels.Add(new KeyValuePair<string, int>(level.Id, level.Level));
 
-            _state.Load(save.CityIndex, save.CityEarned, save.LifetimeEarned, save.ReputationEarned, save.ReputationSpent, levels);
+            _state.Load(save.CityIndex, save.CityEarned, save.LifetimeEarned, save.ReputationEarned, save.ReputationSpent, levels,
+                save.ReputationBonus);
         }
     }
 }

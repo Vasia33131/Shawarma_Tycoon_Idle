@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _id: bridges_xl
   _nameKey: station.bridges_xl
-  _icon: {fileID: 0}
+  _icon: {fileID: 21300000, guid: 365d1a40ea467634e8b3152137dd7340, type: 3}
   _baseCost: 103680000
-  _costGrowth: 1.07
+  _costGrowth: 1.15
   _baseIncome: 51840000
   _cycleTime: 24
   _startLevel: 0

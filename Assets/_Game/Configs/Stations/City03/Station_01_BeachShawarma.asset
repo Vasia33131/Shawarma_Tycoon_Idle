@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _id: beach_shawarma
   _nameKey: station.beach_shawarma
-  _icon: {fileID: 0}
+  _icon: {fileID: 21300000, guid: 6a4cc6432e14c8644ada51909af39cab, type: 3}
   _baseCost: 400
   _costGrowth: 1.07
   _baseIncome: 100

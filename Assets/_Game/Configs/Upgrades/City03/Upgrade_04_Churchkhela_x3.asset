@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Upgrade_04_Churchkhela_x3
   m_EditorClassIdentifier: 
   _id: churchkhela_x3_1
-  _cost: 18000000
+  _cost: 180000000
   _targetStation: {fileID: 11400000, guid: 44c35171e9e20de3b5d4e65eaded2cc4, type: 2}
   _incomeMultiplier: 3

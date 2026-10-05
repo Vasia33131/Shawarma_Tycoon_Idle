@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _id: resort_xl
   _nameKey: station.resort_xl
-  _icon: {fileID: 0}
+  _icon: {fileID: 21300000, guid: ed462dcdc59a3b34cbaffbb614392ce5, type: 3}
   _baseCost: 10368000
-  _costGrowth: 1.07
+  _costGrowth: 1.15
   _baseIncome: 5184000
   _cycleTime: 24
   _startLevel: 0

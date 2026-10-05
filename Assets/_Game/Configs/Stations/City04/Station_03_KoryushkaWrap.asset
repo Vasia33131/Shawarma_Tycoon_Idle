@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _id: koryushka_wrap
   _nameKey: station.koryushka_wrap
-  _icon: {fileID: 0}
+  _icon: {fileID: 21300000, guid: f304d2bd6da101a43913f998dbe7e6e5, type: 3}
   _baseCost: 720000
-  _costGrowth: 1.07
+  _costGrowth: 1.15
   _baseIncome: 540000
   _cycleTime: 6
   _startLevel: 0

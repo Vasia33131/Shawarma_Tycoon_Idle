@@ -2,6 +2,7 @@ using ShaurmaTycoon.Core;
 using ShaurmaTycoon.Economy;
 using ShaurmaTycoon.Managers;
 using ShaurmaTycoon.Prestige;
+using ShaurmaTycoon.Retention;
 using ShaurmaTycoon.Shop;
 using UnityEditor;
 using UnityEngine;
@@ -9,7 +10,7 @@ using UnityEngine;
 namespace ShaurmaTycoon.EditorTools
 {
     /// <summary>
-    /// ВРЕМЕННЫЕ пункты для проверки престижа в Play (полноценное отладочное окно — этап 11).
+    /// Пункты меню для проверки в Play из редактора. В игре (редактор и Development build) есть отладочное окно — кнопка «DEV» (Core/DebugWindow).
     /// Добавляют монеты и одновременно засчитывают их как заработок города.
     /// </summary>
     public static class DebugMenu
@@ -89,6 +90,39 @@ namespace ShaurmaTycoon.EditorTools
             Debug.Log("[Debug] Ad bills: cooldown and daily counter reset.");
         }
 
+        [MenuItem("ShaurmaTycoon/Debug/Reset Gift Timer")]
+        private static void ResetGift()
+        {
+            if (!Services.TryGet(out GiftBoxService gift))
+            {
+                Debug.LogWarning("[Debug] Services are not ready — enter Play first.");
+                return;
+            }
+
+            gift.ResetTimer();
+            Debug.Log("[Debug] Gift box is ready.");
+        }
+
+        /// <summary>Завершает все задания дня (прогресс = цель) — проверка наград.</summary>
+        [MenuItem("ShaurmaTycoon/Debug/Complete Daily Quests")]
+        private static void CompleteQuests()
+        {
+            if (!Services.TryGet(out DailyQuestService quests))
+            {
+                Debug.LogWarning("[Debug] Services are not ready — enter Play first.");
+                return;
+            }
+
+            for (int i = 0; i < quests.Quests.Active.Count; i++)
+            {
+                DailyQuests.Quest quest = quests.Quests.Active[i];
+                quests.Report(quest.Type, quest.Target);
+            }
+            Debug.Log("[Debug] Daily quests completed.");
+        }
+
+        [MenuItem("ShaurmaTycoon/Debug/Reset Gift Timer", true)]
+        [MenuItem("ShaurmaTycoon/Debug/Complete Daily Quests", true)]
         [MenuItem("ShaurmaTycoon/Debug/Reset Ad Bills Timer", true)]
         [MenuItem("ShaurmaTycoon/Debug/Add 100 Bills", true)]
         [MenuItem("ShaurmaTycoon/Debug/Add 1e9 Earned", true)]

@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Upgrade_01_PiterShaverma_x3
   m_EditorClassIdentifier: 
   _id: piter_shaverma_x3_1
-  _cost: 1000000
+  _cost: 10000000
   _targetStation: {fileID: 11400000, guid: 9b9d2737ed5315e580fe99a5fd838138, type: 2}
   _incomeMultiplier: 3

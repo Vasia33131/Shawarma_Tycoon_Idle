@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Upgrade_04_ChakChak_x3
   m_EditorClassIdentifier: 
   _id: chak_chak_x3_1
-  _cost: 1800000
+  _cost: 18000000
   _targetStation: {fileID: 11400000, guid: 0b4b083623084e839d8084aa367c93df, type: 2}
   _incomeMultiplier: 3

@@ -41,6 +41,16 @@ customer.phrase_07	Сдачи не надо!	Keep the change!
 customer.phrase_08	Можно с собой?	To go, please!
 customer.phrase_09	Ммм, как пахнет!	Mmm, smells great!
 customer.phrase_10	Лучшая шаурма в городе!	Best shawarma in town!
+customer.phrase.student	Одну студенческую — до стипендии неделя!	One student special — payday is a week away!
+customer.phrase.babushka	Внучок, а с укропчиком можно?	Sonny, could you add some dill?
+customer.phrase.office	Только побыстрее, у меня созвон!	Quick, please — I've got a call!
+customer.phrase.courier	Мне с собой, у меня ещё двенадцать заказов	To go — I've got twelve more orders
+customer.phrase.tourist	Это и есть ваша знаменитая шаурма?	Is this your famous shawarma?
+customer.phrase.builder	Двойную! Смена была тяжёлая	A double! It was a long shift
+customer.phrase.girl_headphones	Секунду… да-да, мне одну!	One sec… yes, one please!
+customer.phrase.fisherman	Корюшки нет? Ну давай шаурму	No smelt? Fine, shawarma then
+customer.phrase.hipster	А у вас есть крафтовая шаурма?	Got any craft shawarma?
+customer.phrase.schoolkid	Мама сказала — только не острую!	Mom said — not spicy!
 offline.title	Пока тебя не было	While you were away
 offline.subtitle	Менеджеры работали {0}	Your managers worked for {0}
 offline.claim	Забрать	Collect
@@ -88,6 +98,7 @@ map.status_next	Следующая цель	Next goal
 map.status_locked	Пока закрыт	Locked for now
 map.details	порог {0} · цены и доход ×{1}	goal {0} · prices & income ×{1}
 kiosk.upgraded	Ларёк преобразился!	Kiosk upgraded!
+kiosk.sign	ШАУРМА	SHAWARMA
 city.sochi	Сочи	Sochi
 station.beach_shawarma	Пляжная шаурма	Beach Shawarma
 station.corn_cob	Варёная кукуруза	Boiled Corn
@@ -112,6 +123,7 @@ station.business_lunch	Бизнес-ланч	Business Lunch
 settings.title	Настройки	Settings
 settings.sound	Звуки	Sounds
 settings.music	Музыка	Music
+settings.effects	Эффекты фона	Background effects
 settings.on	Вкл	On
 settings.off	Выкл	Off
 settings.close	Готово	Done
@@ -154,3 +166,33 @@ bills.ad_desc	+{0} купюры · сегодня ещё {1}	+{0} bills · {1} l
 bills.ad_watch	Смотреть	Watch
 bills.ad_wait	Через {0}	In {0}
 bills.ad_tomorrow	Завтра	Tomorrow
+retention.daily_title	Ежедневная награда	Daily reward
+retention.day	День {0}	Day {0}
+retention.claim	Забрать	Claim
+retention.claimed	Получено	Claimed
+retention.daily_ready	Награда за сегодня ждёт!	Today's reward is waiting!
+retention.daily_next	Следующая награда через {0}	Next reward in {0}
+retention.skin	Скин	Skin
+retention.skin_unlocked	Золотой ларёк!	Golden kiosk!
+retention.quests_title	Задания дня	Daily quests
+retention.quests_new	Новые задания через {0}	New quests in {0}
+retention.watch	Смотреть	Watch
+quest.buy_levels	Купи уровни станций	Buy station levels
+quest.hire_manager	Найми менеджера	Hire a manager
+quest.buy_upgrade	Купи улучшения	Buy upgrades
+quest.watch_boost	Включи буст ×2 доход	Start the ×2 income boost
+quest.open_gift	Открой подарок	Open the gift
+boost.button	{0} доход	{0} income
+boost.offer_body	Посмотри рекламу: доход ×2 ещё на {0}.\nМожно накопить до {1}.	Watch an ad: ×2 income for {0} more.\nStacks up to {1}.
+boost.offer_left	Сейчас осталось: {0}	Time left: {0}
+boost.full	Запас полон	Boost is full
+gift.title	Подарок!	A gift!
+gift.body	Посмотри рекламу и забери монеты:\n+{0}	Watch an ad to get coins:\n+{0}
+gift.wait	Следующий подарок через {0}	Next gift in {0}
+tutorial.tap	Тапни, чтобы приготовить шаурму!	Tap to cook a shawarma!
+tutorial.buy_level	Купи уровень — больше денег за заказ	Buy a level to earn more per order
+tutorial.unlock_station	Открой новую станцию!	Unlock a new station!
+tutorial.open_managers	Открой вкладку «Менеджеры»	Open the Managers tab
+tutorial.hire_manager	Найми менеджера — станция заработает сама	Hire a manager to run the station
+tutorial.open_stations	Вернись на вкладку «Станции»	Go back to the Stations tab
+zen.hint	Нажми, чтобы вернуться	Tap to return

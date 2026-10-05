@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 using ShaurmaTycoon.Core.Tweening;
 using ShaurmaTycoon.Economy;
@@ -22,6 +23,8 @@ namespace ShaurmaTycoon.UI
 
         [SerializeField] private GameObject _root = null;
         [SerializeField] private RectTransform _panel = null;
+        private PopupAnimator _animator;
+        private PopupAnimator Animator => _animator != null ? _animator : _animator = PopupAnimator.For(_root, _panel);
         [SerializeField] private TMP_Text _subtitleText = null;
         [SerializeField] private TMP_Text _amountText = null;
         [SerializeField] private TMP_Text _limitText = null;
@@ -32,9 +35,13 @@ namespace ShaurmaTycoon.UI
         private OfflineIncomeService _offline;
         private IPlatformService _platform;
         private SaveService _save;
-        private TweenRunner _tweens;
         private CoinFlyEffect _coins;
         private Loc _loc;
+
+        /// <summary>Окно закрыто после получения награды (дальше можно показывать следующее окно).</summary>
+        public event Action Closed;
+
+        public bool IsOpen => Animator.IsOpen;
 
         public void Bind(OfflineIncomeService offline, IPlatformService platform, SaveService save, TweenRunner tweens,
             CoinFlyEffect coins, Loc loc)
@@ -42,7 +49,6 @@ namespace ShaurmaTycoon.UI
             _offline = offline;
             _platform = platform;
             _save = save;
-            _tweens = tweens;
             _coins = coins;
             _loc = loc;
 
@@ -65,8 +71,7 @@ namespace ShaurmaTycoon.UI
             _claimDoubleText.text = _loc.Format("offline.claim_ad", "×" + _offline.AdMultiplier.ToString("0.##", CultureInfo.InvariantCulture));
 
             SetButtonsInteractable(true);
-            _root.SetActive(true);
-            _tweens.Scale(_panel, Vector3.one * 0.6f, Vector3.one, 0.35f, Ease.OutBack);
+            Animator.Show();
         }
 
         private void OnClaim()
@@ -94,12 +99,13 @@ namespace ShaurmaTycoon.UI
             Vector3 origin = _amountText.rectTransform.position;
             for (int i = 0; i < CoinBurst; i++)
             {
-                Vector3 offset = new Vector3(Random.Range(-CoinSpread, CoinSpread), Random.Range(-CoinSpread, CoinSpread) * 0.5f, 0f);
+                Vector3 offset = new Vector3(UnityEngine.Random.Range(-CoinSpread, CoinSpread), UnityEngine.Random.Range(-CoinSpread, CoinSpread) * 0.5f, 0f);
                 _coins.Fly(origin + offset * _amountText.canvas.scaleFactor);
             }
 
             _save?.SaveNow();
-            _root.SetActive(false);
+            Animator.Hide();
+            Closed?.Invoke();
         }
 
         private void SetButtonsInteractable(bool interactable)

@@ -26,6 +26,8 @@ namespace ShaurmaTycoon.UI
         [SerializeField] private BillShopRowView _rowPrefab = null;
         [Tooltip("Бейдж «!» на кнопке вкладки: реклама за купюры доступна.")]
         [SerializeField] private GameObject _tabBadge = null;
+        [Tooltip("Иконка строки «Купюры за рекламу» (icon_ad); пусто — цветная плашка.")]
+        [SerializeField] private Sprite _adIcon = null;
 
         [Header("Look")]
         [SerializeField] private Color _billColor = new Color(0.25f, 0.62f, 0.33f);
@@ -309,6 +311,7 @@ namespace ShaurmaTycoon.UI
             if (_adRow != null)
             {
                 _adRow.SetName(_loc.Get("bills.ad_name"));
+                _adRow.SetIcon(_adIcon);
                 _adRow.SetBadge(false);
                 RefreshAd(force: true);
             }
@@ -329,6 +332,7 @@ namespace ShaurmaTycoon.UI
                 CoinPackConfig pack = _shop.GetCoinPack(i);
                 BillShopRowView row = _coinRows[i];
                 row.SetName(_loc.Get(pack.NameKey) + " · " + DurationFormatter.Format(pack.IncomeMinutes * 60, _loc));
+                row.SetIcon(pack.Icon);
                 row.SetBadge(false);
                 row.SetButton(_loc.Format("shop.price_bills", pack.PriceBills.ToString(CultureInfo.InvariantCulture)), _shop.CanBuyCoins(i));
             }

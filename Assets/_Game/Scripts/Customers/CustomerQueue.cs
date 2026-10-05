@@ -7,6 +7,7 @@ using ShaurmaTycoon.Stations;
 using ShaurmaTycoon.UI;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace ShaurmaTycoon.Customers
 {
@@ -38,6 +39,10 @@ namespace ShaurmaTycoon.Customers
         [SerializeField] private RectTransform _bubble = null;
         [SerializeField] private TMP_Text _bubbleText = null;
         [SerializeField] private KioskView _kiosk = null;
+        [Tooltip("Сердечки-реакции над клиентами и котом (пул, по кругу).")]
+        [SerializeField] private Image[] _hearts = new Image[0];
+        [Tooltip("Кот у ларька: иногда клиент в очереди ему умиляется. Можно оставить пустым.")]
+        [SerializeField] private CatView _cat = null;
 
         private readonly List<int> _queue = new List<int>(16);
 
@@ -59,6 +64,14 @@ namespace ShaurmaTycoon.Customers
         private float _spawnTimer;
         private float _serviceTimer;
         private int _lastPhrase = -1;
+        private int _servedCount;
+        private int _nextHeart;
+        private float _charmTimer;
+        private bool _raining;
+        private Color[] _umbrellaColors;
+
+        /// <summary>Заполненность очереди 0–1 (от числа мест): громкость гриля в V6.</summary>
+        public float Fullness => _pool.Length > 0 ? Mathf.Clamp01((float)_queue.Count / _pool.Length) : 0f;
 
         public void Bind(CustomerConfig config, IncomeRateTracker rate, StationController stations, CoinFlyEffect coins,
             AudioService audio, TweenRunner tweens, Loc loc)
@@ -88,6 +101,50 @@ namespace ShaurmaTycoon.Customers
 
             _bubble.gameObject.SetActive(false);
             _kiosk.Bind(config.SellerSkin);
+            for (int i = 0; i < _hearts.Length; i++)
+                _hearts[i].gameObject.SetActive(false);
+            _charmTimer = Random.Range(config.CatCharmInterval.x, config.CatCharmInterval.y);
+        }
+
+        /// <summary>Сердечко всплывает в точке улицы (координаты как у клиентов: x от окна, y от тротуара).</summary>
+        public void ShowHeart(Vector2 position)
+        {
+            if (_hearts.Length == 0 || _tweens == null)
+                return;
+
+            Image heart = _hearts[_nextHeart];
+            _nextHeart = (_nextHeart + 1) % _hearts.Length;
+            RectTransform rect = heart.rectTransform;
+            heart.gameObject.SetActive(true);
+            _tweens.Move(rect, position, position + new Vector2(0f, 80f), 0.9f, Ease.OutQuad);
+            _tweens.Scale(rect, Vector3.one * 0.4f, Vector3.one, 0.25f, Ease.OutBack);
+            _tweens.Fade(heart, 1f, 0f, 0.9f, Ease.InQuad);
+        }
+
+        /// <summary>Дождь (V5): все клиенты на улице и новые раскрывают зонтики случайного цвета из colors.</summary>
+        public void SetRaining(bool raining, Color[] colors)
+        {
+            _umbrellaColors = colors;
+            if (_raining == raining || _states == null)
+                return;
+            _raining = raining;
+
+            for (int i = 0; i < _pool.Length; i++)
+            {
+                if (_states[i] == State.Inactive)
+                    continue;
+                _pool[i].SetUmbrella(raining, PickUmbrellaColor());
+                RectTransform umbrella = _pool[i].Umbrella;
+                if (raining && umbrella != null)
+                    _tweens.Scale(umbrella, Vector3.one * 0.2f, Vector3.one, 0.3f, Ease.OutBack);
+            }
+        }
+
+        private Color PickUmbrellaColor()
+        {
+            return _umbrellaColors != null && _umbrellaColors.Length > 0
+                ? _umbrellaColors[Random.Range(0, _umbrellaColors.Length)]
+                : Color.white;
         }
 
         public void Tick(float deltaTime)
@@ -105,6 +162,43 @@ namespace ShaurmaTycoon.Customers
 
             UpdateQueue(deltaTime, rate);
             UpdateLeaving(deltaTime, halfWidth);
+            AnimateCustomers(deltaTime);
+            UpdateCatCharm(deltaTime);
+        }
+
+        // Тело каждого клиента: вприпрыжку в пути, «дыхание» на месте.
+        private void AnimateCustomers(float deltaTime)
+        {
+            for (int i = 0; i < _pool.Length; i++)
+            {
+                State state = _states[i];
+                if (state == State.Inactive)
+                    continue;
+                bool walking = state == State.Walking || state == State.Leaving;
+                _pool[i].Animate(deltaTime, walking, state == State.Leaving ? LeaveSpeedFactor : 1f);
+            }
+        }
+
+        // Раз в пару минут клиент из очереди (не у окна) умиляется коту: радуется, над котом — сердечко.
+        private void UpdateCatCharm(float deltaTime)
+        {
+            if (_cat == null || !_cat.isActiveAndEnabled)
+                return;
+
+            _charmTimer -= deltaTime;
+            if (_charmTimer > 0f)
+                return;
+            _charmTimer = Random.Range(_config.CatCharmInterval.x, _config.CatCharmInterval.y);
+
+            for (int place = 1; place < _queue.Count; place++)
+            {
+                int i = _queue[place];
+                if (_states[i] != State.Waiting || _pool[i].IsCheering)
+                    continue;
+                _pool[i].Cheer(1.5f);
+                _cat.Admired();
+                return;
+            }
         }
 
         private bool TrySpawn(float halfWidth)
@@ -120,6 +214,8 @@ namespace ShaurmaTycoon.Customers
                 _frame[i] = 0;
                 _frameTimer[i] = 0f;
                 _pool[i].Rect.localScale = Vector3.one;
+                _pool[i].Setup(_config.CustomerSkins[_skin[i]], _config);
+                _pool[i].SetUmbrella(_raining, PickUmbrellaColor());
                 _pool[i].SetX(_x[i]);
                 _pool[i].gameObject.SetActive(true);
                 _queue.Add(i);
@@ -161,7 +257,8 @@ namespace ShaurmaTycoon.Customers
                 else if (_states[i] != State.Waiting)
                 {
                     _states[i] = State.Waiting;
-                    _pool[i].SetSprite(skin.Idle);
+                    if (!_pool[i].IsCheering)
+                        _pool[i].SetSprite(skin.Idle);
                 }
             }
         }
@@ -191,7 +288,7 @@ namespace ShaurmaTycoon.Customers
             _pool[i].SetSprite(skin.Idle);
             _serviceTimer = (float)_demand.GetServiceTime(rate);
 
-            _bubbleText.text = _loc.Get(PickPhrase());
+            _bubbleText.text = _loc.Get(PickPhrase(skin));
             _bubble.anchoredPosition = new Vector2(_x[i] + BubbleOffsetX, BubbleHeight);
             _bubble.gameObject.SetActive(true);
             _tweens.Scale(_bubble, Vector3.one * 0.3f, Vector3.one, 0.25f, Ease.OutBack);
@@ -203,12 +300,20 @@ namespace ShaurmaTycoon.Customers
         {
             _queue.RemoveAt(0);
             _states[i] = State.Leaving;
-            _pool[i].SetSprite(skin.Cheer != null ? skin.Cheer : skin.Idle);
+            if (skin.Cheer != null)
+                _pool[i].Cheer(_config.CheerDuration);
+            else
+                _pool[i].SetSprite(skin.Idle);
             _tweens.Punch(_pool[i].Rect, 0.12f, 0.25f);
             _coins.Fly(_pool[i].Rect.position + Vector3.up * 120f);
+            if (Random.value < _config.ReactionChance)
+                ShowHeart(new Vector2(_x[i], _config.CharacterHeight + 10f));
 
             _bubble.gameObject.SetActive(false);
             _kiosk.SetServing(false);
+            _servedCount++;
+            if (_servedCount % _config.SellerHappyEvery == 0)
+                _kiosk.ShowHappy();
         }
 
         private void Animate(int i, CustomerSkin skin, float deltaTime)
@@ -226,8 +331,12 @@ namespace ShaurmaTycoon.Customers
             _pool[i].SetSprite(skin.Walk[_frame[i] % skin.Walk.Length]);
         }
 
-        private string PickPhrase()
+        // Своя реплика персонажа (бабушка — про укроп, курьер — про заказы) или общая.
+        private string PickPhrase(CustomerSkin skin)
         {
+            if (!string.IsNullOrEmpty(skin.PhraseKey) && Random.value < _config.OwnPhraseChance)
+                return skin.PhraseKey;
+
             int count = _config.PhraseKeys.Count;
             if (count == 0)
                 return string.Empty;

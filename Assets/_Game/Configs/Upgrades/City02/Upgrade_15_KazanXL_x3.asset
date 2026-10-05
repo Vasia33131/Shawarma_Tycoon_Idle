@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Upgrade_15_KazanXL_x3
   m_EditorClassIdentifier: 
   _id: kazan_xl_x3_2
-  _cost: 25920000000
+  _cost: 259200000000
   _targetStation: {fileID: 11400000, guid: 3fc61ecb8e564ecb8f564ae9934a59c5, type: 2}
   _incomeMultiplier: 3

@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Upgrade_07_BeachShawarma_x3
   m_EditorClassIdentifier: 
   _id: beach_shawarma_x3_3
-  _cost: 1000000000
+  _cost: 10000000000
   _targetStation: {fileID: 11400000, guid: 5825539e0121788c5b276d8605bd2780, type: 2}
   _incomeMultiplier: 3

@@ -21,6 +21,8 @@ namespace ShaurmaTycoon.UI
 
         [SerializeField] private TMP_Text _coinsText = null;
         [SerializeField] private TMP_Text _incomeText = null;
+        [Tooltip("Строка дохода целиком (иконка + текст); пусто — прячется только текст.")]
+        [SerializeField] private GameObject _incomeRoot = null;
         [Tooltip("Иконка монет: цель летящих монет, подпрыгивает при их прилёте.")]
         [SerializeField] private RectTransform _coinIcon = null;
         [Tooltip("Репутация (GDD §3): показывается, когда она уже есть.")]
@@ -146,8 +148,9 @@ namespace ShaurmaTycoon.UI
             {
                 _shownIncome = income;
                 bool hasIncome = income > 0;
-                if (_incomeText.gameObject.activeSelf != hasIncome)
-                    _incomeText.gameObject.SetActive(hasIncome);
+                GameObject incomeRoot = _incomeRoot != null ? _incomeRoot : _incomeText.gameObject;
+                if (incomeRoot.activeSelf != hasIncome)
+                    incomeRoot.SetActive(hasIncome);
                 if (hasIncome)
                 {
                     _income.Clear().Append(_incomeTemplate.Prefix).AppendNumber(income).Append(_incomeTemplate.Suffix);

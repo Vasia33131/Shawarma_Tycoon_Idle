@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Upgrade_16_KatykTea_x3
   m_EditorClassIdentifier: 
   _id: katyk_tea_x3_3
-  _cost: 216000000000
+  _cost: 2160000000000
   _targetStation: {fileID: 11400000, guid: 2066f37d70d24bba9c9fcb191f27752d, type: 2}
   _incomeMultiplier: 3

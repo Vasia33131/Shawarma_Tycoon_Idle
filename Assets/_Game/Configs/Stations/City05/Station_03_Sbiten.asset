@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _id: sbiten
   _nameKey: station.sbiten
-  _icon: {fileID: 0}
+  _icon: {fileID: 21300000, guid: fea9120f89275d3499eac6394d4b6dca, type: 3}
   _baseCost: 7200000
-  _costGrowth: 1.07
+  _costGrowth: 1.15
   _baseIncome: 5400000
   _cycleTime: 6
   _startLevel: 0

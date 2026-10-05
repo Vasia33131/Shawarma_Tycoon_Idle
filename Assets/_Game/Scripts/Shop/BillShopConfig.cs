@@ -31,6 +31,8 @@ namespace ShaurmaTycoon.Shop
         public double IncomeMinutes = 30;
         [Tooltip("Минимум монет (× масштаб города), если доход ещё маленький.")]
         public double MinCoins = 1000;
+        [Tooltip("Sprites/Shop/<Id>.png; пока картинки нет, Art/Assign Icons ставит icon_coin.")]
+        public Sprite Icon;
     }
 
     /// <summary>Постоянная покупка за реальные деньги (этап 09): «Без рекламы», «Постоянный ×2».</summary>

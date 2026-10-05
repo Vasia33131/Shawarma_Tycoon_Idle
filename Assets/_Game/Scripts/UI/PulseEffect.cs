@@ -9,12 +9,12 @@ namespace ShaurmaTycoon.UI
     /// «Дыхание» элемента. Если задана кнопка — пульсирует, пока она активна; иначе — пока Active = true.
     /// Анимирует PulseDriver (без своего Update); пока на объекте идёт твин масштаба (нажатие), не мешает ему.
     /// </summary>
-    public sealed class PulseEffect : MonoBehaviour
+    public sealed class PulseEffect : MonoBehaviour, IUiAnimated
     {
         [Tooltip("Пульсировать, пока эта кнопка интерактивна. Пусто — управлять через Active.")]
         [SerializeField] private Button _whileInteractable = null;
-        [SerializeField] private float _amplitude = 0.06f;
-        [SerializeField] private float _speed = 5f;
+        [SerializeField] private float _amplitude = 0.04f;
+        [SerializeField] private float _speed = 2.5f;
 
         private RectTransform _rect;
         private PulseDriver _driver;
@@ -43,7 +43,7 @@ namespace ShaurmaTycoon.UI
             StopPulse();
         }
 
-        internal void Pulse(float time, TweenRunner tweens)
+        public void Animate(float time, float deltaTime, TweenRunner tweens)
         {
             if (!ShouldPulse)
             {

@@ -10,5 +10,9 @@ namespace ShaurmaTycoon.Core.Audio
         Upgrade,
         Tab,
         Bubble,
+        CatPurr,
+        CatMeow,
+        CarPass,
+        PopupOpen,
     }
 }

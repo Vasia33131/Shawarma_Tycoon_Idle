@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _id: business_lunch
   _nameKey: station.business_lunch
-  _icon: {fileID: 0}
+  _icon: {fileID: 21300000, guid: 0fd923ef8ee4f9046a0f844e573be11b, type: 3}
   _baseCost: 12441600000
-  _costGrowth: 1.07
+  _costGrowth: 1.15
   _baseIncome: 6220800000
   _cycleTime: 96
   _startLevel: 0

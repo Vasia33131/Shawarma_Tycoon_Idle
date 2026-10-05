@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _id: cheese_lavash
   _nameKey: station.cheese_lavash
-  _icon: {fileID: 0}
+  _icon: {fileID: 21300000, guid: 2a80aea3d6ec45b429fa5058c35fda2c, type: 3}
   _baseCost: 60
-  _costGrowth: 1.07
+  _costGrowth: 1.15
   _baseIncome: 60
   _cycleTime: 3
   _startLevel: 0

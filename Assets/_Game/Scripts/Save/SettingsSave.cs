@@ -8,5 +8,6 @@ namespace ShaurmaTycoon.Save
     {
         public bool SoundOn = true;
         public bool MusicOn = true;
+        public bool EffectsOn = true;
     }
 }

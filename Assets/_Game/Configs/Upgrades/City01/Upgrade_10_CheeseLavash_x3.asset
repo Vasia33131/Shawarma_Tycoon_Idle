@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Upgrade_10_CheeseLavash_x3
   m_EditorClassIdentifier: 
   _id: cheese_lavash_x3_3
-  _cost: 150000000
+  _cost: 1500000000
   _targetStation: {fileID: 11400000, guid: 1c43d87bab95493c8ad32c3e713cde05, type: 2}
   _incomeMultiplier: 3

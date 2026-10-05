@@ -32,7 +32,7 @@ namespace ShaurmaTycoon.Core
 
         [Header("Prestige (GDD §7)")]
         [Tooltip("Всего репутации = floor(sqrt(заработано за всё время / это число)).")]
-        [SerializeField] private double _reputationDivisor = 1e6;
+        [SerializeField] private double _reputationDivisor = 1e7;
         [Tooltip("Прибавка к доходу за единицу полученной репутации (0.02 = +2%).")]
         [SerializeField] private double _incomeBonusPerReputation = 0.02;
 

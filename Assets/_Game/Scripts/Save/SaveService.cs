@@ -19,6 +19,7 @@ namespace ShaurmaTycoon.Save
         private readonly Func<DateTime> _utcNow;
         private readonly List<ISaveParticipant> _participants = new List<ISaveParticipant>(4);
         private float _timer;
+        private bool _wiped;
 
         public SaveService(ISaveStorage storage, ISaveSerializer serializer, Func<DateTime> utcNow)
         {
@@ -70,7 +71,7 @@ namespace ShaurmaTycoon.Save
 
         public void SaveNow()
         {
-            if (!IsLoaded)
+            if (!IsLoaded || _wiped)
                 return;
 
             for (int i = 0; i < _participants.Count; i++)
@@ -82,6 +83,24 @@ namespace ShaurmaTycoon.Save
             SaveCount++;
 
             _storage.Save(_serializer.Serialize(Data), ok =>
+            {
+                if (!ok)
+                    SaveFailed?.Invoke();
+            });
+        }
+
+        /// <summary>Сейв стёрт отладочным окном — до перезапуска игра больше ничего не записывает.</summary>
+        public bool IsWiped => _wiped;
+
+        /// <summary>
+        /// Отладка (этап 11): записывает пустой сейв и выключает дальнейшие записи, чтобы текущее состояние
+        /// не перезаписало его. Новая игра начнётся после перезапуска.
+        /// </summary>
+        public void Wipe()
+        {
+            _wiped = true;
+            var empty = new SaveData { SavedAtUtcTicks = _utcNow().Ticks };
+            _storage.Save(_serializer.Serialize(empty), ok =>
             {
                 if (!ok)
                     SaveFailed?.Invoke();

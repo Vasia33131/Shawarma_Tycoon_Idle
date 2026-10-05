@@ -1,4 +1,6 @@
 using System.Globalization;
+using ShaurmaTycoon.Core;
+using ShaurmaTycoon.Core.Tweening;
 using ShaurmaTycoon.Economy;
 using ShaurmaTycoon.Localization;
 using ShaurmaTycoon.Stations;
@@ -26,6 +28,8 @@ namespace ShaurmaTycoon.UI
         [SerializeField] private Button[] _tapButtons = new Button[0];
         [SerializeField] private Image _icon = null;
         [SerializeField] private TMP_Text _iconLabel = null;
+        [Tooltip("Нарисованная еда станции поверх кружка (StationConfig.Icon); без картинки — номер в кружке.")]
+        [SerializeField] private Image _iconArt = null;
         [SerializeField] private TMP_Text _nameText = null;
         [SerializeField] private TMP_Text _levelText = null;
         [SerializeField] private RectTransform _progressFill = null;
@@ -47,6 +51,8 @@ namespace ShaurmaTycoon.UI
         [SerializeField] private Button _unlockButton = null;
         [SerializeField] private TMP_Text _unlockCostText = null;
         [SerializeField] private BillOfferTrigger _unlockOffer = null;
+        [Tooltip("Силуэт еды закрытой станции — «что-то вкусное скоро откроется».")]
+        [SerializeField] private Image _lockedIconArt = null;
 
         private readonly NumberText _incomeBuilder = new NumberText();
         private readonly NumberText _countBuilder = new NumberText();
@@ -74,6 +80,8 @@ namespace ShaurmaTycoon.UI
         private bool _shownWaitingForTap;
         private float _shownFill = -1f;
         private float _lastEffectTime = float.NegativeInfinity;
+        private bool _wasLocked;
+        private TweenRunner _tweens;
 
         /// <param name="hiddenEffectSource">Откуда летят монеты, когда строка не видна (окно ларька).</param>
         /// <param name="offers">Покупка за купюры, когда не хватает монет; null — без неё.</param>
@@ -97,8 +105,15 @@ namespace ShaurmaTycoon.UI
             _countTemplate = loc.GetTemplate("station.buy_count");
             _unlockTemplate = loc.GetTemplate("station.unlock");
 
-            _icon.color = iconColor;
             _iconLabel.text = (index + 1).ToString(CultureInfo.InvariantCulture);
+            Sprite iconSprite = StationIcons.Get(station.Definition);
+            StationIcons.Apply(_icon, _iconArt, _iconLabel, iconSprite, iconColor);
+            if (_lockedIconArt != null)
+            {
+                _lockedIconArt.sprite = iconSprite;
+                _lockedIconArt.enabled = iconSprite != null;
+            }
+            _wasLocked = !station.IsUnlocked;
 
             for (int i = 0; i < _tapButtons.Length; i++)
                 _tapButtons[i].onClick.AddListener(OnTap);
@@ -134,6 +149,15 @@ namespace ShaurmaTycoon.UI
             _loc.LanguageChanged -= RefreshAll;
             _buyMode.ModeChanged -= OnBuyModeChanged;
         }
+
+        /// <summary>Куда показывает подсказка онбординга «тапни».</summary>
+        public RectTransform TapTarget => _tapButtons.Length > 0 ? (RectTransform)_tapButtons[0].transform : null;
+
+        /// <summary>Кнопка покупки уровней (подсказка онбординга).</summary>
+        public RectTransform BuyTarget => (RectTransform)_buyButton.transform;
+
+        /// <summary>Кнопка «Открыть за X» закрытой станции (подсказка онбординга).</summary>
+        public RectTransform UnlockTarget => (RectTransform)_unlockButton.transform;
 
         /// <summary>Вызывается каждый кадр из StationsPanel.</summary>
         public void TickProgress()
@@ -223,6 +247,9 @@ namespace ShaurmaTycoon.UI
 
             _lockedRoot.SetActive(!unlocked);
             _nameText.text = stationName;
+            if (unlocked && _wasLocked)
+                PlayUnlockReveal();
+            _wasLocked = !unlocked;
 
             if (unlocked)
             {
@@ -242,6 +269,13 @@ namespace ShaurmaTycoon.UI
             }
 
             RefreshBuy(force: true);
+        }
+
+        // Станция открылась: еда «выпрыгивает» из-под снятого замка.
+        private void PlayUnlockReveal()
+        {
+            if (_tweens != null || Services.TryGet(out _tweens))
+                _tweens.Punch(_icon.rectTransform, 0.25f, 0.45f);
         }
 
         private void RefreshIncome()

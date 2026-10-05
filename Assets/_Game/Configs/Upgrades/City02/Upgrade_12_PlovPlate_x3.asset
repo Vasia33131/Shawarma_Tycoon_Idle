@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Upgrade_12_PlovPlate_x3
   m_EditorClassIdentifier: 
   _id: plov_plate_x3_1
-  _cost: 3110400000
+  _cost: 31104000000
   _targetStation: {fileID: 11400000, guid: ac6fdb90651344ef939a4c6e02988164, type: 2}
   _incomeMultiplier: 3

@@ -11,15 +11,17 @@ using UnityEngine.UI;
 namespace ShaurmaTycoon.UI
 {
     /// <summary>
-    /// Карта филиалов во вкладке «Город»: города стоят по CityConfig.MapPosition и соединены дорогой из точек.
-    /// Фургон на дороге к следующему городу показывает прогресс к порогу. Тап по городу — описание в шапке карты.
+    /// Карта филиалов во вкладке «Город»: города стоят по CityConfig.MapPosition и соединены извилистой дорогой
+    /// из штрихов (квадратичная кривая Безье между соседями, изгиб чередуется). Фургон едет по кривой к следующему
+    /// городу и показывает прогресс к порогу. Тап по городу — описание в плашке сверху.
     /// Всё позиционируется якорями (доли области карты), поэтому раскладка не зависит от размера экрана.
     /// </summary>
     public sealed class CityMapView : MonoBehaviour, ISceneBinding
     {
-        // Фургон и закрашенная часть дороги идут между краями кружков, а не между центрами.
-        private const float RouteStart = 0.15f;
-        private const float RouteEnd = 0.85f;
+        // Изгиб дороги: сдвиг середины по нормали, доля длины отрезка.
+        private const float CurveBend = 0.12f;
+        private const float MaxTravelerTilt = 15f;
+        private const int LengthSamples = 16;
 
         [SerializeField] private RectTransform _area = null;
         [SerializeField] private CityMapNodeView _nodePrefab = null;
@@ -27,9 +29,17 @@ namespace ShaurmaTycoon.UI
         [SerializeField] private RectTransform _traveler = null;
         [SerializeField] private TMP_Text _selectedNameText = null;
         [SerializeField] private TMP_Text _selectedInfoText = null;
-        [Tooltip("Примерный размер области карты в единицах канваса — по нему считается шаг точек дороги.")]
+        [Tooltip("Миниатюра выбранного города в плашке. Пусто или у города нет миниатюры — скрыта.")]
+        [SerializeField] private Image _selectedIcon = null;
+        [Tooltip("Статус выбранного города отдельной строкой. Пусто — статус в начале строки описания.")]
+        [SerializeField] private TMP_Text _selectedStatusText = null;
+        [SerializeField] private Color _statusColor = new Color(0.45f, 0.35f, 0.28f);
+        [SerializeField] private Color _nextStatusColor = new Color(0.95f, 0.55f, 0.15f);
+        [Tooltip("Размер области карты в единицах канваса — по нему считаются шаг штрихов и изгиб дороги.")]
         [SerializeField] private Vector2 _referenceSize = new Vector2(960f, 640f);
-        [SerializeField] private float _dotSpacing = 36f;
+        [SerializeField] private float _dotSpacing = 30f;
+        [Tooltip("Штрихов ближе этого расстояния (ед. канваса) к центру города нет — дорога начинается у края миниатюры.")]
+        [SerializeField] private float _nodeClearance = 72f;
 
         [Header("Road colors")]
         [SerializeField] private Color _roadDoneColor = new Color(0.30f, 0.69f, 0.31f);
@@ -46,6 +56,12 @@ namespace ShaurmaTycoon.UI
         private int _selectedIndex = -1;
         private Loc _loc;
         private float _shownProgress = -1f;
+        // Отрезок к следующему городу в единицах _referenceSize и доли кривой у краёв миниатюр.
+        private Vector2 _routeFrom;
+        private Vector2 _routeControl;
+        private Vector2 _routeTo;
+        private float _routeStart = 0.15f;
+        private float _routeEnd = 0.85f;
 
         private bool HasNext => _currentIndex + 1 < _cities.Count;
 
@@ -85,36 +101,44 @@ namespace ShaurmaTycoon.UI
                 return;
 
             _shownProgress = progress;
-            float t = Mathf.Lerp(RouteStart, RouteEnd, progress);
+            float t = Mathf.Lerp(_routeStart, _routeEnd, progress);
             for (int i = 0; i < _routeDots.Count; i++)
                 _routeDots[i].color = _routeDotT[i] <= t ? _roadProgressColor : _roadAheadColor;
 
-            Vector2 from = _cities[_currentIndex].MapPosition;
-            Vector2 to = _cities[_currentIndex + 1].MapPosition;
-            Vector2 anchor = Vector2.Lerp(from, to, t);
-            _traveler.anchorMin = anchor;
-            _traveler.anchorMax = anchor;
-            _traveler.anchoredPosition = Vector2.zero;
-            // Фургон смотрит в сторону движения.
-            _traveler.localScale = new Vector3(to.x >= from.x ? 1f : -1f, 1f, 1f);
+            Place(_traveler, ToAnchor(Bezier(_routeFrom, _routeControl, _routeTo, t)));
+            // Фургон смотрит в сторону движения и слегка наклоняется по дороге (на крутых участках — не больше ±15°).
+            Vector2 tangent = BezierTangent(_routeFrom, _routeControl, _routeTo, t);
+            bool right = _routeTo.x >= _routeFrom.x;
+            float tilt = Mathf.Clamp(Mathf.Atan2(tangent.y, Mathf.Abs(tangent.x)) * Mathf.Rad2Deg, -MaxTravelerTilt, MaxTravelerTilt);
+            _traveler.localScale = new Vector3(right ? 1f : -1f, 1f, 1f);
+            _traveler.localRotation = Quaternion.Euler(0f, 0f, right ? tilt : -tilt);
         }
 
         private void BuildRoad()
         {
             for (int segment = 0; segment + 1 < _cities.Count; segment++)
             {
-                Vector2 from = _cities[segment].MapPosition;
-                Vector2 to = _cities[segment + 1].MapPosition;
-                float length = Vector2.Scale(to - from, _referenceSize).magnitude;
+                Vector2 from = Vector2.Scale(_cities[segment].MapPosition, _referenceSize);
+                Vector2 to = Vector2.Scale(_cities[segment + 1].MapPosition, _referenceSize);
+                Vector2 chord = to - from;
+                float sign = segment % 2 == 0 ? 1f : -1f;
+                Vector2 control = (from + to) * 0.5f + new Vector2(-chord.y, chord.x) * (CurveBend * sign);
+                float length = CurveLength(from, control, to);
                 int steps = Mathf.Max(2, Mathf.RoundToInt(length / _dotSpacing));
+                float clearance = length > 0f ? Mathf.Min(0.4f, _nodeClearance / length) : 0.4f;
 
                 Color color = segment < _currentIndex ? _roadDoneColor : _roadLockedColor;
                 for (int k = 1; k < steps; k++)
                 {
                     float t = (float)k / steps;
+                    if (t < clearance || t > 1f - clearance)
+                        continue;
+
                     Image dot = Instantiate(_roadDotPrefab, _area);
                     dot.name = $"Road_{segment}_{k}";
-                    Place(dot.rectTransform, Vector2.Lerp(from, to, t));
+                    Place(dot.rectTransform, ToAnchor(Bezier(from, control, to, t)));
+                    Vector2 tangent = BezierTangent(from, control, to, t);
+                    dot.rectTransform.localRotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(tangent.y, tangent.x) * Mathf.Rad2Deg);
                     dot.color = color;
 
                     if (segment == _currentIndex)
@@ -123,7 +147,45 @@ namespace ShaurmaTycoon.UI
                         _routeDotT.Add(t);
                     }
                 }
+
+                if (segment == _currentIndex)
+                {
+                    _routeFrom = from;
+                    _routeControl = control;
+                    _routeTo = to;
+                    _routeStart = clearance;
+                    _routeEnd = 1f - clearance;
+                }
             }
+        }
+
+        private static Vector2 Bezier(Vector2 a, Vector2 control, Vector2 b, float t)
+        {
+            float u = 1f - t;
+            return u * u * a + 2f * u * t * control + t * t * b;
+        }
+
+        private static Vector2 BezierTangent(Vector2 a, Vector2 control, Vector2 b, float t)
+        {
+            return 2f * (1f - t) * (control - a) + 2f * t * (b - control);
+        }
+
+        private static float CurveLength(Vector2 a, Vector2 control, Vector2 b)
+        {
+            float length = 0f;
+            Vector2 previous = a;
+            for (int i = 1; i <= LengthSamples; i++)
+            {
+                Vector2 point = Bezier(a, control, b, (float)i / LengthSamples);
+                length += (point - previous).magnitude;
+                previous = point;
+            }
+            return length;
+        }
+
+        private Vector2 ToAnchor(Vector2 point)
+        {
+            return new Vector2(point.x / _referenceSize.x, point.y / _referenceSize.y);
         }
 
         private void BuildNodes()
@@ -133,7 +195,7 @@ namespace ShaurmaTycoon.UI
                 CityMapNodeView node = Instantiate(_nodePrefab, _area);
                 node.name = $"City_{i + 1}_{_cities[i].Id}";
                 Place((RectTransform)node.transform, _cities[i].MapPosition);
-                node.Setup(i + 1, StateOf(i), _cities[i].BoothColor);
+                node.Setup(i + 1, StateOf(i), _cities[i].BoothColor, _cities[i].MapIcon);
 
                 int index = i;
                 node.Button.onClick.AddListener(() => Select(index));
@@ -167,11 +229,28 @@ namespace ShaurmaTycoon.UI
                 return;
 
             CityConfig city = _cities[_selectedIndex];
+            CityMapNodeState state = StateOf(_selectedIndex);
             _selectedNameText.text = _loc.Get(city.NameKey);
-            string status = _loc.Get(StatusKey(StateOf(_selectedIndex)));
+            string status = _loc.Get(StatusKey(state));
             string details = _loc.Format("map.details", BigNumberFormatter.Format(city.PrestigeThreshold),
                 FormatScale(city.ValueScale));
-            _selectedInfoText.text = status + " · " + details;
+
+            if (_selectedStatusText != null)
+            {
+                _selectedStatusText.text = status;
+                _selectedStatusText.color = state == CityMapNodeState.Next ? _nextStatusColor : _statusColor;
+                _selectedInfoText.text = details;
+            }
+            else
+            {
+                _selectedInfoText.text = status + " · " + details;
+            }
+
+            if (_selectedIcon != null)
+            {
+                _selectedIcon.sprite = city.MapIcon;
+                _selectedIcon.gameObject.SetActive(city.MapIcon != null);
+            }
         }
 
         // Масштаб города — целое «×10 000» (суффиксы K/M здесь читаются хуже).

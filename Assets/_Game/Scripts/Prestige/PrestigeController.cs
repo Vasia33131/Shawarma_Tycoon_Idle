@@ -49,7 +49,7 @@ namespace ShaurmaTycoon.Prestige
         public double Progress => Math.Min(1, _state.CityEarned / Threshold);
 
         public bool IsThresholdReached => _state.CityEarned >= Threshold;
-        public long ForecastGain => _rules.ReputationGain(_state.LifetimeEarned, _state.ReputationEarned);
+        public long ForecastGain => _rules.ReputationGain(_state.LifetimeEarned, _state.ReputationFromCities);
         public bool CanPrestige => IsThresholdReached && ForecastGain >= 1;
 
         public double CurrentIncomeMultiplier => _rules.IncomeMultiplier(_state.ReputationEarned);

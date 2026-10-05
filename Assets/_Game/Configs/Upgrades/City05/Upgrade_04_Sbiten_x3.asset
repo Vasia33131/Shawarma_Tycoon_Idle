@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Upgrade_04_Sbiten_x3
   m_EditorClassIdentifier: 
   _id: sbiten_x3_1
-  _cost: 1800000000
+  _cost: 18000000000
   _targetStation: {fileID: 11400000, guid: 2eb373367a963ebce635c30991f5e6e9, type: 2}
   _incomeMultiplier: 3

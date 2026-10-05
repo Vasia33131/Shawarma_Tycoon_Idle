@@ -16,6 +16,9 @@ namespace ShaurmaTycoon.UI
     {
         [SerializeField] private Image _icon = null;
         [SerializeField] private TMP_Text _iconLabel = null;
+        [SerializeField] private Image _iconArt = null;
+        [Tooltip("Значок улучшений «для всех станций» (UiIcons.TabUpgrades).")]
+        [SerializeField] private Sprite _allStationsIcon = null;
         [SerializeField] private TMP_Text _descriptionText = null;
         [SerializeField] private Button _buyButton = null;
         [SerializeField] private TMP_Text _buyText = null;
@@ -41,7 +44,11 @@ namespace ShaurmaTycoon.UI
             _offers = offers;
 
             int target = upgrades.GetTargetStationIndex(index);
-            _icon.color = StationColors.Get(target);
+            Sprite icon = target >= 0 && target < stations.Stations.Count
+                ? StationIcons.Get(stations.Stations[target].Definition)
+                : _allStationsIcon != null ? _allStationsIcon : null;
+            // Множитель («×3») — бейджем поверх значка, виден и с картинкой.
+            StationIcons.Apply(_icon, _iconArt, null, icon, StationColors.Get(target));
             _iconLabel.text = "×" + FormatMultiplier(upgrades.GetDefinition(index).IncomeMultiplier);
             _buyButton.onClick.AddListener(OnBuy);
             if (_buyOffer != null)

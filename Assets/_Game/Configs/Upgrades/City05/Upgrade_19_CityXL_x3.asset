@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Upgrade_19_CityXL_x3
   m_EditorClassIdentifier: 
   _id: city_xl_x3_3
-  _cost: 2592000000000000
+  _cost: 25920000000000000
   _targetStation: {fileID: 11400000, guid: c48960c0f5e15830fd8ab535b50268ac, type: 2}
   _incomeMultiplier: 3

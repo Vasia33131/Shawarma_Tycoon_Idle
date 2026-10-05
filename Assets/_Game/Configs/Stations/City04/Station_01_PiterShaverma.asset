@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _id: piter_shaverma
   _nameKey: station.piter_shaverma
-  _icon: {fileID: 0}
+  _icon: {fileID: 21300000, guid: 8045e5cf8a3cff74fbbf210a308edadc, type: 3}
   _baseCost: 4000
   _costGrowth: 1.07
   _baseIncome: 1000

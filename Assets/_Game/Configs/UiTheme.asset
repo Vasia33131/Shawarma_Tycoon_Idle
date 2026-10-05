@@ -1,0 +1,78 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa8c4cb4a215b7748bcc9b2184a67ab1, type: 3}
+  m_Name: UiTheme
+  m_EditorClassIdentifier: 
+  Outline: {r: 0.2901961, g: 0.17254902, b: 0.11372549, a: 1}
+  TextDark: {r: 0.23137255, g: 0.14117648, b: 0.09411765, a: 1}
+  TextMuted: {r: 0.5411765, g: 0.41960785, b: 0.34117648, a: 1}
+  TextLight: {r: 1, g: 0.9647059, b: 0.9098039, a: 1}
+  Panel: {r: 1, g: 0.94509804, b: 0.8627451, a: 1}
+  Row: {r: 1, g: 0.972549, b: 0.93333334, a: 1}
+  RowShade: {r: 0.92156863, g: 0.8392157, b: 0.7372549, a: 1}
+  ScreenBackground: {r: 0.9647059, g: 0.9019608, b: 0.8117647, a: 1}
+  HudBackground: {r: 0.35686275, g: 0.22745098, b: 0.16078432, a: 1}
+  Overlay: {r: 0.16470589, g: 0.101960786, b: 0.18039216, a: 0.6}
+  Primary: {r: 0.4862745, g: 0.76862746, b: 0.49803922, a: 1}
+  Secondary: {r: 0.95686275, g: 0.63529414, b: 0.34901962, a: 1}
+  Neutral: {r: 0.6627451, g: 0.5176471, b: 0.40392157, a: 1}
+  Disabled: {r: 0.84705883, g: 0.78431374, b: 0.72156864, a: 1}
+  Reward: {r: 1, g: 0.7607843, b: 0.3019608, a: 1}
+  Gold: {r: 1, g: 0.8117647, b: 0.3529412, a: 1}
+  LightGold: {r: 1, g: 0.9098039, b: 0.6901961, a: 1}
+  CoinInner: {r: 0.9490196, g: 0.61960787, b: 0.29803923, a: 1}
+  Glow: {r: 1, g: 0.8901961, b: 0.6313726, a: 1}
+  Reputation: {r: 0.60784316, g: 0.49803922, b: 0.83137256, a: 1}
+  ReputationLight: {r: 0.8509804, g: 0.8, b: 0.9490196, a: 1}
+  Bills: {r: 0.37254903, g: 0.7254902, b: 0.5411765, a: 1}
+  BillsLight: {r: 0.78431374, g: 0.92156863, b: 0.8352941, a: 1}
+  Badge: {r: 0.8980392, g: 0.40392157, b: 0.3529412, a: 1}
+  FloatingText: {r: 0.7882353, g: 0.45490196, b: 0.18039216, a: 1}
+  Sky: {r: 1, g: 0.84313726, b: 0.627451, a: 1}
+  Pavement: {r: 0.7254902, g: 0.6039216, b: 0.5254902, a: 1}
+  Curb: {r: 0.56078434, g: 0.44705883, b: 0.38431373, a: 1}
+  Booth: {r: 0.8509804, g: 0.3764706, b: 0.2901961, a: 1}
+  WindowDark: {r: 0.24313726, g: 0.14901961, b: 0.10980392, a: 1}
+  Wood: {r: 0.65882355, g: 0.43137255, b: 0.27058825, a: 1}
+  Meat: {r: 0.65882355, g: 0.38431373, b: 0.1882353, a: 1}
+  MeatDark: {r: 0.47843137, g: 0.25882354, b: 0.11764706, a: 1}
+  Awning: {r: 1, g: 0.95686275, b: 0.9019608, a: 1}
+  Steel: {r: 0.6392157, g: 0.61960787, b: 0.6509804, a: 1}
+  Leaf: {r: 0.4862745, g: 0.72156864, b: 0.41568628, a: 1}
+  LeafDark: {r: 0.30980393, g: 0.5411765, b: 0.30588236, a: 1}
+  Land: {r: 0.89411765, g: 0.9019608, b: 0.7529412, a: 1}
+  Hill: {r: 0.7882353, g: 0.8392157, b: 0.6392157, a: 1}
+  Water: {r: 0.6627451, g: 0.8117647, b: 0.8901961, a: 1}
+  Paper: {r: 1, g: 0.9843137, b: 0.9490196, a: 1}
+  GiftRed: {r: 0.8784314, g: 0.3647059, b: 0.3137255, a: 1}
+  LampOff: {r: 0.24313726, g: 0.14901961, b: 0.10980392, a: 0.4509804}
+  ButtonLipShade: 0.72
+  ButtonLip: 10
+  ButtonLipPressed: 4
+  CardShadeHeight: 6
+  CardOutlineAlpha: 0.35
+  PressOffset: 6
+  PressScale: 0.97
+  PressDuration: 0.06
+  ReleaseDuration: 0.18
+  PulseAmplitude: 0.04
+  PulseSpeed: 2.5
+  GlowMinAlpha: 0.5
+  GlowMaxAlpha: 0.8
+  GlowPeriod: 2
+  PopupShowDuration: 0.25
+  PopupHideDuration: 0.12
+  PopupOverlayFade: 0.2
+  PopupStartScale: 0.92
+  PopupStartOffset: 40
+  TabRaise: 10
+  TabTransition: 0.15

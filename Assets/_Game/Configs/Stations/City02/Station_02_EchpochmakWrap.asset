@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _id: echpochmak_wrap
   _nameKey: station.echpochmak_wrap
-  _icon: {fileID: 0}
+  _icon: {fileID: 21300000, guid: b3e1f7bed589fe04a87806b5ff62e686, type: 3}
   _baseCost: 600
-  _costGrowth: 1.07
+  _costGrowth: 1.15
   _baseIncome: 600
   _cycleTime: 3
   _startLevel: 0

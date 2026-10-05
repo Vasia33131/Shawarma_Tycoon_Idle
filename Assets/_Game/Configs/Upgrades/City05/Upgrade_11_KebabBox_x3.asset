@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Upgrade_11_KebabBox_x3
   m_EditorClassIdentifier: 
   _id: kebab_box_x3_2
-  _cost: 2160000000000
+  _cost: 21600000000000
   _targetStation: {fileID: 11400000, guid: d26a11e12614802f6efcc73c7ce5953d, type: 2}
   _incomeMultiplier: 3

@@ -24,6 +24,7 @@ namespace ShaurmaTycoon.UI
 
         [SerializeField] private Image _icon = null;
         [SerializeField] private TMP_Text _iconLabel = null;
+        [SerializeField] private Image _iconArt = null;
         [SerializeField] private TMP_Text _nameText = null;
         [SerializeField] private TMP_Text _descriptionText = null;
         [SerializeField] private Button _hireButton = null;
@@ -43,6 +44,9 @@ namespace ShaurmaTycoon.UI
         private bool _shownAffordable;
         private BillOfferPopup _offers;
 
+        /// <summary>Кнопка найма (подсказка онбординга).</summary>
+        public RectTransform HireTarget => (RectTransform)_hireButton.transform;
+
         /// <param name="offers">Найм за купюры, когда не хватает монет; null — без него.</param>
         public void Bind(int index, StationModel station, ManagerController managers, Wallet wallet, Loc loc, BillOfferPopup offers)
         {
@@ -55,7 +59,7 @@ namespace ShaurmaTycoon.UI
             _offers = offers;
             _hireTemplate = loc.GetTemplate("manager.hire");
 
-            _icon.color = StationColors.Get(index);
+            StationIcons.Apply(_icon, _iconArt, _iconLabel, StationIcons.Get(station.Definition), StationColors.Get(index));
             _iconLabel.text = (index + 1).ToString(CultureInfo.InvariantCulture);
             _hireButton.onClick.AddListener(OnHire);
             if (_hireOffer != null)

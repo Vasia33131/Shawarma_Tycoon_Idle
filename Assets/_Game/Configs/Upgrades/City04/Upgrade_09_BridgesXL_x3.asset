@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Upgrade_09_BridgesXL_x3
   m_EditorClassIdentifier: 
   _id: bridges_xl_x3_1
-  _cost: 25920000000
+  _cost: 259200000000
   _targetStation: {fileID: 11400000, guid: a552df2f33dc9ce8309e535381e8878a, type: 2}
   _incomeMultiplier: 3

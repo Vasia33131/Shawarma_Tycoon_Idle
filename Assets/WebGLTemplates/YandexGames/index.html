@@ -30,6 +30,82 @@
         }
     </style>
 
+    <!-- Экран загрузки «Шаурма Тайкун» (V7): вечерняя картинка ларька, золотая капсула прогресса.
+         Селекторы с двумя id — сильнее CSS полосы, который PluginYG дописывает в style.css при сборке. -->
+    <style>
+        body {
+            background: #5B4B8A;
+        }
+
+        body #loading-cover {
+            overflow: hidden;
+            background: linear-gradient(180deg, #5B4B8A 0%, #B5ABC5 22%, #D4A192 45%, #8A534C 78%, #5E3A3A 100%);
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+        }
+
+        /* Размытая копия на весь экран — поля по бокам (ландшафт) или сверху и снизу (портрет). */
+        #loading-cover #cozy-backdrop {
+            position: absolute;
+            inset: -40px;
+            background: url('Images/loading_bg.jpg') center 45% / cover no-repeat;
+            filter: blur(22px) brightness(0.85);
+        }
+
+        /* Картинка целиком, вписана в экран; края мягко тают в размытый фон. */
+        #loading-cover #cozy-art {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: min(100vw, 100vh);
+            height: min(100vw, 100vh);
+            transform: translate(-50%, -50%);
+            background: url('Images/loading_bg.jpg') center / contain no-repeat;
+            -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 9%, #000 91%, transparent 100%);
+            mask-image: linear-gradient(90deg, transparent 0, #000 9%, #000 91%, transparent 100%);
+        }
+
+        @media (orientation: portrait) {
+            #loading-cover #cozy-art {
+                top: 44%;
+                -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 10%, #000 86%, transparent 100%);
+                mask-image: linear-gradient(180deg, transparent 0, #000 10%, #000 86%, transparent 100%);
+            }
+        }
+
+        /* Полоса загрузки — внизу, на размытой мостовой картинки. */
+        #loading-cover #unity-loading-bar {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 11%;
+        }
+
+        #loading-cover #unity-progress-bar-empty {
+            width: min(64vw, 440px);
+            height: 26px;
+            margin: 0;
+            padding: 4px;
+            border: none;
+            border-radius: 999px;
+            background: rgba(74, 44, 29, 0.4);
+            box-shadow: 0 2px 10px rgba(74, 44, 29, 0.35);
+        }
+
+        #loading-cover #unity-progress-bar-full {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(180deg, #FFDF85 0%, #FFCF5A 55%, #E9AE34 100%);
+            box-shadow: 0 0 10px rgba(255, 207, 90, 0.55);
+        }
+
+        #loading-cover .spinner {
+            border-top-color: rgba(255, 207, 90, 0.25);
+            border-right-color: rgba(255, 207, 90, 0.25);
+            border-bottom-color: rgba(255, 207, 90, 0.25);
+            border-left-color: #FFCF5A;
+        }
+    </style>
+
     <!-- Additional head modules -->
 
 </head>
@@ -39,6 +115,8 @@
         <canvas id="unity-canvas" tabindex="-1"></canvas>
     </div>
     <div id="loading-cover" style="display:none;">
+        <div id="cozy-backdrop"></div>
+        <div id="cozy-art"></div>
         <div id="unity-loading-bar">
             <div id="unity-logo"><img src="Images/logo.png"></div>
             <div id="unity-progress-bar-empty" style="display: none;">
@@ -108,6 +186,7 @@
         let ygGameInstance = null;
         let ysdk = null;
         let initYSDK = false;
+        let initSDKMessageSent = false;
         let initGame = false;
         let syncInit = false;
         let isVisibility = true;
@@ -206,7 +285,7 @@
         const ResumeCallback = () => {
             isPausedGame = false;
             YG2Instance('SetPauseGame', 'false');
-            FocusGame(false);
+            FocusGame();
         };
 
         const script = document.createElement("script");
@@ -220,6 +299,8 @@
                     progressBarFull.style.width = `${100 * adjustedProgress}%`;
                 }).then((unityInstance) => {
                     ygGameInstance = unityInstance;
+                    SendInitSDKComplete();
+
                     loadingCover.style.background = "";
                     loadingCover.style.display = "none";
                     FocusGame();
@@ -243,49 +324,78 @@
 
         function IsLocalHost() {
             try {
-                if (window.top !== window) {
+                if (window.top !== window)
                     return false;
-                }
 
                 const host = window.location.hostname;
-                if (host === "localhost" || host === "127.0.0.1" || host.endsWith(".local")) {
-                    LogStyledMessage("Local Host");
+                const isLocalAddress = window.location.protocol === "file:" ||
+                    host === "localhost" ||
+                    host === "127.0.0.1" ||
+                    host === "::1" ||
+                    host.endsWith(".local");
+
+                if (isLocalAddress && !IsYandexSDKAvailable()) {
+                    LogStyledMessage("Local Host Without Yandex SDK");
                     return true;
                 }
-            } 
+
+                return false;
+            }
             catch (error) {
                 console.error("Error checking the local host:", error);
                 return false;
             }
         }
 
-        function YG2Instance(method) {
-            if (ygGameInstance == null)
+        function IsYandexSDKAvailable() {
+            return typeof YaGames !== "undefined" && typeof YaGames.init === "function";
+        }
+
+        function SendInitSDKComplete() {
+            if (!initYSDK || ygGameInstance == null || initSDKMessageSent)
                 return;
 
-            if (!initGame) {
-                setTimeout(function () {
-                    if (ygGameInstance)
-                        ygGameInstance.SendMessage('YG2Instance', method);
-                }, 100);
-            }
-            else {
-                ygGameInstance.SendMessage('YG2Instance', method);
-            }
-                
+            ygGameInstance.SendMessage('YG2Instance', 'InitSDKComplete');
+            initSDKMessageSent = true;
         }
+
+        let pendingYG2Messages = [];
+        let pendingYG2Timer = null;
+
         function YG2Instance(method, arg) {
             if (ygGameInstance == null)
                 return;
 
-            if (!initGame) {
-                setTimeout(function () {
-                    ygGameInstance.SendMessage('YG2Instance', method, arg);
-                }, 100);
+            if (!initGame || pendingYG2Messages.length > 0) {
+                pendingYG2Messages.push({ method: method, arg: arg });
+
+                if (pendingYG2Timer === null)
+                    pendingYG2Timer = setTimeout(FlushYG2Messages, 100);
+
+                return;
             }
-            else {
+
+            SendYG2Message(method, arg);
+        }
+
+        function FlushYG2Messages() {
+            pendingYG2Timer = null;
+
+            const queue = pendingYG2Messages;
+            pendingYG2Messages = [];
+
+            if (ygGameInstance == null)
+                return;
+
+            for (let i = 0; i < queue.length; i++)
+                SendYG2Message(queue[i].method, queue[i].arg);
+        }
+
+        function SendYG2Message(method, arg) {
+            if (arg === undefined)
+                ygGameInstance.SendMessage('YG2Instance', method);
+            else
                 ygGameInstance.SendMessage('YG2Instance', method, arg);
-            }
         }
 
         function LogStyledMessage(message, style = 'color: #FFDF73; background-color: #454545') {
@@ -309,8 +419,7 @@
                 // Additional init modules
 
                 initYSDK = true;
-                if (ygGameInstance != null)
-                    ygGameInstance.SendMessage('YG2Instance', 'InitSDKComplete');
+                SendInitSDKComplete();
 
                 LogStyledMessage('Init YandexSDK Success');
 
@@ -328,7 +437,7 @@
             setTimeout(function () {
                 if (isPausedGame == true)
                     YG2Instance('SetPauseGame', 'true');
-            }, 100);
+            }, 0);
 
             // Additional start modules
         }

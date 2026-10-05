@@ -13,11 +13,11 @@ namespace ShaurmaTycoon.UI
     [RequireComponent(typeof(Button))]
     public sealed class ButtonFeedback : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     {
-        private const float PressedScale = 0.92f;
-        private const float PressDuration = 0.08f;
-        private const float ReleaseDuration = 0.3f;
-
         [SerializeField] private SoundId _sound = SoundId.Tap;
+        [Tooltip("Масштаб при нажатии. У объёмных кнопок (SoftButton) — почти 1: «проминание» делает сама кнопка.")]
+        [SerializeField] private float _pressedScale = 0.94f;
+        [SerializeField] private float _pressDuration = 0.06f;
+        [SerializeField] private float _releaseDuration = 0.18f;
 
         private Button _button;
         private RectTransform _rect;
@@ -46,7 +46,7 @@ namespace ShaurmaTycoon.UI
                 return;
 
             _pressed = true;
-            _tweens.Scale(_rect, _rect.localScale, Vector3.one * PressedScale, PressDuration, Ease.OutQuad);
+            _tweens.Scale(_rect, _rect.localScale, Vector3.one * _pressedScale, _pressDuration, Ease.OutQuad);
         }
 
         public void OnPointerUp(PointerEventData eventData)
@@ -55,7 +55,7 @@ namespace ShaurmaTycoon.UI
                 return;
 
             _pressed = false;
-            _tweens.Scale(_rect, _rect.localScale, Vector3.one, ReleaseDuration, Ease.OutBack);
+            _tweens.Scale(_rect, _rect.localScale, Vector3.one, _releaseDuration, Ease.OutBack);
         }
 
         private void OnClick()

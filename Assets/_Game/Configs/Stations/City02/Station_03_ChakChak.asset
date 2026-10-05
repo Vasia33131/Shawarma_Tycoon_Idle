@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _id: chak_chak
   _nameKey: station.chak_chak
-  _icon: {fileID: 0}
+  _icon: {fileID: 21300000, guid: df99b9524ae4cf34f94ca2bb5f1b1375, type: 3}
   _baseCost: 7200
-  _costGrowth: 1.07
+  _costGrowth: 1.15
   _baseIncome: 5400
   _cycleTime: 6
   _startLevel: 0

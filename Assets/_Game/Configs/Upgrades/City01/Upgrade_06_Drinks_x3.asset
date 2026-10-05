@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Upgrade_06_Drinks_x3
   m_EditorClassIdentifier: 
   _id: drinks_x3_1
-  _cost: 2160000
+  _cost: 21600000
   _targetStation: {fileID: 11400000, guid: 0904757db57c4531894aa241e48a1657, type: 2}
   _incomeMultiplier: 3

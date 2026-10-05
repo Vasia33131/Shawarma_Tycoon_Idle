@@ -8,6 +8,7 @@ namespace ShaurmaTycoon.Economy
         Purchase,
         Ad,
         Debug,
+        Reward,
     }
 
     /// <summary>На что потрачены купюры.</summary>

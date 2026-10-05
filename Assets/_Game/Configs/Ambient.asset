@@ -1,0 +1,100 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 949b660f201c51f4780a44963e899fba, type: 3}
+  m_Name: Ambient
+  m_EditorClassIdentifier: 
+  _slotMinutes: 10
+  _weatherDuration: {x: 2, y: 4}
+  _weatherTransition: 3
+  _weatherCheckInterval: 1
+  _cloudCount: 4
+  _cloudSpeed: {x: 8, y: 14}
+  _cloudAlpha: {x: 0.7, y: 0.95}
+  _cloudScale: {x: 0.7, y: 1.2}
+  _cloudWidth: 230
+  _cloudTop: {x: 50, y: 190}
+  _starCount: 25
+  _starSize: {x: 3, y: 6}
+  _starPeriod: {x: 2, y: 5}
+  _starAlpha: {x: 0.25, y: 0.95}
+  _fireflyCount: 8
+  _fireflyCountBoosted: 14
+  _fireflySize: {x: 10, y: 16}
+  _fireflyAlpha: 0.55
+  _fireflyAlphaBoosted: 0.9
+  _fireflyDrift: {x: 30, y: 80}
+  _fireflyPeriod: {x: 7, y: 14}
+  _fireflyBreathPeriod: {x: 2, y: 4}
+  _steamCount: 8
+  _steamInterval: {x: 0.5, y: 0.8}
+  _steamRise: {x: 90, y: 140}
+  _steamLifetime: 2.5
+  _steamSize: 30
+  _steamGrowth: 1.8
+  _steamAlpha: 0.35
+  _steamSway: 8
+  _farBirdInterval: {x: 30, y: 60}
+  _farBirdSpeed: {x: 60, y: 90}
+  _farBirdFlapPeriod: 0.45
+  _farBirdTop: {x: 60, y: 170}
+  _sparrowInterval: {x: 60, y: 120}
+  _sparrowSize: 58
+  _sparrowFlightTime: 1.6
+  _sparrowHops: {x: 2, y: 3}
+  _sparrowHopHeight: 14
+  _sparrowHopTime: 0.3
+  _sparrowRest: {x: 0.7, y: 1.6}
+  _sparrowScareRadius: 170
+  _vehicleInterval: {x: 15, y: 40}
+  _vehicleSpeed: {x: 120, y: 220}
+  _vehicleJitter: 1
+  _vehicleDefaultHeight: 125
+  _vehicleSizes:
+  - Sprite: {fileID: 21300000, guid: c15feec85e9b4044291fe2cdd169e600, type: 3}
+    Height: 118
+  - Sprite: {fileID: 21300000, guid: 2b5c991a24f9fe84891600388c4b53aa, type: 3}
+    Height: 125
+  - Sprite: {fileID: 21300000, guid: 5fd92de61d6663b4786db70960ac923e, type: 3}
+    Height: 130
+  - Sprite: {fileID: 21300000, guid: b7df480d6b6abfa4f9da4ceaac1bd8d7, type: 3}
+    Height: 215
+  - Sprite: {fileID: 21300000, guid: c6be5b1182767c44f94d6135c902e80e, type: 3}
+    Height: 150
+  _headlightAlpha: 0.4
+  _rainDropCount: 50
+  _rainDropSize: {x: 3, y: 26}
+  _rainAngle: 14
+  _rainSpeed: {x: 900, y: 1100}
+  _rainAlpha: 0.45
+  _rainSkyDarken: 0.18
+  _puddleCount: {x: 4, y: 6}
+  _puddleAlpha: 0.25
+  _rippleInterval: {x: 0.3, y: 0.8}
+  _rippleDuration: 0.8
+  _splashCount: 3
+  _splashInterval: {x: 0.4, y: 1.2}
+  _umbrellaColors:
+  - {r: 0.96862745, g: 0.69803923, b: 0.65882355, a: 1}
+  - {r: 0.65882355, g: 0.84705883, b: 0.78431374, a: 1}
+  - {r: 0.7254902, g: 0.7764706, b: 0.9490196, a: 1}
+  - {r: 1, g: 0.87058824, b: 0.58431375, a: 1}
+  - {r: 0.8509804, g: 0.72156864, b: 0.93333334, a: 1}
+  - {r: 0.95686275, g: 0.7607843, b: 0.6039216, a: 1}
+  _snowflakeCount: 40
+  _snowflakeSize: {x: 5, y: 10}
+  _snowSpeed: {x: 40, y: 80}
+  _snowSway: 18
+  _snowSwayPeriod: {x: 2, y: 4}
+  _snowAlpha: 0.9
+  _driftGrowTime: 60
+  _driftMeltTime: 10
+  _driftAlpha: 0.85

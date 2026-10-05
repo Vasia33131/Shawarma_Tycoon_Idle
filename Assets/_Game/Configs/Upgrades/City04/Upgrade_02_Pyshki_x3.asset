@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Upgrade_02_Pyshki_x3
   m_EditorClassIdentifier: 
   _id: pyshki_x3_1
-  _cost: 15000000
+  _cost: 150000000
   _targetStation: {fileID: 11400000, guid: c112da01bfc8d7d20d50e438e1e28733, type: 2}
   _incomeMultiplier: 3

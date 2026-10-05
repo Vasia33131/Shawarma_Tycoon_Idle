@@ -42,8 +42,25 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 8a3419e21b0f44a6a40e0fe021e3af29, type: 2}
   - {fileID: 11400000, guid: 17b425a8b69b46f289724edecb4d12fd, type: 2}
   - {fileID: 11400000, guid: 12e6747c97e046f28d72e0d84af7095e, type: 2}
-  _prestigeThreshold: 1000000000
+  _prestigeThreshold: 10000000000
   _valueScale: 1
-  _skyColor: {r: 1, g: 0.87, b: 0.68, a: 1}
-  _boothColor: {r: 0.85, g: 0.3, b: 0.2, a: 1}
-  _mapPosition: {x: 0.08, y: 0.25}
+  _skyHorizon: {r: 1, g: 0.84313726, b: 0.627451, a: 1}
+  _skyTop: {r: 0.35686275, g: 0.29411766, b: 0.5411765, a: 1}
+  _skyMiddle: {r: 0.9490196, g: 0.627451, b: 0.48235294, a: 1}
+  _boothColor: {r: 0.8509804, g: 0.3764706, b: 0.2901961, a: 1}
+  _bgFar: {fileID: 21300000, guid: ff33dbb9d1b63c5498a25737dee5a8b2, type: 3}
+  _bgNear: {fileID: 21300000, guid: e20b39cc51e5f7943b034435b28d4208, type: 3}
+  _showMoon: 0
+  _showStars: 0
+  _rainChance: 0.2
+  _snowAllowed: 1
+  _vehicles:
+  - {fileID: 21300000, guid: c15feec85e9b4044291fe2cdd169e600, type: 3}
+  - {fileID: 21300000, guid: 2b5c991a24f9fe84891600388c4b53aa, type: 3}
+  - {fileID: 21300000, guid: 5fd92de61d6663b4786db70960ac923e, type: 3}
+  - {fileID: 21300000, guid: c6be5b1182767c44f94d6135c902e80e, type: 3}
+  _fireflies: 0
+  _music: {fileID: 8300000, guid: f7d2b4da4c7db184ca637737fe0ffc02, type: 3}
+  _ambientBase: {fileID: 8300000, guid: 42c2f4eed5efb5d47aae467ddb359ee1, type: 3}
+  _mapPosition: {x: 0.193, y: 0.313}
+  _mapIcon: {fileID: 21300000, guid: 45d362c25fc55af468ccf25c56c1b38f, type: 3}

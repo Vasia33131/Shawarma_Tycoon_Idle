@@ -19,6 +19,12 @@ namespace ShaurmaTycoon.Prestige
         public double LifetimeEarned { get; private set; }
         public long ReputationEarned { get; private set; }
         public long ReputationSpent { get; private set; }
+
+        /// <summary>Часть полученной репутации, выданная наградами (задания дня), а не переездами.</summary>
+        public long ReputationBonus { get; private set; }
+
+        /// <summary>Репутация за переезды: от неё считается «минус уже полученная» в формуле GDD §7.</summary>
+        public long ReputationFromCities => ReputationEarned - ReputationBonus;
         public long FreeReputation => ReputationEarned - ReputationSpent;
         public IReadOnlyDictionary<string, int> ShopLevels => _shopLevels;
 
@@ -59,6 +65,17 @@ namespace ShaurmaTycoon.Prestige
             Changed?.Invoke();
         }
 
+        /// <summary>Награда репутацией (задания дня): бонус к доходу и магазин, но награду за переезд не уменьшает.</summary>
+        public void AddBonusReputation(long amount)
+        {
+            if (amount <= 0)
+                return;
+
+            ReputationEarned += amount;
+            ReputationBonus += amount;
+            Changed?.Invoke();
+        }
+
         /// <summary>Переход в город cityIndex с наградой gain: заработок города обнуляется.</summary>
         public void CompletePrestige(long gain, int cityIndex)
         {
@@ -69,13 +86,14 @@ namespace ShaurmaTycoon.Prestige
         }
 
         public void Load(int cityIndex, double cityEarned, double lifetimeEarned, long reputationEarned, long reputationSpent,
-            IEnumerable<KeyValuePair<string, int>> shopLevels)
+            IEnumerable<KeyValuePair<string, int>> shopLevels, long reputationBonus = 0)
         {
             CityIndex = Math.Max(0, cityIndex);
             CityEarned = Math.Max(0, cityEarned);
             LifetimeEarned = Math.Max(CityEarned, lifetimeEarned);
             ReputationEarned = Math.Max(0, reputationEarned);
             ReputationSpent = Math.Min(Math.Max(0, reputationSpent), ReputationEarned);
+            ReputationBonus = Math.Min(Math.Max(0, reputationBonus), ReputationEarned);
 
             _shopLevels.Clear();
             if (shopLevels != null)

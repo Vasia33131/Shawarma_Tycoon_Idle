@@ -40,16 +40,19 @@ MonoBehaviour:
     PriceBills: 5
     IncomeMinutes: 30
     MinCoins: 1000
+    Icon: {fileID: 21300000, guid: a82b9e6774369aa45b1baa7ac34e1d31, type: 3}
   - Id: coins_medium
     NameKey: shop.coins_medium
     PriceBills: 20
     IncomeMinutes: 180
     MinCoins: 10000
+    Icon: {fileID: 21300000, guid: 5f6248966c550924f9b7108f4ec12a34, type: 3}
   - Id: coins_large
     NameKey: shop.coins_large
     PriceBills: 60
     IncomeMinutes: 720
     MinCoins: 50000
+    Icon: {fileID: 21300000, guid: ab4f9081d0bb63945852bcbacfbedde3, type: 3}
   _starterPack:
     ProductId: starter_pack
     Bills: 50
@@ -65,3 +68,5 @@ MonoBehaviour:
     ProductId: income_x2
     DisplayPrice: 299
     Icon: {fileID: 21300000, guid: c606d3685160c3f49aff73df159b809a, type: 3}
+  _secondsPerBill: 360
+  _minCoinsPerBill: 200

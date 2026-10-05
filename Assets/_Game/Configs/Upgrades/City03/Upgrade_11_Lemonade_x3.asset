@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Upgrade_11_Lemonade_x3
   m_EditorClassIdentifier: 
   _id: fresh_lemonade_x3_2
-  _cost: 21600000000
+  _cost: 216000000000
   _targetStation: {fileID: 11400000, guid: 67b55cee9d3cc00c42f3f7b2dd50b50d, type: 2}
   _incomeMultiplier: 3

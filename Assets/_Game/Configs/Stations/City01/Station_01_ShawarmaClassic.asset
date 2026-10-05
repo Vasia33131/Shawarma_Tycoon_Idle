@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _id: shawarma_classic
   _nameKey: station.shawarma_classic
-  _icon: {fileID: 0}
+  _icon: {fileID: 21300000, guid: 70911c7236ec35b4799b7eb31de3cb71, type: 3}
   _baseCost: 4
   _costGrowth: 1.07
   _baseIncome: 1

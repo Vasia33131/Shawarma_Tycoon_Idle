@@ -54,12 +54,22 @@ namespace ShaurmaTycoon.Core
             Services.Register(settings);
             settings.Changed += () => music.Muted = !settings.MusicOn;
 
+            // Эмбиент (V6) тоже переживает переезд: улица сменяется морем кроссфейдом, а не обрывается.
+            var ambientAudio = new AmbientAudioService(audioObject, settings);
+            Services.Register(ambientAudio);
+            _tickManager.Register(ambientAudio);
+
             var pause = new PauseController(paused =>
             {
                 _tickManager.IsPaused = paused;
                 GameEvents.RaiseGamePaused(paused);
             });
             Services.Register(pause);
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            // Отладочное окно (этап 11) — в релизной сборке его код не компилируется.
+            DebugWindow.Create();
+#endif
 
             _platform = CreatePlatform(pause);
             Services.Register(_platform);
