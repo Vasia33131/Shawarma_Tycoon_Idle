@@ -98,6 +98,8 @@ namespace ShaurmaTycoon.Tests
             public void Load(Action<string> onLoaded) => onLoaded?.Invoke(null);
             public void SetLeaderboardScore(string leaderboardId, double score) { }
             public void Purchase(string productId, Action<bool> onComplete) => onComplete?.Invoke(true);
+            public void GetPurchases(Action<string[]> onLoaded) => onLoaded?.Invoke(new string[0]);
+            public void ConsumePurchase(string productId) { }
 
             public void ShowRewarded(Action<bool> onComplete)
             {

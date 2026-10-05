@@ -21,6 +21,19 @@ namespace ShaurmaTycoon.UI
 
         public Button Button => _button;
 
+        /// <summary>Картинка-иконка вместо цветной плашки; null — оставить плашку.</summary>
+        public void SetIcon(Sprite sprite)
+        {
+            if (sprite == null)
+                return;
+
+            _icon.sprite = sprite;
+            _icon.type = Image.Type.Simple;
+            _icon.preserveAspect = true;
+            _icon.color = Color.white;
+            _iconMark.gameObject.SetActive(false);
+        }
+
         public void SetLook(Color icon, Color mark, Color button)
         {
             _icon.color = icon;

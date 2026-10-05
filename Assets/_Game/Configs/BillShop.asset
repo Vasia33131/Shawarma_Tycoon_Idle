@@ -19,18 +19,21 @@ MonoBehaviour:
     Bills: 20
     DisplayPrice: 19
     Best: 0
+    Icon: {fileID: 21300000, guid: 9ab387755f7c37743823aa57b5d0ea2f, type: 3}
   - Id: bills_medium
     ProductId: bills_medium
     NameKey: shop.bills_medium
     Bills: 120
     DisplayPrice: 99
     Best: 0
+    Icon: {fileID: 21300000, guid: 0148648d1ef939c43843cf7809e868bb, type: 3}
   - Id: bills_large
     ProductId: bills_large
     NameKey: shop.bills_large
     Bills: 350
     DisplayPrice: 249
     Best: 1
+    Icon: {fileID: 21300000, guid: 33a1b278692944640bcfc65c79e26e72, type: 3}
   _coinPacks:
   - Id: coins_small
     NameKey: shop.coins_small
@@ -47,3 +50,18 @@ MonoBehaviour:
     PriceBills: 60
     IncomeMinutes: 720
     MinCoins: 50000
+  _starterPack:
+    ProductId: starter_pack
+    Bills: 50
+    CoinBills: 50
+    MinIncomeMinutes: 10
+    DisplayPrice: 99
+    Icon: {fileID: 21300000, guid: 6bb9fd4b21ca0d744ae7fc2cfc00e751, type: 3}
+  _noAds:
+    ProductId: no_ads
+    DisplayPrice: 149
+    Icon: {fileID: 21300000, guid: 374d05ca1a196e44695a811de26950a2, type: 3}
+  _incomeX2:
+    ProductId: income_x2
+    DisplayPrice: 299
+    Icon: {fileID: 21300000, guid: c606d3685160c3f49aff73df159b809a, type: 3}

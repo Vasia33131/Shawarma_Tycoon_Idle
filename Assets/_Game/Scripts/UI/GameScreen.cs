@@ -79,7 +79,9 @@ namespace ShaurmaTycoon.UI
             BindCityPanel(prestige, city, tweens, loc);
             _settingsPopup.Bind(Services.Get<GameSettings>(), tweens, loc);
             Services.TryGet(out AdBillService adBills);
-            _shopPanel.Bind(Services.Get<BillShop>(), Services.Get<BillWallet>(), loc, _coinFly, adBills);
+            Services.TryGet(out StarterPack starterPack);
+            Services.TryGet(out PermanentProducts permanent);
+            _shopPanel.Bind(Services.Get<BillShop>(), Services.Get<BillWallet>(), loc, _coinFly, adBills, starterPack, permanent);
             _hud.BillsClicked += OpenShop;
 
             _tickManager = Services.Get<TickManager>();
@@ -102,6 +104,10 @@ namespace ShaurmaTycoon.UI
                 _customers.Bind(customers, _incomeRate, _stations, _coinFly, audio, tweens, loc);
                 _tickManager.Register(_customers);
             }
+
+            // Сцена собрана и показана игроку — платформе можно сообщить, что игра готова (Game Ready).
+            if (Services.TryGet(out IPlatformService platform))
+                platform.GameReady();
         }
 
         private void BindCityPanel(PrestigeState prestige, CityConfig city, TweenRunner tweens, Loc loc)

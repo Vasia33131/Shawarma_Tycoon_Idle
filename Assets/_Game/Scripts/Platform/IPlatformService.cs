@@ -31,9 +31,16 @@ namespace ShaurmaTycoon.Platform
         /// <param name="onLoaded">JSON сохранения или null, если сохранения нет.</param>
         void Load(Action<string> onLoaded);
 
-        // TODO(YANDEX): уточнить сигнатуры лидерборда и покупок на этапе 09.
+        /// <summary>Отправить результат в лидерборд. Платформа может отказать неавторизованному игроку — это не ошибка.</summary>
         void SetLeaderboardScore(string leaderboardId, double score);
 
+        /// <summary>Оплата товара. onComplete(true) — оплачено; расходуемый товар после выдачи и сохранения надо подтвердить ConsumePurchase.</summary>
         void Purchase(string productId, Action<bool> onComplete);
+
+        /// <summary>Id купленных, но не подтверждённых товаров (расходуемые — не выданные; постоянные — все купленные).</summary>
+        void GetPurchases(Action<string[]> onLoaded);
+
+        /// <summary>Подтвердить расходуемую покупку. Вызывать только после выдачи награды и сохранения.</summary>
+        void ConsumePurchase(string productId);
     }
 }

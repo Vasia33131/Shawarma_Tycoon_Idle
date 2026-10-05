@@ -23,6 +23,7 @@ namespace ShaurmaTycoon.Core
 
         private TickManager _tickManager;
         private IPlatformService _platform;
+        private YandexBridge _yandexBridge = null;
 
         private void Awake()
         {
@@ -53,15 +54,31 @@ namespace ShaurmaTycoon.Core
             Services.Register(settings);
             settings.Changed += () => music.Muted = !settings.MusicOn;
 
-            _platform = CreatePlatform();
+            var pause = new PauseController(paused =>
+            {
+                _tickManager.IsPaused = paused;
+                GameEvents.RaiseGamePaused(paused);
+            });
+            Services.Register(pause);
+
+            _platform = CreatePlatform(pause);
             Services.Register(_platform);
             _platform.Init(OnPlatformReady);
         }
 
-        private static IPlatformService CreatePlatform()
+        private IPlatformService CreatePlatform(PauseController pause)
         {
-            // TODO(YANDEX): на этапе 09 в WebGL-билде создавать YandexPlatformService.
+#if UNITY_WEBGL && !UNITY_EDITOR
+            // Пауза по сигналу платформы (реклама) и по скрытой вкладке; звук слушает GameEvents.GamePaused.
+            _yandexBridge = YandexBridge.Create();
+            _yandexBridge.PauseRequested += pause.SetPlatformPause;
+            _yandexBridge.VisibilityChanged += pause.SetFocus;
+            var yandex = new YandexPlatformService(_yandexBridge);
+            _tickManager.Register(yandex);
+            return yandex;
+#else
             return new EditorPlatformService();
+#endif
         }
 
         private void OnPlatformReady()
@@ -78,8 +95,34 @@ namespace ShaurmaTycoon.Core
             Services.Register(save);
             _tickManager.Register(save);
 
+            // Вкладка скрыта или игра закрывается — сейв уходит и в облако сразу, не дожидаясь интервала.
+            if (_platform is YandexPlatformService yandex)
+            {
+                GameEvents.ApplicationFocusChanged += hasFocus =>
+                {
+                    if (!hasFocus)
+                        yandex.FlushCloud();
+                };
+                GameEvents.ApplicationQuitting += yandex.FlushCloud;
+                if (_yandexBridge != null)
+                {
+                    _yandexBridge.VisibilityChanged += visible =>
+                    {
+                        if (visible)
+                            return;
+                        save.SaveNow();
+                        yandex.FlushCloud();
+                    };
+                }
+            }
+
             var prestige = new PrestigeState();
             Services.Register(prestige);
+
+            var leaderboard = new LeaderboardService(platform, prestige);
+            Services.Register(leaderboard);
+            _tickManager.Register(leaderboard);
+            Services.Register(new InterstitialService(platform, () => Time.realtimeSinceStartup));
             save.Load(() =>
             {
                 // Прогресс престижа живёт в Boot и переживает перезагрузку сцены Game.

@@ -27,5 +27,14 @@ namespace ShaurmaTycoon.Save
         public PrestigeSave Prestige = new PrestigeSave();
         public SettingsSave Settings = new SettingsSave();
         public AdRewardSave AdBills = new AdRewardSave();
+
+        /// <summary>Куплен «Стартовый набор» (постоянная покупка, не повторяется).</summary>
+        public bool StarterPackBought;
+
+        /// <summary>Куплено «Без рекламы» (постоянная покупка).</summary>
+        public bool NoAdsBought;
+
+        /// <summary>Куплен «Постоянный ×2» (постоянная покупка).</summary>
+        public bool IncomeX2Bought;
     }
 }

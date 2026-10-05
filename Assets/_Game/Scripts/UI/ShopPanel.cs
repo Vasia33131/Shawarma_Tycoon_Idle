@@ -16,7 +16,10 @@ namespace ShaurmaTycoon.UI
     {
         private const float RefreshInterval = 1f;
         private const int CoinsPerPurchaseEffect = 6;
+        private static readonly PermanentProduct[] PremiumProducts = { PermanentProduct.NoAds, PermanentProduct.IncomeX2 };
 
+        [SerializeField] private StarterPackCard _starterCard = null;
+        [SerializeField] private RectTransform _premiumGroup = null;
         [SerializeField] private RectTransform _adGroup = null;
         [SerializeField] private RectTransform _billsGroup = null;
         [SerializeField] private RectTransform _coinsGroup = null;
@@ -33,6 +36,9 @@ namespace ShaurmaTycoon.UI
         [SerializeField] private Color _coinButtonColor = new Color(0.95f, 0.55f, 0.15f);
         [SerializeField] private Color _adColor = new Color(0.55f, 0.35f, 0.85f);
         [SerializeField] private Color _adMarkColor = new Color(1f, 1f, 1f);
+        [SerializeField] private Color _premiumColor = new Color(0.85f, 0.30f, 0.20f);
+        [SerializeField] private Color _premiumMarkColor = new Color(1f, 0.90f, 0.60f);
+        [SerializeField] private Color _premiumButtonColor = new Color(0.30f, 0.69f, 0.31f);
 
         private BillShop _shop;
         private BillWallet _bills;
@@ -45,6 +51,8 @@ namespace ShaurmaTycoon.UI
         private double[] _shownRewards;
         private float _timer;
 
+        private PermanentProducts _permanent;
+        private BillShopRowView[] _premiumRows;
         private AdBillService _adBills;
         private BillShopRowView _adRow;
         private readonly NumberText _adWaitText = new NumberText();
@@ -54,7 +62,10 @@ namespace ShaurmaTycoon.UI
         private long _shownAdSeconds = -1;
 
         /// <param name="adBills">Купюры за рекламу; null — строки рекламы нет.</param>
-        public void Bind(BillShop shop, BillWallet bills, Loc loc, CoinFlyEffect coinFly, AdBillService adBills)
+        /// <param name="starterPack">Стартовый набор; null — карточки нет.</param>
+        /// <param name="permanent">«Без рекламы» и «Постоянный ×2»; null — строк нет.</param>
+        public void Bind(BillShop shop, BillWallet bills, Loc loc, CoinFlyEffect coinFly, AdBillService adBills, StarterPack starterPack = null,
+            PermanentProducts permanent = null)
         {
             SceneBindings.Track(this);
             _shop = shop;
@@ -64,6 +75,28 @@ namespace ShaurmaTycoon.UI
             _adBills = adBills;
             _rewardTemplate = loc.GetTemplate("shop.coins_reward");
             _adWaitTemplate = loc.GetTemplate("bills.ad_wait");
+
+            _permanent = permanent;
+            _premiumRows = new BillShopRowView[permanent != null && _premiumGroup != null ? PremiumProducts.Length : 0];
+            for (int i = 0; i < _premiumRows.Length; i++)
+            {
+                BillShopRowView row = CreateRow(_premiumGroup, "Premium_" + PremiumProducts[i], _premiumColor, _premiumMarkColor, _premiumButtonColor);
+                PermanentProduct product = PremiumProducts[i];
+                row.Button.onClick.AddListener(() => OnBuyPremium(product));
+                _premiumRows[i] = row;
+            }
+            if (_premiumGroup != null && _premiumRows.Length == 0)
+                _premiumGroup.gameObject.SetActive(false);
+            if (_permanent != null)
+                _permanent.Purchased += OnPremiumPurchased;
+
+            if (_starterCard != null)
+            {
+                if (starterPack != null)
+                    _starterCard.Bind(starterPack, loc, coinFly);
+                else
+                    _starterCard.gameObject.SetActive(false);
+            }
 
             if (_adBills != null && _adGroup != null)
             {
@@ -118,6 +151,8 @@ namespace ShaurmaTycoon.UI
                 return;
             RefreshRewards(force: false);
             RefreshAd(force: false);
+            if (_starterCard != null)
+                _starterCard.Refresh();
         }
 
         public void Tick(float deltaTime)
@@ -136,6 +171,8 @@ namespace ShaurmaTycoon.UI
 
             RefreshRewards(force: false);
             RefreshAd(force: false);
+            if (_starterCard != null)
+                _starterCard.Refresh();
         }
 
         private void OnWatchAd()
@@ -208,6 +245,35 @@ namespace ShaurmaTycoon.UI
             return row;
         }
 
+        private void OnBuyPremium(PermanentProduct product)
+        {
+            if (_permanent.Buy(product, _ => RefreshInteractable()))
+                RefreshInteractable();
+        }
+
+        private void OnPremiumPurchased(PermanentProduct product)
+        {
+            RefreshStatic();
+        }
+
+        private void RefreshPremiumRows()
+        {
+            for (int i = 0; i < _premiumRows.Length; i++)
+            {
+                PermanentProduct product = PremiumProducts[i];
+                BillShopRowView row = _premiumRows[i];
+                bool owned = _permanent.Has(product);
+                string prefix = product == PermanentProduct.NoAds ? "shop.no_ads" : "shop.x2";
+                row.SetIcon(_permanent.GetOffer(product).Icon);
+                row.SetName(_loc.Get(prefix + "_name"));
+                row.SetDescription(_loc.Get(prefix + "_desc"));
+                row.SetBadge(false);
+                row.SetButton(owned ? _loc.Get("shop.owned")
+                    : _loc.Format("shop.price_yan", _permanent.GetOffer(product).DisplayPrice.ToString(CultureInfo.InvariantCulture)),
+                    _permanent.CanBuy(product));
+            }
+        }
+
         private void OnBuyBills(int index)
         {
             if (_shop.BuyBillPack(index, _ => RefreshInteractable()))
@@ -236,6 +302,10 @@ namespace ShaurmaTycoon.UI
 
         private void RefreshStatic()
         {
+            RefreshPremiumRows();
+            if (_starterCard != null)
+                _starterCard.RefreshStatic();
+
             if (_adRow != null)
             {
                 _adRow.SetName(_loc.Get("bills.ad_name"));
@@ -250,6 +320,7 @@ namespace ShaurmaTycoon.UI
                 row.SetName(_loc.Get(pack.NameKey));
                 row.SetDescription(_loc.Format("shop.bills_amount", pack.Bills.ToString(CultureInfo.InvariantCulture)));
                 row.SetBadge(pack.Best);
+                row.SetIcon(pack.Icon);
                 row.SetButton(_loc.Format("shop.price_yan", pack.DisplayPrice.ToString(CultureInfo.InvariantCulture)), !_shop.IsPurchasing);
             }
 
@@ -267,6 +338,8 @@ namespace ShaurmaTycoon.UI
 
         private void RefreshInteractable()
         {
+            for (int i = 0; i < _premiumRows.Length; i++)
+                _premiumRows[i].SetInteractable(_permanent.CanBuy(PremiumProducts[i]));
             for (int i = 0; i < _billRows.Length; i++)
                 _billRows[i].SetInteractable(!_shop.IsPurchasing);
             for (int i = 0; i < _coinRows.Length; i++)

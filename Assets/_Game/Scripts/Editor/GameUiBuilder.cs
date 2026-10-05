@@ -1139,6 +1139,10 @@ namespace ShaurmaTycoon.EditorTools
             GameObject panel = BuildListPanel(parent, "ShopPanel", "tab.shop", out _, out RectTransform list);
             var shopPanel = panel.AddComponent<ShopPanel>();
 
+            StarterPackCard starterCard = BuildStarterPackCard(list);
+
+            BuildSectionTitle(list, "PremiumTitle", "shop.premium_title");
+            RectTransform premiumGroup = BuildRowGroup(list, "PremiumGroup");
             RectTransform adGroup = BuildRowGroup(list, "AdGroup");
             BuildSectionTitle(list, "BillsTitle", "shop.bills_title");
             RectTransform billsGroup = BuildRowGroup(list, "BillsGroup");
@@ -1146,6 +1150,8 @@ namespace ShaurmaTycoon.EditorTools
             RectTransform coinsGroup = BuildRowGroup(list, "CoinsGroup");
 
             var so = new SerializedObject(shopPanel);
+            Set(so, "_starterCard", starterCard);
+            Set(so, "_premiumGroup", premiumGroup);
             Set(so, "_adGroup", adGroup);
             Set(so, "_billsGroup", billsGroup);
             Set(so, "_coinsGroup", coinsGroup);
@@ -1154,6 +1160,100 @@ namespace ShaurmaTycoon.EditorTools
 
             panel.SetActive(false);
             return shopPanel;
+        }
+
+        // ---------- Starter pack (09) ----------
+
+        private const float StarterCardHeight = 480f;
+
+        /// <summary>
+        /// Карточка «Стартовый набор»: золотая рамка, красная пульсирующая ленточка «Супер-выгода!», большая иконка набора слева,
+        /// справа название и две плитки наград (купюры + монеты), внизу большая зелёная кнопка цены.
+        /// </summary>
+        private static StarterPackCard BuildStarterPackCard(Transform list)
+        {
+            GameObject root = CreateUi("StarterPackCard", list);
+            root.AddComponent<LayoutElement>().preferredHeight = StarterCardHeight;
+            AddImage(root, Gold, _roundSprite).raycastTarget = false;
+            var card = root.AddComponent<StarterPackCard>();
+
+            GameObject inner = CreateUi("Inner", root.transform);
+            Stretch(inner, new Vector2(10f, 10f), new Vector2(-10f, -10f));
+            AddImage(inner, LightGold, _roundSprite).raycastTarget = false;
+
+            // Иконка набора: чуть наклонена, спрайт назначает StarterPackCard из конфига.
+            GameObject icon = CreateUi("Icon", inner.transform);
+            SetRect(icon, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0.5f, 0.5f), new Vector2(135f, -200f), new Vector2(210f, 210f));
+            icon.transform.localRotation = Quaternion.Euler(0f, 0f, 6f);
+            Image iconImage = AddImage(icon, Color.white, null, sliced: false);
+            iconImage.preserveAspect = true;
+            iconImage.raycastTarget = false;
+
+            GameObject content = CreateUi("Content", inner.transform);
+            Stretch(content, new Vector2(250f, 0f), Vector2.zero);
+
+            GameObject ribbon = CreateUi("Ribbon", root.transform);
+            SetRect(ribbon, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -36f), new Vector2(460f, 62f));
+            AddImage(ribbon, BoothRed, _roundSprite).raycastTarget = false;
+            TMP_Text ribbonText = AddText(ribbon.transform, "Label", "", 36, Color.white, TextAlignmentOptions.Center, bold: true, autoSize: true);
+            Stretch(ribbonText.gameObject, new Vector2(14f, 4f), new Vector2(-14f, -4f));
+            ribbonText.raycastTarget = false;
+            var ribbonPulse = ribbon.AddComponent<PulseEffect>();
+
+            TMP_Text title = AddText(content.transform, "TitleText", "", 52, DarkBrown, TextAlignmentOptions.Center, bold: true, autoSize: true);
+            SetRect(title.gameObject, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -76f), new Vector2(-20f, 68f));
+            title.raycastTarget = false;
+
+            TMP_Text billsText = BuildStarterTile(content.transform, "BillsTile", BillGreen, BillLight, -1f);
+            TMP_Text coinsText = BuildStarterTile(content.transform, "CoinsTile", Orange, Gold, 1f);
+
+            TMP_Text plus = AddText(content.transform, "Plus", "+", 64, DarkBrown, TextAlignmentOptions.Center, bold: true);
+            SetRect(plus.gameObject, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -230f), new Vector2(60f, 70f));
+            plus.raycastTarget = false;
+
+            TMP_Text once = AddText(inner.transform, "OnceText", "", 34, BoothRed, TextAlignmentOptions.Center, bold: true, autoSize: true);
+            SetRect(once.gameObject, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -302f), new Vector2(-40f, 44f));
+            once.raycastTarget = false;
+
+            GameObject buy = CreateUi("BuyButton", inner.transform);
+            SetRect(buy, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 24f), new Vector2(620f, 112f));
+            AddImage(buy, Green, _roundSprite);
+            Button buyButton = AddButton(buy, SoundId.Buy);
+            AddPulseWhileInteractable(buy, buyButton);
+            TMP_Text buyText = AddText(buy.transform, "Label", "", 50, Color.white, TextAlignmentOptions.Center, bold: true, autoSize: true);
+            Stretch(buyText.gameObject, new Vector2(16f, 8f), new Vector2(-16f, -8f));
+            buyText.raycastTarget = false;
+
+            var so = new SerializedObject(card);
+            Set(so, "_icon", iconImage);
+            Set(so, "_titleText", title);
+            Set(so, "_ribbonText", ribbonText);
+            Set(so, "_onceText", once);
+            Set(so, "_billsText", billsText);
+            Set(so, "_coinsText", coinsText);
+            Set(so, "_buyButton", buyButton);
+            Set(so, "_buyText", buyText);
+            Set(so, "_ribbonPulse", ribbonPulse);
+            so.ApplyModifiedPropertiesWithoutUndo();
+            return card;
+        }
+
+        // Плитка награды: цветной прямоугольник, круглый значок и крупный текст. side: -1 — слева от центра, 1 — справа.
+        private static TMP_Text BuildStarterTile(Transform parent, string name, Color color, Color markColor, float side)
+        {
+            GameObject tile = CreateUi(name, parent);
+            SetRect(tile, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(side < 0f ? 1f : 0f, 1f),
+                new Vector2(side * 18f, -150f), new Vector2(340f, 160f));
+            AddImage(tile, color, _roundSprite).raycastTarget = false;
+
+            GameObject mark = CreateUi("Mark", tile.transform);
+            SetRect(mark, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -36f), new Vector2(56f, 56f));
+            AddImage(mark, markColor, _circleSprite, sliced: false).raycastTarget = false;
+
+            TMP_Text text = AddText(tile.transform, "Text", "", 38, Color.white, TextAlignmentOptions.Center, bold: true, autoSize: true);
+            SetRect(text.gameObject, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 16f), new Vector2(-20f, 74f));
+            text.raycastTarget = false;
+            return text;
         }
 
         // Красный кружок «!» в углу кнопки вкладки: есть бесплатная награда.
@@ -1199,7 +1299,7 @@ namespace ShaurmaTycoon.EditorTools
             var view = root.AddComponent<BillShopRowView>();
 
             GameObject icon = CreateUi("Icon", root.transform);
-            SetRect(icon, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(24f, 0f), new Vector2(120f, 84f));
+            SetRect(icon, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(16f, 0f), new Vector2(138f, 138f));
             Image iconImage = AddImage(icon, BillGreen, _roundSprite);
             iconImage.raycastTarget = false;
             GameObject mark = CreateUi("Mark", icon.transform);

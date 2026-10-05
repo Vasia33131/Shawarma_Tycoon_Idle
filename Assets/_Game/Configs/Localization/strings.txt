@@ -130,6 +130,15 @@ shop.coins_reward	+{0} монет	+{0} coins
 shop.price_yan	{0} ян	{0} YAN
 shop.price_bills	{0} купюр	{0} bills
 shop.best	Выгодно!	Best value!
+shop.starter_title	Стартовый набор	Starter pack
+shop.starter_badge	Супер-выгода!	Super deal!
+shop.starter_once	Только один раз!	One time only!
+shop.premium_title	Навсегда	Forever
+shop.no_ads_name	Без рекламы	No ads
+shop.no_ads_desc	Без рекламных вставок. Награды за рекламу — по желанию	No ad breaks. Reward ads stay optional
+shop.x2_name	Постоянный ×2	Permanent ×2
+shop.x2_desc	Весь доход ×2 навсегда	All income ×2 forever
+shop.owned	Куплено	Owned
 bills.offer_title	Не хватает монет	Not enough coins
 bills.offer_body	Купить {0}?\nЦена в купюрах: {1}	Buy {0}?\nPrice in bills: {1}
 bills.offer_poor	Нужно купюр: {0}, у вас: {1}.\nКупюры есть в магазине.	You need {0} bills, you have {1}.\nGet more in the shop.

@@ -24,6 +24,16 @@ namespace ShaurmaTycoon.Tests
             public void Save(string json, Action<bool> onComplete) => onComplete?.Invoke(true);
             public void Load(Action<string> onLoaded) => onLoaded?.Invoke(null);
             public void SetLeaderboardScore(string leaderboardId, double score) { }
+            public string[] Pending = new string[0];
+            public Action OnConsume;
+            public readonly System.Collections.Generic.List<string> Consumed = new System.Collections.Generic.List<string>();
+            public void GetPurchases(Action<string[]> onLoaded) => onLoaded?.Invoke(Pending);
+
+            public void ConsumePurchase(string productId)
+            {
+                Consumed.Add(productId);
+                OnConsume?.Invoke();
+            }
 
             public void Purchase(string productId, Action<bool> onComplete)
             {
@@ -133,6 +143,68 @@ namespace ShaurmaTycoon.Tests
             Assert.IsFalse(world.Shop.IsPurchasing);
             Assert.AreEqual(350, world.Bills.Bills);
             Assert.AreEqual(1, world.Saves);
+        }
+
+        [Test]
+        public void BuyBillPack_Success_ConsumesPurchaseAfterSave()
+        {
+            World world = Create();
+            int savesWhenConsumed = -1;
+            world.Platform.OnConsume = () => savesWhenConsumed = world.Saves;
+
+            world.Shop.BuyBillPack(0, null);
+            world.Platform.Complete(true);
+
+            CollectionAssert.AreEqual(new[] { "bills_small" }, world.Platform.Consumed);
+            Assert.AreEqual(1, savesWhenConsumed, "Purchase must be confirmed only after the save.");
+        }
+
+        [Test]
+        public void BuyBillPack_Failed_DoesNotConsume()
+        {
+            World world = Create();
+
+            world.Shop.BuyBillPack(0, null);
+            world.Platform.Complete(false);
+
+            Assert.IsEmpty(world.Platform.Consumed);
+        }
+
+        [Test]
+        public void TryGrantPurchasedPack_KnownProduct_GrantsSavesAndConsumes()
+        {
+            World world = Create();
+
+            Assert.IsTrue(world.Shop.TryGrantPurchasedPack("bills_large"));
+
+            Assert.AreEqual(350, world.Bills.Bills);
+            Assert.AreEqual(1, world.Saves);
+            CollectionAssert.AreEqual(new[] { "bills_large" }, world.Platform.Consumed);
+        }
+
+        [Test]
+        public void TryGrantPurchasedPack_UnknownProduct_DoesNothing()
+        {
+            World world = Create();
+
+            Assert.IsFalse(world.Shop.TryGrantPurchasedPack("no_ads"));
+
+            Assert.AreEqual(0, world.Bills.Bills);
+            Assert.IsEmpty(world.Platform.Consumed);
+        }
+
+        [Test]
+        public void PurchaseRecovery_GrantsPendingPacksOnce()
+        {
+            World world = Create();
+            PurchaseRecovery.Reset();
+            world.Platform.Pending = new[] { "bills_small", "no_ads" };
+
+            Assert.IsTrue(PurchaseRecovery.Run(world.Platform, world.Shop.TryGrantPurchasedPack));
+            Assert.IsFalse(PurchaseRecovery.Run(world.Platform, world.Shop.TryGrantPurchasedPack), "Runs once per session.");
+
+            Assert.AreEqual(20, world.Bills.Bills);
+            CollectionAssert.AreEqual(new[] { "bills_small" }, world.Platform.Consumed);
         }
 
         [Test]

@@ -76,5 +76,15 @@ namespace ShaurmaTycoon.Platform
             Debug.Log($"[Platform] Purchase '{productId}' (editor stub)");
             onComplete?.Invoke(true);
         }
+
+        public void GetPurchases(Action<string[]> onLoaded)
+        {
+            onLoaded?.Invoke(new string[0]);
+        }
+
+        public void ConsumePurchase(string productId)
+        {
+            Debug.Log($"[Platform] Consume '{productId}' (editor stub)");
+        }
     }
 }

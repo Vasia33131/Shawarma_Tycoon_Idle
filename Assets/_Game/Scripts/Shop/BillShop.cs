@@ -98,14 +98,39 @@ namespace ShaurmaTycoon.Shop
             {
                 IsPurchasing = false;
                 if (success)
-                {
-                    _bills.Add(pack.Bills, BillSource.Purchase);
-                    _saveNow?.Invoke();
-                    BillsPurchased?.Invoke(index);
-                }
+                    GrantPack(index);
                 onDone?.Invoke(success);
             });
             return true;
+        }
+
+        /// <summary>
+        /// Выдаёт оплаченный пак по id товара платформы (покупка не выдана до перезапуска) и подтверждает её.
+        /// </summary>
+        /// <returns>false — такого пака нет.</returns>
+        public bool TryGrantPurchasedPack(string productId)
+        {
+            for (int i = 0; i < _billPacks.Count; i++)
+            {
+                if (_billPacks[i].ProductId != productId)
+                    continue;
+
+                GrantPack(i);
+                return true;
+            }
+
+            return false;
+        }
+
+        // Купюры → сохранение → только потом подтверждение платформе: если игра упадёт между шагами,
+        // покупка останется неподтверждённой и выдастся при следующем запуске.
+        private void GrantPack(int index)
+        {
+            BillPackConfig pack = _billPacks[index];
+            _bills.Add(pack.Bills, BillSource.Purchase);
+            _saveNow?.Invoke();
+            _platform?.ConsumePurchase(pack.ProductId);
+            BillsPurchased?.Invoke(index);
         }
 
         private static bool IsValid(int index, int count)
