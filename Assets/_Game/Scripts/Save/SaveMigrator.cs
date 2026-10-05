@@ -38,6 +38,20 @@ namespace ShaurmaTycoon.Save
             data.Prestige = NormalizePrestige(data.Prestige);
             if (data.Settings == null)
                 data.Settings = new SettingsSave();
+            data.AdBills = NormalizeAdBills(data.AdBills);
+        }
+
+        private static AdRewardSave NormalizeAdBills(AdRewardSave save)
+        {
+            if (save == null)
+                return new AdRewardSave();
+            if (save.LastClaimUtcTicks < 0 || save.LastClaimUtcTicks > DateTime.MaxValue.Ticks)
+                save.LastClaimUtcTicks = 0;
+            if (save.DayUtcTicks < 0 || save.DayUtcTicks > DateTime.MaxValue.Ticks)
+                save.DayUtcTicks = 0;
+            if (save.ClaimsToday < 0)
+                save.ClaimsToday = 0;
+            return save;
         }
 
         private static PrestigeSave NormalizePrestige(PrestigeSave prestige)

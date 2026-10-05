@@ -1,6 +1,6 @@
 # PROGRESS
 
-## Текущий этап: 08e — Покупки за купюры (код готов, ждёт проверки в Unity)
+## Текущий этап: 08f — Купюры за рекламу (код готов, ждёт проверки в Unity); этапы 08a–08f закрыты по коду
 
 ## Журнал
 ### Этап 00 — Каркас (готов, 2026-10-04)
@@ -381,11 +381,30 @@
   - при частых тапах по «купить» отдельная кнопка тратила бы купюры случайно, поэтому подтверждение теперь всегда, а не только для цен > 10.
 - Известные проблемы / TODO: выполнить ShaurmaTycoon/Build Game UI (значки на кнопках строк, окно предложения).
 
+### Этап 08f — Купюры за рекламу (код готов, 2026-10-05; ждёт Build Game UI и проверки в Unity)
+- Проверено: runtime, editor и тесты компилируются без ошибок. Тесты вне Unity: 278 зелёных, 42 падают только из-за среды. Новые AdBillRewardTests: 9/9. Ключи строк проверены скриптом.
+- Сделано:
+  - `Shop/AdBillReward` (чистые правила): +2 купюры, кулдаун 10 мин, лимит 6 просмотров за сутки UTC, сброс в полночь UTC; время назад → «последний просмотр» прижимается к now;
+  - `Shop/AdBillService`: `TryWatch` → `IPlatformService.ShowRewarded`; купюры и кулдаун — только при досмотре; повторный тап, пока реклама открыта, игнорируется; сразу `SaveNow`;
+    - сам является `ISaveParticipant` → `SaveData.AdBills` (`Save/AdRewardSave`), нормализация в `SaveMigrator`;
+    - создаётся в `GameSceneInstaller`, время — `platform.ServerTimeUtc`;
+  - `BalanceConfig`: `_adBillsReward` = 2, `_adBillsCooldownMinutes` = 10, `_adBillsDailyLimit` = 6;
+  - UI:
+    - первая строка вкладки «Магазин»: «Купюры за рекламу», «+2 купюры · сегодня ещё N», кнопка «Смотреть» / «Через m:ss» (раз в секунду, без аллокаций) / «Завтра»;
+    - красный бейдж «!» на вкладке «Магазин», когда награда доступна (обновляется и при закрытой вкладке);
+  - Debug-меню: «Reset Ad Bills Timer».
+- Решения:
+  - отдельный вылет купюр не делали — при начислении счётчик в HUD подпрыгивает и показывает «+2» (этап 08c);
+  - подарок монет раз в 10 минут (этап 10) — отдельная кнопка, не объединяется (решение пользователя).
+- Известные проблемы / TODO:
+  - выполнить ShaurmaTycoon/Build Game UI;
+  - TODO(YANDEX) этап 09: пауза игры и звука на время rewarded, проверка на черновике.
+
 ## Важные решения (архитектура)
 - Unity 2022.3.62f1, 2D, URP 2D, Color Space Gamma, старый Input Manager.
 - Сборки: `ShaurmaTycoon` (runtime), `ShaurmaTycoon.Editor`, `ShaurmaTycoon.Tests.EditMode` (Assets/_Game/Tests/EditMode). Namespace `ShaurmaTycoon.<Модуль>`, для редакторского кода `ShaurmaTycoon.EditorTools`.
 - Сервисы регистрируются в `GameBootstrap` через `Services.Register<T>`, единственный Update в игре — в `TickManager`.
-- Сервисы Boot: `TickManager` (+ `ApplicationEvents`), `MusicService` (+ единственный `AudioListener` на объекте «Audio»), `GameSettings`, `Wallet`, `BillWallet`, `TweenRunner`, `PulseDriver`, `IPlatformService`, `Loc`, `SaveService`, `PrestigeState`. Сервисы сцены Game (`GameSceneInstaller`): `BalanceConfig`, `CityConfig` (текущий), `CityCatalog`, `StationController`, `ManagerController`, `UpgradeService`, `ReputationShop`, `BillShop`, `BillPurchases`, `AudioService`, `CustomerConfig`, `OfflineIncomeService`, `PrestigeController`; снимаются через `Services.Unregister(instance)`. Вью связываются в `GameScreen.Start`.
+- Сервисы Boot: `TickManager` (+ `ApplicationEvents`), `MusicService` (+ единственный `AudioListener` на объекте «Audio»), `GameSettings`, `Wallet`, `BillWallet`, `TweenRunner`, `PulseDriver`, `IPlatformService`, `Loc`, `SaveService`, `PrestigeState`. Сервисы сцены Game (`GameSceneInstaller`): `BalanceConfig`, `CityConfig` (текущий), `CityCatalog`, `StationController`, `ManagerController`, `UpgradeService`, `ReputationShop`, `BillShop`, `BillPurchases`, `AdBillService`, `AudioService`, `CustomerConfig`, `OfflineIncomeService`, `PrestigeController`; снимаются через `Services.Unregister(instance)`. Вью связываются в `GameScreen.Start`.
 - Все тексты UI — ключи из `Configs/Localization/strings.txt` (TSV: key, ru, en); новые ключи добавлять туда и в `StringsFileTests.RequiredKeys`.
 - Тексты, которые меняются в Tick, выводить через `NumberText` + `TMP_Text.SetNumberText`, шаблоны — `Loc.GetTemplate(key)` (без string.Format).
 - Новая система с состоянием → реализовать `ISaveParticipant` и зарегистрировать в `SaveService`; новые поля `SaveData` — со значением по умолчанию, при несовместимых изменениях повышать `SaveData.CurrentVersion` и добавлять шаг в `SaveMigrator`.

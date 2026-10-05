@@ -140,3 +140,8 @@ bills.item_unlock	«{0}»	"{0}"
 bills.item_levels	«{0}» +{1} ур.	"{0}" +{1} lv.
 bills.item_upgrade	улучшение «{0}»	upgrade "{0}"
 bills.item_manager	менеджера: {0}	a manager: {0}
+bills.ad_name	Купюры за рекламу	Bills for an ad
+bills.ad_desc	+{0} купюры · сегодня ещё {1}	+{0} bills · {1} left today
+bills.ad_watch	Смотреть	Watch
+bills.ad_wait	Через {0}	In {0}
+bills.ad_tomorrow	Завтра	Tomorrow

@@ -8,17 +8,21 @@ using UnityEngine;
 namespace ShaurmaTycoon.UI
 {
     /// <summary>
-    /// Вкладка «Магазин»: паки купюр за реальные деньги и мешки монет за купюры.
-    /// Награда мешков зависит от дохода — пересчитывается раз в секунду, пока вкладка открыта (без аллокаций).
+    /// Вкладка «Магазин»: купюры за рекламу, паки купюр за реальные деньги и мешки монет за купюры.
+    /// Награда мешков и таймер рекламы обновляются раз в секунду, пока вкладка открыта (без аллокаций);
+    /// бейдж «!» на вкладке — даже когда она закрыта.
     /// </summary>
     public sealed class ShopPanel : MonoBehaviour, ITickable, ISceneBinding
     {
         private const float RefreshInterval = 1f;
         private const int CoinsPerPurchaseEffect = 6;
 
+        [SerializeField] private RectTransform _adGroup = null;
         [SerializeField] private RectTransform _billsGroup = null;
         [SerializeField] private RectTransform _coinsGroup = null;
         [SerializeField] private BillShopRowView _rowPrefab = null;
+        [Tooltip("Бейдж «!» на кнопке вкладки: реклама за купюры доступна.")]
+        [SerializeField] private GameObject _tabBadge = null;
 
         [Header("Look")]
         [SerializeField] private Color _billColor = new Color(0.25f, 0.62f, 0.33f);
@@ -27,6 +31,8 @@ namespace ShaurmaTycoon.UI
         [SerializeField] private Color _coinMarkColor = new Color(1f, 0.65f, 0.10f);
         [SerializeField] private Color _billButtonColor = new Color(0.25f, 0.62f, 0.33f);
         [SerializeField] private Color _coinButtonColor = new Color(0.95f, 0.55f, 0.15f);
+        [SerializeField] private Color _adColor = new Color(0.55f, 0.35f, 0.85f);
+        [SerializeField] private Color _adMarkColor = new Color(1f, 1f, 1f);
 
         private BillShop _shop;
         private BillWallet _bills;
@@ -39,14 +45,31 @@ namespace ShaurmaTycoon.UI
         private double[] _shownRewards;
         private float _timer;
 
-        public void Bind(BillShop shop, BillWallet bills, Loc loc, CoinFlyEffect coinFly)
+        private AdBillService _adBills;
+        private BillShopRowView _adRow;
+        private readonly NumberText _adWaitText = new NumberText();
+        private LocTemplate _adWaitTemplate;
+        private int _shownAdState = -1;
+        private int _shownAdRemaining = -1;
+        private long _shownAdSeconds = -1;
+
+        /// <param name="adBills">Купюры за рекламу; null — строки рекламы нет.</param>
+        public void Bind(BillShop shop, BillWallet bills, Loc loc, CoinFlyEffect coinFly, AdBillService adBills)
         {
             SceneBindings.Track(this);
             _shop = shop;
             _bills = bills;
             _loc = loc;
             _coinFly = coinFly;
+            _adBills = adBills;
             _rewardTemplate = loc.GetTemplate("shop.coins_reward");
+            _adWaitTemplate = loc.GetTemplate("bills.ad_wait");
+
+            if (_adBills != null && _adGroup != null)
+            {
+                _adRow = CreateRow(_adGroup, "AdBills", _adColor, _adMarkColor, _adColor);
+                _adRow.Button.onClick.AddListener(OnWatchAd);
+            }
 
             _billRows = new BillShopRowView[shop.BillPackCount];
             for (int i = 0; i < _billRows.Length; i++)
@@ -91,13 +114,15 @@ namespace ShaurmaTycoon.UI
 
         private void OnEnable()
         {
-            if (_shop != null)
-                RefreshRewards(force: false);
+            if (_shop == null)
+                return;
+            RefreshRewards(force: false);
+            RefreshAd(force: false);
         }
 
         public void Tick(float deltaTime)
         {
-            if (_shop == null || !gameObject.activeInHierarchy)
+            if (_shop == null)
                 return;
 
             _timer += deltaTime;
@@ -105,7 +130,74 @@ namespace ShaurmaTycoon.UI
                 return;
 
             _timer = 0f;
+            RefreshBadge();
+            if (!gameObject.activeInHierarchy)
+                return;
+
             RefreshRewards(force: false);
+            RefreshAd(force: false);
+        }
+
+        private void OnWatchAd()
+        {
+            if (_adBills.TryWatch(_ => RefreshAfterAd()))
+                RefreshAd(force: true);
+        }
+
+        private void RefreshAfterAd()
+        {
+            RefreshAd(force: true);
+            RefreshBadge();
+        }
+
+        private void RefreshBadge()
+        {
+            if (_tabBadge == null)
+                return;
+            bool available = _adBills != null && _adBills.CanWatch;
+            if (_tabBadge.activeSelf != available)
+                _tabBadge.SetActive(available);
+        }
+
+        // Состояния кнопки: 0 — смотреть, 1 — таймер кулдауна, 2 — лимит на сегодня, 3 — реклама открыта.
+        private void RefreshAd(bool force)
+        {
+            if (_adRow == null)
+                return;
+
+            System.DateTime now = _adBills.Now;
+            AdBillReward rules = _adBills.Rules;
+            int remaining = rules.RemainingToday(now);
+            int state = _adBills.IsShowing ? 3 : remaining == 0 ? 2 : rules.CanClaim(now) ? 0 : 1;
+            long seconds = state == 1 ? (long)System.Math.Ceiling(rules.TimeLeft(now).TotalSeconds) : 0;
+
+            if (force || remaining != _shownAdRemaining)
+            {
+                _shownAdRemaining = remaining;
+                _adRow.SetDescription(_loc.Format("bills.ad_desc", rules.Reward.ToString(CultureInfo.InvariantCulture),
+                    remaining.ToString(CultureInfo.InvariantCulture)));
+            }
+
+            if (!force && state == _shownAdState && seconds == _shownAdSeconds)
+                return;
+
+            bool stateChanged = force || state != _shownAdState;
+            _shownAdState = state;
+            _shownAdSeconds = seconds;
+            if (state == 1)
+            {
+                _adWaitText.Clear().Append(_adWaitTemplate.Prefix).AppendInteger(seconds / 60).Append(':');
+                if (seconds % 60 < 10)
+                    _adWaitText.Append('0');
+                _adRow.SetButtonText(_adWaitText.AppendInteger(seconds % 60).Append(_adWaitTemplate.Suffix));
+            }
+            else if (stateChanged)
+            {
+                _adRow.SetButton(_loc.Get(state == 2 ? "bills.ad_tomorrow" : "bills.ad_watch"), state == 0);
+            }
+
+            if (stateChanged)
+                _adRow.SetInteractable(state == 0);
         }
 
         private BillShopRowView CreateRow(RectTransform group, string name, Color icon, Color mark, Color button)
@@ -144,6 +236,13 @@ namespace ShaurmaTycoon.UI
 
         private void RefreshStatic()
         {
+            if (_adRow != null)
+            {
+                _adRow.SetName(_loc.Get("bills.ad_name"));
+                _adRow.SetBadge(false);
+                RefreshAd(force: true);
+            }
+
             for (int i = 0; i < _billRows.Length; i++)
             {
                 BillPackConfig pack = _shop.GetBillPack(i);

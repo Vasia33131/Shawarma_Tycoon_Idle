@@ -43,6 +43,7 @@ namespace ShaurmaTycoon.Tests
             "shop.price_yan", "shop.price_bills", "shop.best",
             "bills.offer_title", "bills.offer_body", "bills.offer_poor", "bills.offer_buy", "bills.offer_shop", "bills.offer_cancel",
             "bills.item_unlock", "bills.item_levels", "bills.item_upgrade", "bills.item_manager",
+            "bills.ad_name", "bills.ad_desc", "bills.ad_watch", "bills.ad_wait", "bills.ad_tomorrow",
         };
 
         private static LocTable LoadTable()

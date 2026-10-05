@@ -39,6 +39,7 @@ namespace ShaurmaTycoon.Core
         private ReputationShop _reputationShop;
         private BillShop _billShopService;
         private BillPurchases _billPurchases;
+        private AdBillService _adBills;
         private OfflineIncomeService _offline;
         private PrestigeController _prestigeController;
         private PrestigeState _prestige;
@@ -118,6 +119,13 @@ namespace ShaurmaTycoon.Core
                 save != null ? save.SaveNow : (System.Action)null);
             Services.Register(_billPurchases);
 
+            // Купюры за рекламу: таймер по серверному времени, состояние — в сейве (переживает переезд).
+            _adBills = new AdBillService(_balance.CreateAdBillReward(), Services.Get<BillWallet>(), platform,
+                () => platform != null ? platform.ServerTimeUtc : System.DateTime.UtcNow, save != null ? save.SaveNow : (System.Action)null);
+            if (_save != null)
+                _save.Register(_adBills);
+            Services.Register(_adBills);
+
             _prestigeController = new PrestigeController(_prestige, _rules, _currentCity.PrestigeThreshold, cityIndex, cityCount,
                 _save, _saveParticipant, StartCoinsForCity, ReloadScene);
             Services.Register(_prestigeController);
@@ -182,6 +190,9 @@ namespace ShaurmaTycoon.Core
             Services.Unregister(_prestigeController);
             Services.Unregister(_billShopService);
             Services.Unregister(_billPurchases);
+            Services.Unregister(_adBills);
+            if (_save != null && _adBills != null)
+                _save.Unregister(_adBills);
             Services.Unregister(_offline);
             Services.Unregister(_customers);
             Services.Unregister(_audioService);

@@ -56,6 +56,12 @@ namespace ShaurmaTycoon.UI
             _button.interactable = interactable;
         }
 
+        /// <summary>Текст кнопки, который меняется по таймеру, — без аллокаций.</summary>
+        public void SetButtonText(NumberText text)
+        {
+            _buttonText.SetNumberText(text);
+        }
+
         public void SetInteractable(bool interactable)
         {
             _button.interactable = interactable;

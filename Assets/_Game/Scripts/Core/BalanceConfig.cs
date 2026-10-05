@@ -1,6 +1,8 @@
+using System;
 using ShaurmaTycoon.Offline;
 using ShaurmaTycoon.Prestige;
 using ShaurmaTycoon.Stations;
+using ShaurmaTycoon.Shop;
 using UnityEngine;
 
 namespace ShaurmaTycoon.Core
@@ -34,7 +36,20 @@ namespace ShaurmaTycoon.Core
         [Tooltip("Прибавка к доходу за единицу полученной репутации (0.02 = +2%).")]
         [SerializeField] private double _incomeBonusPerReputation = 0.02;
 
+        [Header("Bills for ads (08f)")]
+        [Tooltip("Сколько купюр за досмотренную рекламу.")]
+        [SerializeField] private int _adBillsReward = 2;
+        [Tooltip("Минут между просмотрами.")]
+        [SerializeField] private double _adBillsCooldownMinutes = 10;
+        [Tooltip("Просмотров за сутки UTC.")]
+        [SerializeField] private int _adBillsDailyLimit = 6;
+
         public double ManagerCostMultiplier => _managerCostMultiplier;
+
+        public AdBillReward CreateAdBillReward()
+        {
+            return new AdBillReward(_adBillsReward, TimeSpan.FromMinutes(_adBillsCooldownMinutes), _adBillsDailyLimit);
+        }
 
         public PrestigeRules CreatePrestigeRules()
         {
@@ -71,6 +86,12 @@ namespace ShaurmaTycoon.Core
                 _incomeBonusPerReputation = 0;
             if (_offlineAdMultiplier < 1)
                 _offlineAdMultiplier = 1;
+            if (_adBillsReward < 1)
+                _adBillsReward = 1;
+            if (_adBillsCooldownMinutes < 0)
+                _adBillsCooldownMinutes = 0;
+            if (_adBillsDailyLimit < 1)
+                _adBillsDailyLimit = 1;
         }
     }
 }

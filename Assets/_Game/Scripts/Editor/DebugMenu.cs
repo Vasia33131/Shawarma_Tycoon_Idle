@@ -2,6 +2,7 @@ using ShaurmaTycoon.Core;
 using ShaurmaTycoon.Economy;
 using ShaurmaTycoon.Managers;
 using ShaurmaTycoon.Prestige;
+using ShaurmaTycoon.Shop;
 using UnityEditor;
 using UnityEngine;
 
@@ -75,6 +76,20 @@ namespace ShaurmaTycoon.EditorTools
             Debug.Log($"[Debug] +100 bills, now {bills.Bills}.");
         }
 
+        [MenuItem("ShaurmaTycoon/Debug/Reset Ad Bills Timer")]
+        private static void ResetAdBills()
+        {
+            if (!Services.TryGet(out AdBillService adBills))
+            {
+                Debug.LogWarning("[Debug] Services are not ready — enter Play first.");
+                return;
+            }
+
+            adBills.Rules.Load(0, 0, 0);
+            Debug.Log("[Debug] Ad bills: cooldown and daily counter reset.");
+        }
+
+        [MenuItem("ShaurmaTycoon/Debug/Reset Ad Bills Timer", true)]
         [MenuItem("ShaurmaTycoon/Debug/Add 100 Bills", true)]
         [MenuItem("ShaurmaTycoon/Debug/Add 1e9 Earned", true)]
         [MenuItem("ShaurmaTycoon/Debug/Add 1e10 Earned", true)]

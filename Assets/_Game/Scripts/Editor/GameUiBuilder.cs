@@ -393,6 +393,9 @@ namespace ShaurmaTycoon.EditorTools
 
             var tabSo = new SerializedObject(tabBar);
             SetArray(tabSo, "_buttons", tabButtons);
+            var shopPanelSo = new SerializedObject(shopPanel);
+            Set(shopPanelSo, "_tabBadge", BuildTabBadge(tabButtons[4].transform));
+            shopPanelSo.ApplyModifiedPropertiesWithoutUndo();
             SetArray(tabSo, "_panels", stationsPanel.gameObject, managersPanel.gameObject, upgradesPanel.gameObject, cityPanel.gameObject,
                 shopPanel.gameObject);
             tabSo.ApplyModifiedPropertiesWithoutUndo();
@@ -1132,12 +1135,14 @@ namespace ShaurmaTycoon.EditorTools
             GameObject panel = BuildListPanel(parent, "ShopPanel", "tab.shop", out _, out RectTransform list);
             var shopPanel = panel.AddComponent<ShopPanel>();
 
+            RectTransform adGroup = BuildRowGroup(list, "AdGroup");
             BuildSectionTitle(list, "BillsTitle", "shop.bills_title");
             RectTransform billsGroup = BuildRowGroup(list, "BillsGroup");
             BuildSectionTitle(list, "CoinsTitle", "shop.coins_title");
             RectTransform coinsGroup = BuildRowGroup(list, "CoinsGroup");
 
             var so = new SerializedObject(shopPanel);
+            Set(so, "_adGroup", adGroup);
             Set(so, "_billsGroup", billsGroup);
             Set(so, "_coinsGroup", coinsGroup);
             Set(so, "_rowPrefab", BuildBillShopRowPrefab());
@@ -1145,6 +1150,18 @@ namespace ShaurmaTycoon.EditorTools
 
             panel.SetActive(false);
             return shopPanel;
+        }
+
+        // Красный кружок «!» в углу кнопки вкладки: есть бесплатная награда.
+        private static GameObject BuildTabBadge(Transform tab)
+        {
+            GameObject badge = CreateUi("Badge", tab);
+            SetRect(badge, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 0.5f), new Vector2(-10f, -10f), new Vector2(44f, 44f));
+            AddImage(badge, BoothRed, _circleSprite, sliced: false).raycastTarget = false;
+            TMP_Text mark = AddText(badge.transform, "Mark", "!", 34, Color.white, TextAlignmentOptions.Center, bold: true);
+            Stretch(mark.gameObject, Vector2.zero, Vector2.zero);
+            badge.SetActive(false);
+            return badge;
         }
 
         private static void BuildSectionTitle(Transform list, string name, string key)

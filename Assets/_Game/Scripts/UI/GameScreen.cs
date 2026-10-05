@@ -78,7 +78,8 @@ namespace ShaurmaTycoon.UI
             _upgradesPanel.Bind(Services.Get<UpgradeService>(), _stations, wallet, loc, offers);
             BindCityPanel(prestige, city, tweens, loc);
             _settingsPopup.Bind(Services.Get<GameSettings>(), tweens, loc);
-            _shopPanel.Bind(Services.Get<BillShop>(), Services.Get<BillWallet>(), loc, _coinFly);
+            Services.TryGet(out AdBillService adBills);
+            _shopPanel.Bind(Services.Get<BillShop>(), Services.Get<BillWallet>(), loc, _coinFly, adBills);
             _hud.BillsClicked += OpenShop;
 
             _tickManager = Services.Get<TickManager>();

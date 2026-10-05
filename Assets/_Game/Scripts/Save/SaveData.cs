@@ -26,5 +26,6 @@ namespace ShaurmaTycoon.Save
 
         public PrestigeSave Prestige = new PrestigeSave();
         public SettingsSave Settings = new SettingsSave();
+        public AdRewardSave AdBills = new AdRewardSave();
     }
 }
