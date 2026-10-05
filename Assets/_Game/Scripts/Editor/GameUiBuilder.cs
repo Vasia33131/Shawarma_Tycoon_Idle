@@ -390,6 +390,10 @@ namespace ShaurmaTycoon.EditorTools
             Set(cityPanelSo, "_confirmPopup", prestigePopup);
             cityPanelSo.ApplyModifiedPropertiesWithoutUndo();
             BuildEffects(screen.transform, hud.CoinIcon, out CoinFlyEffect coinFly, out FloatingTextEffect floatingText);
+            // Окна без своих эффектов — поверх летящих монет и цифр дохода.
+            prestigePopup.transform.SetAsLastSibling();
+            settingsPopup.transform.SetAsLastSibling();
+            billOfferPopup.transform.SetAsLastSibling();
 
             var tabSo = new SerializedObject(tabBar);
             SetArray(tabSo, "_buttons", tabButtons);
