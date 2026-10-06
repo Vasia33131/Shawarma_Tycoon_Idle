@@ -32,8 +32,11 @@ namespace ShaurmaTycoon.Core.Audio
             ApplySettings();
         }
 
-        /// <summary>Город загрузился: основа города и гриль. Пустые клипы — слой молчит (старый вид без пакета G).</summary>
-        public void Apply(AmbientAudioConfig config, AudioClip baseClip)
+        /// <summary>
+        /// Город загрузился: громкости и кроссфейды слоёв. Клипы приходят отдельно (SetBase, SetSizzle, SetWeather) —
+        /// по мере загрузки файлов звука; до тех пор играет прежняя основа, и смена идёт кроссфейдом.
+        /// </summary>
+        public void Apply(AmbientAudioConfig config)
         {
             _config = config;
             if (config == null)
@@ -46,14 +49,24 @@ namespace ShaurmaTycoon.Core.Audio
 
             _base.Configure(config.BaseCrossfade, config.LoopOverlap);
             _base.Volume = config.BaseVolume;
-            _base.SetClip(baseClip);
 
             _sizzle.Configure(config.BaseCrossfade, config.LoopOverlap);
-            _sizzle.SetClip(config.Sizzle);
             _sizzle.Volume = SizzleVolume();
 
             _weather.Configure(config.WeatherCrossfade, config.LoopOverlap);
             _weather.Volume = config.WeatherVolume;
+        }
+
+        /// <summary>Основа города (улица или прибой); null — слой затихает.</summary>
+        public void SetBase(AudioClip clip)
+        {
+            _base.SetClip(clip);
+        }
+
+        /// <summary>Шипение гриля; null — слой затихает.</summary>
+        public void SetSizzle(AudioClip clip)
+        {
+            _sizzle.SetClip(clip);
         }
 
         /// <summary>Дождь, ветер или null (ясно); переход — за время кроссфейда погоды, вместе с визуалом.</summary>

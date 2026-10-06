@@ -22,6 +22,9 @@ namespace ShaurmaTycoon.Platform
         /// <summary>Вкладка скрыта (false) или снова видима (true).</summary>
         public event Action<bool> VisibilityChanged;
 
+        /// <summary>Окно браузера потеряло фокус (false: Alt+Tab, клик в другое окно) или вернуло его (true).</summary>
+        public event Action<bool> WindowFocusChanged;
+
         public static YandexBridge Create()
         {
             var go = new GameObject(ObjectName);
@@ -38,10 +41,12 @@ namespace ShaurmaTycoon.Platform
         public void ShowInterstitial(Action<string> onResult) => Call(id => Native.ShowInterstitial(id), (status, _) => onResult(status));
         public void Purchase(string productId, Action<string> onResult) => Call(id => Native.Purchase(id, productId), (status, _) => onResult(status));
         public void GetPurchases(Action<string, string> onResult) => Call(id => Native.GetPurchases(id), onResult);
+        public void GetCatalog(Action<string, string> onResult) => Call(id => Native.GetCatalog(id), onResult);
 
         public string GetLanguage() => Native.GetLanguage();
         public double GetServerTimeMs() => Native.GetServerTimeMs();
         public void GameReady() => Native.GameReady();
+        public void SetGameplay(bool active) => Native.SetGameplay(active);
         public void SetLeaderboardScore(string leaderboardId, double score) => Native.SetLeaderboardScore(leaderboardId, score);
         public void ConsumePurchase(string productId) => Native.ConsumePurchase(productId);
         public void LocalSet(string key, string value) => Native.LocalSet(key, value);
@@ -78,6 +83,10 @@ namespace ShaurmaTycoon.Platform
                     VisibilityChanged?.Invoke(false);
                 else if (status == "focus")
                     VisibilityChanged?.Invoke(true);
+                else if (status == "wblur")
+                    WindowFocusChanged?.Invoke(false);
+                else if (status == "wfocus")
+                    WindowFocusChanged?.Invoke(true);
                 return;
             }
 
@@ -102,6 +111,8 @@ namespace ShaurmaTycoon.Platform
             [DllImport("__Internal")] private static extern IntPtr YB_GetLanguage();
             [DllImport("__Internal")] private static extern double YB_GetServerTimeMs();
             [DllImport("__Internal")] private static extern void YB_GameReady();
+            [DllImport("__Internal")] private static extern void YB_SetGameplay(bool active);
+            [DllImport("__Internal")] private static extern void YB_GetCatalog(int id);
             [DllImport("__Internal")] private static extern void YB_LocalSet(string key, string value);
             [DllImport("__Internal")] private static extern IntPtr YB_LocalGet(string key);
             [DllImport("__Internal")] private static extern void YB_LoadCloud(int id);
@@ -117,6 +128,8 @@ namespace ShaurmaTycoon.Platform
             public static string GetLanguage() => Marshal.PtrToStringUTF8(YB_GetLanguage());
             public static double GetServerTimeMs() => YB_GetServerTimeMs();
             public static void GameReady() => YB_GameReady();
+            public static void SetGameplay(bool active) => YB_SetGameplay(active);
+            public static void GetCatalog(int id) => YB_GetCatalog(id);
             public static void LocalSet(string key, string value) => YB_LocalSet(key, value);
             public static string LocalGet(string key) => Marshal.PtrToStringUTF8(YB_LocalGet(key));
             public static void LoadCloud(int id) => YB_LoadCloud(id);
@@ -133,6 +146,8 @@ namespace ShaurmaTycoon.Platform
             public static string GetLanguage() => "ru";
             public static double GetServerTimeMs() => 0;
             public static void GameReady() { }
+            public static void SetGameplay(bool active) { }
+            public static void GetCatalog(int id) { }
             public static void LocalSet(string key, string value) { }
             public static string LocalGet(string key) => string.Empty;
             public static void LoadCloud(int id) { }

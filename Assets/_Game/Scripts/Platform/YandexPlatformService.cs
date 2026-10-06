@@ -1,6 +1,7 @@
 using System;
 using ShaurmaTycoon.Core;
 using ShaurmaTycoon.Save;
+using ShaurmaTycoon.Shop;
 using UnityEngine;
 
 namespace ShaurmaTycoon.Platform
@@ -24,6 +25,8 @@ namespace ShaurmaTycoon.Platform
         private float _initTimer;
         private bool _cloudAvailable;
         private bool _gameReadySent;
+        private bool _paused;
+        private bool _gameplayActive;
         private TimeSpan _serverOffset = TimeSpan.Zero;
 
         private string _pendingCloudJson;
@@ -38,6 +41,8 @@ namespace ShaurmaTycoon.Platform
         public bool IsInitialized { get; private set; }
         public string Language { get; private set; } = "ru";
         public DateTime ServerTimeUtc => DateTime.UtcNow + _serverOffset;
+
+        public event Action<bool> AdShowing;
 
         public void Init(Action onReady)
         {
@@ -76,16 +81,49 @@ namespace ShaurmaTycoon.Platform
 
             _gameReadySent = true;
             _bridge.GameReady();
+            UpdateGameplay();
+        }
+
+        public void SetGameplayPaused(bool paused)
+        {
+            _paused = paused;
+            UpdateGameplay();
+        }
+
+        /// <summary>GameplayAPI: start — после Game Ready, пока игра не на паузе; stop — на паузе (реклама, скрытая вкладка, фокус).</summary>
+        private void UpdateGameplay()
+        {
+            bool active = _gameReadySent && !_paused;
+            if (active == _gameplayActive)
+                return;
+
+            _gameplayActive = active;
+            _bridge.SetGameplay(active);
+        }
+
+        public void GetCatalog(Action<ProductPrice[]> onLoaded)
+        {
+            _bridge.GetCatalog((status, payload) => onLoaded?.Invoke(status == "ok" ? PriceCatalog.Parse(payload) : null));
         }
 
         public void ShowRewarded(Action<bool> onComplete)
         {
-            _bridge.ShowRewarded(status => onComplete?.Invoke(status == "ok"));
+            AdShowing?.Invoke(true);
+            _bridge.ShowRewarded(status =>
+            {
+                AdShowing?.Invoke(false);
+                onComplete?.Invoke(status == "ok");
+            });
         }
 
         public void ShowInterstitial(Action onClosed)
         {
-            _bridge.ShowInterstitial(_ => onClosed?.Invoke());
+            AdShowing?.Invoke(true);
+            _bridge.ShowInterstitial(_ =>
+            {
+                AdShowing?.Invoke(false);
+                onClosed?.Invoke();
+            });
         }
 
         public void Save(string json, Action<bool> onComplete)

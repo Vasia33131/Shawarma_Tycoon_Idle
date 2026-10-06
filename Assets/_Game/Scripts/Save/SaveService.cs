@@ -7,12 +7,15 @@ namespace ShaurmaTycoon.Save
     /// <summary>
     /// Загрузка и сохранение игры. Участники (ISaveParticipant) получают данные при регистрации
     /// и отдают своё состояние перед каждой записью.
-    /// Автосейв — каждые AutosaveInterval секунд игрового времени, а также при потере фокуса, паузе и выходе
+    /// Автосейв — каждые AutosaveInterval секунд игрового времени, через SoonDelay после покупки, а также при потере фокуса, паузе и выходе
     /// (методы OnApplication* подключаются к GameEvents в GameBootstrap).
     /// </summary>
     public sealed class SaveService : ITickable
     {
         public const float AutosaveInterval = 10f;
+
+        /// <summary>Через сколько секунд после покупки уходит сейв (требование Яндекса 1.9); серия покупок — один сейв.</summary>
+        public const float SoonDelay = 1f;
 
         private readonly ISaveStorage _storage;
         private readonly ISaveSerializer _serializer;
@@ -115,6 +118,13 @@ namespace ShaurmaTycoon.Save
             _timer += deltaTime;
             if (_timer >= AutosaveInterval)
                 SaveNow();
+        }
+
+        /// <summary>Сохранить в ближайшие SoonDelay секунд (после покупки), не раньше — частые покупки склеиваются в одну запись.</summary>
+        public void RequestSoon()
+        {
+            if (_timer < AutosaveInterval - SoonDelay)
+                _timer = AutosaveInterval - SoonDelay;
         }
 
         public void OnApplicationFocusChanged(bool hasFocus)

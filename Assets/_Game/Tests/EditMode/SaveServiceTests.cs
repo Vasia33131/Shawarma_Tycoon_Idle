@@ -135,6 +135,23 @@ namespace ShaurmaTycoon.Tests
         }
 
         [Test]
+        public void RequestSoon_SavesAfterShortDelay_AndMergesBursts()
+        {
+            _service.Load(null);
+
+            _service.RequestSoon();
+            _service.Tick(SaveService.SoonDelay * 0.5f);
+            _service.RequestSoon();
+            Assert.AreEqual(0, _storage.Writes, "Not instantly: a burst of purchases is one write.");
+
+            _service.Tick(SaveService.SoonDelay * 0.6f);
+            Assert.AreEqual(1, _storage.Writes);
+
+            _service.Tick(SaveService.AutosaveInterval - 0.5f);
+            Assert.AreEqual(1, _storage.Writes, "The regular autosave timer restarts after the write.");
+        }
+
+        [Test]
         public void FocusLost_Pause_Quit_SaveImmediately()
         {
             _service.Load(null);

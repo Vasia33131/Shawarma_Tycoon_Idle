@@ -4,8 +4,10 @@ using UnityEngine;
 namespace ShaurmaTycoon.EditorTools
 {
     /// <summary>
-    /// Импорт звуков пакета G (V6) для WebGL: музыка — Streaming, петли эмбиента — сжатые в памяти,
-    /// короткие эффекты — распакованные при загрузке и моно. Остальные звуки (корень Audio/) не трогаем.
+    /// Импорт звуков пакета G (V6) для WebGL: всё — распакованное при загрузке (Decompress On Load), эффекты и эмбиент — моно.
+    /// Короткие эффекты — моно, quality 0.6. Остальные звуки (корень Audio/) не трогаем (они меньше 128 КБ — всегда Web Audio).
+    /// Этап 12 (размер билда): музыка — quality 0.35 (lo-fi это прощает), эмбиент — моно и quality 0.3:
+    /// в WebGL звук кодируется в AAC и с этим качеством, а браузер распаковывает клип целиком в память.
     /// </summary>
     public sealed class AudioImportSettings : AssetPostprocessor
     {
@@ -14,9 +16,14 @@ namespace ShaurmaTycoon.EditorTools
         private const string AmbientFolder = AudioFolder + "Ambient/";
         private const string SfxFolder = AudioFolder + "Sfx/";
 
+        private const float MusicQuality = 0.35f;
+        private const float AmbientQuality = 0.3f;
+        private const float SfxQuality = 0.6f;
+
+        // V6: 1; этап 12: 2 — ниже качество музыки, эмбиент в моно; 3 — музыка не Streaming; 4 — музыка и эмбиент Decompress On Load (системный плеер).
         public override uint GetVersion()
         {
-            return 1;
+            return 4;
         }
 
         private void OnPreprocessAudio()
@@ -27,20 +34,22 @@ namespace ShaurmaTycoon.EditorTools
 
             if (assetPath.StartsWith(MusicFolder))
             {
-                settings.loadType = AudioClipLoadType.Streaming;
-                settings.quality = 0.5f;
+                // Только Decompress On Load: Unity WebGL (Audio.js, JS_Sound_Load) играет Streaming и Compressed In Memory клипы
+                // больше 128 КБ через HTML5 <audio> — браузер показывает системный плеер на ПК и в шторке телефона (1.6.1.6, 1.6.2.5).
+                settings.loadType = AudioClipLoadType.DecompressOnLoad;
+                settings.quality = MusicQuality;
                 importer.forceToMono = false;
             }
             else if (assetPath.StartsWith(AmbientFolder))
             {
-                settings.loadType = AudioClipLoadType.CompressedInMemory;
-                settings.quality = 0.45f;
-                importer.forceToMono = false;
+                settings.loadType = AudioClipLoadType.DecompressOnLoad;
+                settings.quality = AmbientQuality;
+                importer.forceToMono = true;
             }
             else if (assetPath.StartsWith(SfxFolder))
             {
                 settings.loadType = AudioClipLoadType.DecompressOnLoad;
-                settings.quality = 0.6f;
+                settings.quality = SfxQuality;
                 importer.forceToMono = true;
             }
             else
@@ -49,6 +58,8 @@ namespace ShaurmaTycoon.EditorTools
             }
 
             importer.defaultSampleSettings = settings;
+            // Своё переопределение WebGL сбило бы эти правила — снимаем, если его выставили руками.
+            importer.ClearSampleSettingOverride("WebGL");
         }
     }
 }

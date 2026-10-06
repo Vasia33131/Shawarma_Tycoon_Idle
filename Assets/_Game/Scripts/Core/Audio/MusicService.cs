@@ -11,6 +11,7 @@ namespace ShaurmaTycoon.Core.Audio
     public sealed class MusicService : ITickable, IDisposable
     {
         private readonly AudioSource[] _sources = new AudioSource[2];
+        private readonly Action<AudioClip> _releaseClip;
         private int _current;
         private float _volume;
         private float _fadeDuration = 1f;
@@ -18,8 +19,10 @@ namespace ShaurmaTycoon.Core.Audio
         private bool _pausedByMute;
         private float _volumeScale = 1f;
 
-        public MusicService(GameObject host)
+        /// <param name="releaseClip">Трек отыграл и затих (переезд): освободить память. null — только выгрузить данные клипа.</param>
+        public MusicService(GameObject host, Action<AudioClip> releaseClip = null)
         {
+            _releaseClip = releaseClip;
             for (int i = 0; i < _sources.Length; i++)
             {
                 AudioSource source = host.AddComponent<AudioSource>();
@@ -104,7 +107,16 @@ namespace ShaurmaTycoon.Core.Audio
             if (previous.volume > 0f)
                 return;
             previous.Stop();
+            AudioClip old = previous.clip;
             previous.clip = null;
+            // В WebGL трек распакован браузером целиком (~50 МБ) — после затухания освобождаем, при возврате загрузится снова.
+            if (old != CurrentClip)
+            {
+                if (_releaseClip != null)
+                    _releaseClip(old);
+                else
+                    old.UnloadAudioData();
+            }
         }
 
         public void Dispose()

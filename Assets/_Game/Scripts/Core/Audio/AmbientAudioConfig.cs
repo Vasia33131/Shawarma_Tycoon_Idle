@@ -5,6 +5,7 @@ namespace ShaurmaTycoon.Core.Audio
     /// <summary>
     /// Звуковая атмосфера (V6): громкости и кроссфейды слоёв эмбиента и общие клипы (гриль, дождь, ветер).
     /// Основа (улица или море) и музыка — свои у каждого города, в CityConfig.
+    /// Клипы — имена файлов в Audio/Ambient без расширения: в билд они идут отдельными MP3 (AudioClipStore).
     /// </summary>
     [CreateAssetMenu(menuName = "ShaurmaTycoon/Ambient Audio Config", fileName = "AmbientAudio")]
     public sealed class AmbientAudioConfig : ScriptableObject
@@ -15,16 +16,16 @@ namespace ShaurmaTycoon.Core.Audio
         [SerializeField] private float _baseCrossfade = 2f;
 
         [Header("Grill sizzle")]
-        [SerializeField] private AudioClip _sizzle = null;
+        [SerializeField] private string _sizzleName = "";
         [Tooltip("Громкость гриля при пустой и при полной очереди; между ними — плавно.")]
         [SerializeField] private Vector2 _sizzleVolume = new Vector2(0.10f, 0.18f);
         [Tooltip("Секунды, за которые громкость гриля догоняет размер очереди.")]
         [SerializeField] private float _sizzleCrossfade = 4f;
 
         [Header("Weather")]
-        [SerializeField] private AudioClip _rain = null;
+        [SerializeField] private string _rainName = "";
         [Tooltip("Для снега.")]
-        [SerializeField] private AudioClip _wind = null;
+        [SerializeField] private string _windName = "";
         [Range(0f, 1f)]
         [SerializeField] private float _weatherVolume = 0.3f;
         [SerializeField] private float _weatherCrossfade = 3f;
@@ -35,11 +36,11 @@ namespace ShaurmaTycoon.Core.Audio
 
         public float BaseVolume => _baseVolume;
         public float BaseCrossfade => _baseCrossfade;
-        public AudioClip Sizzle => _sizzle;
+        public string SizzleName => _sizzleName;
         public Vector2 SizzleVolume => _sizzleVolume;
         public float SizzleCrossfade => _sizzleCrossfade;
-        public AudioClip Rain => _rain;
-        public AudioClip Wind => _wind;
+        public string RainName => _rainName;
+        public string WindName => _windName;
         public float WeatherVolume => _weatherVolume;
         public float WeatherCrossfade => _weatherCrossfade;
         public float LoopOverlap => _loopOverlap;

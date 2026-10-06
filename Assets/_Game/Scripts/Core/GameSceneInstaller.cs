@@ -44,6 +44,7 @@ namespace ShaurmaTycoon.Core
         private AmbientConfig _ambientConfig;
         private WeatherService _weather;
         private AmbientAudioService _ambientSound;
+        private string _weatherClipRequest;
         private GameSettings _settings;
         private CityConfig _currentCity;
         private StationController _stations;
@@ -244,10 +245,29 @@ namespace ShaurmaTycoon.Core
             {
                 if (Services.TryGet(out _settings))
                     _settings.Changed += OnSettingsChanged;
-                _ambientSound.Apply(_ambientAudio, _currentCity.AmbientBase);
-                _ambientSound.SetWeather(WeatherClip(_weather.Current));
+                _ambientSound.Apply(_ambientAudio);
+                if (_ambientAudio != null)
+                {
+                    LoadClip(_currentCity.AmbientBaseName, _ambientSound.SetBase);
+                    LoadClip(_ambientAudio.SizzleName, _ambientSound.SetSizzle);
+                }
+                UpdateWeatherSound();
                 _weather.WeatherChanged += OnWeatherChanged;
             }
+        }
+
+        /// <summary>
+        /// Клип из AudioClipStore (в билде — MP3 из StreamingAssets, догружается после старта). Ответ после переезда (сцена уже другая) отбрасывается.
+        /// </summary>
+        private void LoadClip(string clipName, System.Action<AudioClip> apply)
+        {
+            if (!Services.TryGet(out AudioClipStore store))
+                return;
+            store.Get(clipName, clip =>
+            {
+                if (this != null)
+                    apply(clip);
+            });
         }
 
         /// <summary>Музыка города (V6); при переезде MusicService сменит трек кроссфейдом. Нет своей — запасной трек.</summary>
@@ -255,31 +275,49 @@ namespace ShaurmaTycoon.Core
         {
             if (_music == null || !Services.TryGet(out MusicService music))
                 return;
-            AudioClip track = _currentCity.Music != null ? _currentCity.Music : _music.Track;
-            music.Play(track, _music.Volume, _music.FadeDuration);
+            string track = !string.IsNullOrEmpty(_currentCity.MusicName) ? _currentCity.MusicName : _music.TrackName;
+            LoadClip(track, clip => music.Play(clip, _music.Volume, _music.FadeDuration));
         }
 
         private void OnWeatherChanged(WeatherKind kind)
         {
-            _ambientSound.SetWeather(WeatherClip(kind));
+            UpdateWeatherSound();
         }
 
         // Эффекты фона выключены — дождя не видно, значит и не слышно.
         private void OnSettingsChanged()
         {
-            _ambientSound.SetWeather(WeatherClip(_weather.Current));
+            UpdateWeatherSound();
         }
 
-        private AudioClip WeatherClip(WeatherKind kind)
+        // Пока клип грузится, погода могла смениться ещё раз — применяем только последний запрос.
+        private void UpdateWeatherSound()
+        {
+            string clipName = WeatherClipName(_weather.Current);
+            _weatherClipRequest = clipName;
+            if (string.IsNullOrEmpty(clipName))
+            {
+                _ambientSound.SetWeather(null);
+                return;
+            }
+
+            LoadClip(clipName, clip =>
+            {
+                if (_weatherClipRequest == clipName)
+                    _ambientSound.SetWeather(clip);
+            });
+        }
+
+        private string WeatherClipName(WeatherKind kind)
         {
             if (_ambientAudio == null || (_settings != null && !_settings.EffectsOn))
                 return null;
             switch (kind)
             {
                 case WeatherKind.Rain:
-                    return _ambientAudio.Rain;
+                    return _ambientAudio.RainName;
                 case WeatherKind.Snow:
-                    return _ambientAudio.Wind;
+                    return _ambientAudio.WindName;
                 default:
                     return null;
             }

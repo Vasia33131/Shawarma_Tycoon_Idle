@@ -4,15 +4,33 @@ mergeInto(LibraryManager.library,
 {
 	YB_Init: function (id)
 	{
+		// YB_Init зовётся из Awake сцены Boot — раньше, чем шаблон получит ygGameInstance (промис createUnityInstance).
+		// Ответы до этого момента копим и отправляем, как только экземпляр появится: иначе ответ «нет SDK» или
+		// быстрый getPlayer терялись, и игра стартовала только по таймауту 10 с и без облачных сохранений.
+		var queue = [];
+		var flushTimer = null;
+		function ready() { return typeof ygGameInstance !== 'undefined' && ygGameInstance; }
+		function flush()
+		{
+			if (!ready()) return;
+			clearInterval(flushTimer);
+			flushTimer = null;
+			var pending = queue;
+			queue = [];
+			for (var i = 0; i < pending.length; i++)
+				ygGameInstance.SendMessage('YandexBridge', 'OnResult', pending[i]);
+		}
 		window.ybReply = function (rid, status, payload)
 		{
-			if (typeof ygGameInstance !== 'undefined' && ygGameInstance)
-				ygGameInstance.SendMessage('YandexBridge', 'OnResult', rid + '|' + status + '|' + (payload || ''));
-		};
-		window.ybIsLocal = function ()
-		{
-			var h = window.location.hostname;
-			return h === 'localhost' || h === '127.0.0.1' || h === '' || h.endsWith('.local');
+			var message = rid + '|' + status + '|' + (payload || '');
+			if (ready() && queue.length === 0)
+			{
+				ygGameInstance.SendMessage('YandexBridge', 'OnResult', message);
+				return;
+			}
+			queue.push(message);
+			if (flushTimer === null)
+				flushTimer = setInterval(flush, 50);
 		};
 		window.ybState = { player: null, payments: null, tokens: {} };
 
@@ -30,6 +48,22 @@ mergeInto(LibraryManager.library,
 		catch (e) { console.warn('YB: pause events unavailable', e); }
 
 		document.addEventListener('visibilitychange', function () { window.ybReply(0, document.hidden ? 'blur' : 'focus', ''); });
+		// Перезагрузка и закрытие страницы: сейв уходит синхронно в localStorage, пока страница ещё жива.
+		window.addEventListener('pagehide', function () { window.ybReply(0, 'blur', ''); });
+		// Возврат «назад/вперёд» из кэша страницы: снимаем паузу, поставленную на pagehide (требование 1.14).
+		window.addEventListener('pageshow', function (e) { if (e.persisted && !document.hidden) window.ybReply(0, 'focus', ''); });
+		// Alt+Tab и клик в другое окно не скрывают вкладку — звук глушим и по потере фокуса окна (требование 1.3).
+		// Тап по игре после блюра тоже возвращает фокус (событие focus в iframe приходит не всегда).
+		var windowBlurred = false;
+		function setWindowFocus(focused)
+		{
+			if (windowBlurred !== focused) return;
+			windowBlurred = !focused;
+			window.ybReply(0, focused ? 'wfocus' : 'wblur', '');
+		}
+		window.addEventListener('blur', function () { setWindowFocus(false); });
+		window.addEventListener('focus', function () { setWindowFocus(true); });
+		window.addEventListener('pointerdown', function () { setWindowFocus(true); });
 
 		ysdk.getPlayer({ scopes: false }).then(function (p)
 		{
@@ -44,13 +78,13 @@ mergeInto(LibraryManager.library,
 
 	YB_GetLanguage: function ()
 	{
-		var lang = 'ru';
+		// Язык — только из SDK (environment.i18n.lang): язык браузера и системы не используются.
+		// Без SDK (локальный запуск) — пустая строка, игра берёт русский.
+		var lang = '';
 		try
 		{
-			if (typeof ysdk !== 'undefined' && ysdk && ysdk.environment && ysdk.environment.i18n)
-				lang = ysdk.environment.i18n.lang;
-			else if (navigator.language)
-				lang = navigator.language;
+			if (typeof ysdk !== 'undefined' && ysdk && ysdk.environment && ysdk.environment.i18n && ysdk.environment.i18n.lang)
+				lang = String(ysdk.environment.i18n.lang);
 		}
 		catch (e) { }
 		var size = lengthBytesUTF8(lang) + 1;
@@ -78,6 +112,40 @@ mergeInto(LibraryManager.library,
 				ysdk.features.LoadingAPI.ready();
 		}
 		catch (e) { console.warn('YB: LoadingAPI.ready failed', e); }
+	},
+
+	YB_SetGameplay: function (active)
+	{
+		try
+		{
+			if (typeof ysdk !== 'undefined' && ysdk && ysdk.features && ysdk.features.GameplayAPI)
+			{
+				if (active) ysdk.features.GameplayAPI.start();
+				else ysdk.features.GameplayAPI.stop();
+			}
+		}
+		catch (e) { console.warn('YB: GameplayAPI failed', e); }
+	},
+
+	YB_GetCatalog: function (id)
+	{
+		if (typeof ysdk === 'undefined' || !ysdk) { window.ybReply(id, 'fail', ''); return; }
+		function clean(v) { return String(v == null ? '' : v).replace(/[=;|]/g, ''); }
+		ysdk.getPayments({ signed: false }).then(function (payments)
+		{
+			window.ybState.payments = payments;
+			return payments.getCatalog();
+		}).then(function (products)
+		{
+			var items = [];
+			for (var i = 0; i < products.length; i++)
+				items.push(clean(products[i].id) + '=' + clean(products[i].priceValue) + '=' + clean(products[i].priceCurrencyCode));
+			window.ybReply(id, 'ok', items.join(';'));
+		}).catch(function (e)
+		{
+			console.warn('YB: getCatalog failed', e);
+			window.ybReply(id, 'fail', '');
+		});
 	},
 
 	YB_LocalSet: function (keyPtr, valuePtr)
@@ -127,12 +195,8 @@ mergeInto(LibraryManager.library,
 
 	YB_ShowRewarded: function (id)
 	{
-		if (typeof ysdk === 'undefined' || !ysdk)
-		{
-			// Локальная проверка билда без SDK: награда выдаётся только на localhost.
-			window.ybReply(id, window.ybIsLocal() ? 'ok' : 'fail', '');
-			return;
-		}
+		// Без SDK награды нет: rewarded только настоящий (требования 1.16, 4.1).
+		if (typeof ysdk === 'undefined' || !ysdk) { window.ybReply(id, 'fail', ''); return; }
 		var rewarded = false, done = false;
 		function finish(status) { if (!done) { done = true; window.ybReply(id, status, ''); } }
 		ysdk.adv.showRewardedVideo({
@@ -171,11 +235,8 @@ mergeInto(LibraryManager.library,
 	YB_Purchase: function (id, productPtr)
 	{
 		var product = UTF8ToString(productPtr);
-		if (typeof ysdk === 'undefined' || !ysdk)
-		{
-			window.ybReply(id, window.ybIsLocal() ? 'ok' : 'fail', '');
-			return;
-		}
+		// Оплата только через SDK (требование 1.4): без него покупка не проходит.
+		if (typeof ysdk === 'undefined' || !ysdk) { window.ybReply(id, 'fail', ''); return; }
 		ysdk.getPayments({ signed: false }).then(function (payments)
 		{
 			window.ybState.payments = payments;

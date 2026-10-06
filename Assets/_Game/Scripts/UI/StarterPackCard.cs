@@ -1,4 +1,5 @@
 using System.Globalization;
+using ShaurmaTycoon.Core;
 using ShaurmaTycoon.Economy;
 using ShaurmaTycoon.Localization;
 using ShaurmaTycoon.Shop;
@@ -31,6 +32,7 @@ namespace ShaurmaTycoon.UI
         private readonly NumberText _coinsNumber = new NumberText();
         private StarterPack _pack;
         private Loc _loc;
+        private PriceCatalog _prices;
         private CoinFlyEffect _coinFly;
         private LocTemplate _coinsTemplate;
         private double _shownCoins = -1;
@@ -40,6 +42,7 @@ namespace ShaurmaTycoon.UI
             _pack = pack;
             _loc = loc;
             _coinFly = coinFly;
+            Services.TryGet(out _prices);
             _coinsTemplate = loc.GetTemplate("shop.coins_reward");
             if (_icon != null)
             {
@@ -51,6 +54,8 @@ namespace ShaurmaTycoon.UI
 
             _buyButton.onClick.AddListener(OnBuy);
             _pack.Purchased += OnPurchased;
+            if (_prices != null)
+                _prices.Changed += RefreshStatic;
             RefreshStatic();
         }
 
@@ -58,6 +63,8 @@ namespace ShaurmaTycoon.UI
         {
             if (_pack != null)
                 _pack.Purchased -= OnPurchased;
+            if (_prices != null)
+                _prices.Changed -= RefreshStatic;
         }
 
         /// <summary>Тексты, зависящие от языка; вызывать при смене языка.</summary>
@@ -70,7 +77,8 @@ namespace ShaurmaTycoon.UI
             _ribbonText.text = _loc.Get("shop.starter_badge");
             _onceText.text = _loc.Get("shop.starter_once");
             _billsText.text = _loc.Format("shop.bills_amount", _pack.Bills.ToString(CultureInfo.InvariantCulture));
-            _buyText.text = _loc.Format("shop.price_yan", _pack.DisplayPrice.ToString(CultureInfo.InvariantCulture));
+            _buyText.text = _prices != null ? _prices.Format(_loc, _pack.Config.ProductId, _pack.DisplayPrice)
+                : _loc.Format("shop.price_yan", _pack.DisplayPrice.ToString(CultureInfo.InvariantCulture));
             Refresh(force: true);
         }
 
@@ -80,7 +88,8 @@ namespace ShaurmaTycoon.UI
             if (_pack == null)
                 return;
 
-            bool visible = !_pack.IsPurchased;
+            // Набора нет в каталоге консоли — карточку не показываем (требование 1.13.6).
+            bool visible = !_pack.IsPurchased && (_prices == null || _prices.IsAvailable(_pack.Config.ProductId));
             if (gameObject.activeSelf != visible)
                 gameObject.SetActive(visible);
             if (!visible)

@@ -1,6 +1,6 @@
 # PROGRESS
 
-## Текущий этап: V7 — Режим любования, экран загрузки, атласы (код готов; ждёт Assign Icons + Build Game UI, Build Sprite Atlases, WebGL-билда с замерами и скриншотов). V1–V6 и этапы 09–11 ждут проверки в Unity / на черновике
+## Текущий этап: 12 — Оптимизация и релиз (код готов; ждёт WebGL-билда `ShaurmaTycoon/Release/Build Yandex (WebGL)`, настройки консоли и прогона на черновике). V1–V7 и этапы 09–11 ждут проверки в Unity / на черновике
 
 ## Журнал
 ### Этап 00 — Каркас (готов, 2026-10-04)
@@ -766,6 +766,34 @@
   - если в портретном любовании украшения ларька обрезаются по краям — уменьшить `ResponsiveLayout._zenScale.x` (1.3 → 1.2);
   - старые Kenney-спрайты `Sprites/Customers/*` (запасные клиенты) — если не используются, их можно убрать из билда.
 
+### Этап 12 — Оптимизация и релиз (код готов, 2026-10-06; ждёт билда и прогона на черновике)
+- Проверено: runtime (в т.ч. с дефайнами WebGL-плеера), editor и тесты компилируются вне Unity без ошибок и warnings; тесты вне Unity: 270 зелёных, 16 падают только средовые (вызовы движка, замер аллокаций); новые ReleaseChecksTests 6/6, SaveServiceTests +1. В Unity, WebGL-билде и на Яндексе не проверялось.
+- Сверка с требованиями Яндекса (`Docs/Release/YANDEX_RELEASE.md` — чек-лист по пунктам, настройка консоли, тексты черновика, ручной прогон). Найдено и исправлено:
+  - 1.19.3 GameplayAPI не размечался → `IPlatformService.SetGameplayPaused`: start после Game Ready, stop на любую паузу, start при возврате (`YB_SetGameplay`);
+  - 1.13.2/1.13.4/1.13.6 цены были захардкожены → `Shop/PriceCatalog` (Boot) из `payments.getCatalog()`: число + валюта портала (YAN → «ян»/«YAN»); товар, которого нет в каталоге консоли, не показывается; до ответа каталога — `DisplayPrice` из конфига. Применено в `ShopPanel` (паки, «Навсегда») и `StarterPackCard`;
+  - 1.3 Alt+Tab не глушил звук (вкладка видна) → мост шлёт `wblur/wfocus` (window blur/focus, возврат и по тапу), `PauseController.SetWindowFocus`;
+  - 4.7 пауза на рекламе зависела только от `game_api_pause` → `IPlatformService.AdShowing` + `PauseController.SetAdShowing` на время rewarded/interstitial;
+  - 1.9 покупки станций/улучшений/менеджеров ждали автосейва до 10 с → `Wallet.Spent` и трата купюр вызывают `SaveService.RequestSoon` (сейв через 1 с, серия покупок — одна запись); `pagehide` в мосте сохраняет при перезагрузке/закрытии.
+- Размер билда:
+  - `Editor/YandexRelease.cs`, меню `ShaurmaTycoon/Release`: **Apply WebGL Release Settings** (Brotli без fallback, Managed Stripping High, IL2CPP OptimizeSize + Master, стек в логах только для ошибок, Development Build выкл., очистка динамического атласа Rubik), **Preflight Check** (платформа, Development, шаблон и `/sdk.js`, первая сцена Boot, внешние ссылки в коде, ru/en у всех строк, `autoGRA` выкл.), **Build Yandex (WebGL)** → `Builds/Yandex` + `Builds/Yandex_size_report.txt`; batch: `-executeMethod ShaurmaTycoon.EditorTools.YandexRelease.BuildFromCommandLine`;
+  - PluginYG2 перед каждой сборкой применял свой профиль и возвращал стрипинг **Minimal** → в `YandexGames.asset` стрипинг High, `ApplyReleaseSettings` синхронизирует профиль; `Assets/_Game/link.xml` сохраняет `ShaurmaTycoon` и `Assembly-CSharp` (JsonUtility, SendMessage, рефлексия плагина по атрибутам);
+  - `HappyClappyLoop.wav` (6 МБ) больше не в билде: запасной трек `Music.asset` → `music_cozy_01` (и в `ContentSetup`);
+  - `AudioImportSettings` v2: музыка quality 0.35, эмбиент моно 0.3;
+  - `Rubik SDF`: `m_ClearDynamicDataOnBuild = 1`.
+- Debug Checker (2026-10-06): неофициальный [yandex-games-debug-checker](https://github.com/Nioris/yandex-games-debug-checker) в `Tools/YandexDebugChecker` (вне Assets), меню **Build Yandex Debug (checker)** → `Builds/YandexDebug` (без сжатия, тег после `/sdk.js`); Preflight и релизная сборка не пропускают `debugcheck.js`. Прогон через `sdk-dev-proxy --dev-mode` (заглушка SDK): Game Ready ~3–4 с, `i18n.lang` читается до ready, rewarded по жесту (4 мс) с наградой, GameplayAPI stop/start на скрытие вкладки. FAIL «ready не найден» / «lang не читается» — ложные (статика не видит `framework.js`, мок отдаёт новый `i18n` на каждое обращение). Исправлено по чекеру: шаблон слушает `orientationchange` и `fullscreenchange` (1.6.1.3/1.10.1). Interstitial при переезде и настоящий SDK не проверены.
+- Промо: `Docs/Release/Store/icon_512.png` и `cover_800x470.png` — кадрирование иллюстрации экрана загрузки (не скриншот — п. 5.6).
+- Решения:
+  - модули PluginYG2 не импортируются — свой мост уже покрывает рекламу, сейвы, покупки, каталог, лидерборд, LoadingAPI, GameplayAPI, язык и время; модули дублировали бы инициализацию/паузу и добавили вес;
+  - исключения WebGL остаются `FullWithoutStacktrace`: «только явные» превращают любой NullReferenceException в падение игры (1.14);
+  - пауза по потере фокуса окна теперь используется (раньше отказались из-за риска «залипшей» паузы): возврат и по `focus`, и по тапу в игру.
+- Известные проблемы / TODO:
+  - собрать `ShaurmaTycoon/Release/Build Yandex (WebGL)`, записать размер из `Builds/Yandex_size_report.txt` сюда; если > 20 МБ — смотреть топ ассетов в отчёте;
+  - High stripping не проверен в билде: если что-то пропало (сейв, мост) — смотреть консоль браузера, при необходимости дописать `link.xml` или вернуть Medium;
+  - консоль: товары и лидерборд (таблица в `YANDEX_RELEASE.md` §2), облачные сохранения, скриншоты;
+  - ручной прогон на черновике — `YANDEX_RELEASE.md` §4;
+  - `Rubik SDF.asset` и `YandexGames.asset` правились на диске при открытом Unity — если редактор их перезапишет, `Apply WebGL Release Settings` выставит значения заново;
+  - `HappyClappyLoop.wav` можно удалить из проекта, если не нужен.
+
 ## Важные решения (архитектура)
 - Unity 2022.3.62f1, 2D, URP 2D, Color Space Gamma, старый Input Manager.
 - Сборки: `ShaurmaTycoon` (runtime), `ShaurmaTycoon.Editor`, `ShaurmaTycoon.Tests.EditMode` (Assets/_Game/Tests/EditMode). Namespace `ShaurmaTycoon.<Модуль>`, для редакторского кода `ShaurmaTycoon.EditorTools`.
@@ -779,7 +807,7 @@
 - Новый город = новый `CityConfig` (свои станции и улучшения) в `Configs/Cities/CityCatalog.asset`; переход между городами перезагружает сцену Game.
 
 ## TODO(YANDEX)
-- Консоль Яндекса: лидерборд `richest`, товары паков купюр, включить Payments (см. этап 09).
-- В консоли Яндекса (постоянные товары): `starter_pack` 99, `no_ads` 149, `income_x2` 299; цены из каталога платформы вместо `DisplayPrice`.
+- Консоль Яндекса: лидерборд `richest`, товары паков купюр, включить Payments (см. этап 09; полный список — `Docs/Release/YANDEX_RELEASE.md` §2).
+- В консоли Яндекса (постоянные товары): `starter_pack` 99, `no_ads` 149, `income_x2` 299. Цены в игре уже берутся из каталога платформы (этап 12).
 - Проверка на черновике: реклама, облачный сейв между устройствами, язык, пауза, неподтверждённые покупки.
 - WebGL-шаблон на весь экран: проверить в билде (шаблон YandexGames из плагина уже подключён).

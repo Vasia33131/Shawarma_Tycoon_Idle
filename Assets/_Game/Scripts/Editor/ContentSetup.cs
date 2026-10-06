@@ -32,7 +32,7 @@ namespace ShaurmaTycoon.EditorTools
         private const string BillShopPath = "Assets/_Game/Configs/BillShop.asset";
         private const string RetentionPath = "Assets/_Game/Configs/Retention.asset";
         public const string AmbientPath = "Assets/_Game/Configs/Ambient.asset";
-        private const string DefaultMusicPath = "Assets/_Game/Audio/Music/HappyClappyLoop.wav";
+        private const string DefaultMusicPath = "Assets/_Game/Audio/Music/music_cozy_01.ogg";
         private const string ThemePath = "Assets/_Game/Configs/UiTheme.asset";
         private const string OutlineMaterialPath = "Assets/_Game/Fonts/Rubik SDF - Outline.mat";
         private const float OutlineMaterialWidth = 0.18f;
@@ -353,7 +353,7 @@ namespace ShaurmaTycoon.EditorTools
             if (track == null)
                 Debug.LogWarning($"[ContentSetup] Music track '{DefaultMusicPath}' not found.");
             var so = new SerializedObject(config);
-            so.FindProperty("_track").objectReferenceValue = track;
+            so.FindProperty("_trackName").stringValue = track != null ? track.name : string.Empty;
             so.ApplyModifiedPropertiesWithoutUndo();
             Debug.Log("[ContentSetup] Created " + MusicConfigPath);
             return config;

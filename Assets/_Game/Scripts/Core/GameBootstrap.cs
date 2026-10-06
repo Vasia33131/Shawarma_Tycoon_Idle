@@ -6,6 +6,7 @@ using ShaurmaTycoon.Localization;
 using ShaurmaTycoon.Platform;
 using ShaurmaTycoon.Prestige;
 using ShaurmaTycoon.Save;
+using ShaurmaTycoon.Shop;
 using ShaurmaTycoon.UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -46,7 +47,11 @@ namespace ShaurmaTycoon.Core
             var audioObject = new GameObject("Audio");
             DontDestroyOnLoad(audioObject);
             audioObject.AddComponent<AudioListener>();
-            var music = new MusicService(audioObject);
+            // Музыка и эмбиент догружаются MP3 после старта (этап 12): в стартовом файле билда их нет.
+            var clipStore = new AudioClipStore();
+            Services.Register(clipStore);
+            _tickManager.Register(clipStore);
+            var music = new MusicService(audioObject, clipStore.Release);
             Services.Register(music);
             _tickManager.Register(music);
 
@@ -63,15 +68,12 @@ namespace ShaurmaTycoon.Core
             {
                 _tickManager.IsPaused = paused;
                 GameEvents.RaiseGamePaused(paused);
+                _platform?.SetGameplayPaused(paused);
             });
             Services.Register(pause);
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            // Отладочное окно (этап 11) — в релизной сборке его код не компилируется.
-            DebugWindow.Create();
-#endif
-
             _platform = CreatePlatform(pause);
+            _platform.AdShowing += pause.SetAdShowing;
             Services.Register(_platform);
             _platform.Init(OnPlatformReady);
         }
@@ -83,6 +85,7 @@ namespace ShaurmaTycoon.Core
             _yandexBridge = YandexBridge.Create();
             _yandexBridge.PauseRequested += pause.SetPlatformPause;
             _yandexBridge.VisibilityChanged += pause.SetFocus;
+            _yandexBridge.WindowFocusChanged += pause.SetWindowFocus;
             var yandex = new YandexPlatformService(_yandexBridge);
             _tickManager.Register(yandex);
             return yandex;
@@ -104,6 +107,14 @@ namespace ShaurmaTycoon.Core
             GameEvents.ApplicationQuitting += save.OnApplicationQuitting;
             Services.Register(save);
             _tickManager.Register(save);
+
+            // Покупка за монеты или купюры сохраняется сразу (через секунду), а не ждёт автосейва: прогресс переживает F5 (требование 1.9).
+            Services.Get<Wallet>().Spent += _ => save.RequestSoon();
+            Services.Get<BillWallet>().BillsChanged += (_, delta) =>
+            {
+                if (delta < 0)
+                    save.RequestSoon();
+            };
 
             // Вкладка скрыта или игра закрывается — сейв уходит и в облако сразу, не дожидаясь интервала.
             if (_platform is YandexPlatformService yandex)
@@ -133,6 +144,11 @@ namespace ShaurmaTycoon.Core
             Services.Register(leaderboard);
             _tickManager.Register(leaderboard);
             Services.Register(new InterstitialService(platform, () => Time.realtimeSinceStartup));
+
+            // Цены магазина — из каталога платформы (валюта портала); пока не пришли — из конфига.
+            var prices = new PriceCatalog();
+            Services.Register(prices);
+            prices.Load(platform);
             save.Load(() =>
             {
                 // Прогресс престижа живёт в Boot и переживает перезагрузку сцены Game.

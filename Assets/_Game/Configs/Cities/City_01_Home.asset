@@ -60,7 +60,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 5fd92de61d6663b4786db70960ac923e, type: 3}
   - {fileID: 21300000, guid: c6be5b1182767c44f94d6135c902e80e, type: 3}
   _fireflies: 0
-  _music: {fileID: 8300000, guid: f7d2b4da4c7db184ca637737fe0ffc02, type: 3}
-  _ambientBase: {fileID: 8300000, guid: 42c2f4eed5efb5d47aae467ddb359ee1, type: 3}
+  _musicName: music_cozy_01
+  _ambientBaseName: amb_street
   _mapPosition: {x: 0.193, y: 0.313}
   _mapIcon: {fileID: 21300000, guid: 45d362c25fc55af468ccf25c56c1b38f, type: 3}

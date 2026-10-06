@@ -12,6 +12,9 @@ namespace ShaurmaTycoon.Economy
         /// <summary>Аргумент — новое количество монет.</summary>
         public event Action<double> CoinsChanged;
 
+        /// <summary>Игрок потратил монеты (покупка) — аргумент: сколько. Сейв пишется вскоре после траты.</summary>
+        public event Action<double> Spent;
+
         public void Add(double amount)
         {
             if (!IsValidAmount(amount) || amount == 0)
@@ -31,7 +34,10 @@ namespace ShaurmaTycoon.Economy
                 return false;
 
             if (amount > 0)
+            {
                 SetInternal(Coins - amount);
+                Spent?.Invoke(amount);
+            }
             return true;
         }
 

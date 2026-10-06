@@ -4,19 +4,19 @@ namespace ShaurmaTycoon.Core.Audio
 {
     /// <summary>
     /// Фоновая музыка: запасной трек (если у города своего нет), громкость и длительность плавного перехода.
-    /// Трек города — CityConfig.Music (V6).
+    /// Трек города — CityConfig.MusicName (V6). Треки — имена файлов в Audio/Music: в билд они идут отдельными MP3 (AudioClipStore).
     /// </summary>
     [CreateAssetMenu(menuName = "ShaurmaTycoon/Music Config", fileName = "Music")]
     public sealed class MusicConfig : ScriptableObject
     {
-        [Tooltip("Запасной трек: играет в городе без своей музыки.")]
-        [SerializeField] private AudioClip _track = null;
+        [Tooltip("Запасной трек: имя файла в Audio/Music без расширения. Играет в городе без своей музыки.")]
+        [SerializeField] private string _trackName = "";
         [Range(0f, 1f)]
         [SerializeField] private float _volume = 0.35f;
         [Tooltip("Секунды на появление музыки и кроссфейд при переезде.")]
         [SerializeField] private float _fadeDuration = 2f;
 
-        public AudioClip Track => _track;
+        public string TrackName => _trackName;
         public float Volume => _volume;
         public float FadeDuration => _fadeDuration;
 

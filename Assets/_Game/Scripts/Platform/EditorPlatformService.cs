@@ -5,6 +5,7 @@ namespace ShaurmaTycoon.Platform
 {
     /// <summary>
     /// Заглушка платформы для редактора: реклама сразу «досмотрена», сохранения в PlayerPrefs.
+    /// Язык — из меню ShaurmaTycoon/Editor Language (в билде язык даёт SDK, см. YandexPlatformService).
     /// </summary>
     public sealed class EditorPlatformService : IPlatformService
     {
@@ -40,6 +41,22 @@ namespace ShaurmaTycoon.Platform
         public void GameReady()
         {
             Debug.Log("[Platform] GameReady");
+        }
+
+        public void SetGameplayPaused(bool paused)
+        {
+        }
+
+        public void GetCatalog(Action<ProductPrice[]> onLoaded)
+        {
+            onLoaded?.Invoke(null);
+        }
+
+        // Реклама в редакторе закрывается мгновенно — паузы нет.
+        public event Action<bool> AdShowing
+        {
+            add { }
+            remove { }
         }
 
         public void ShowRewarded(Action<bool> onComplete)

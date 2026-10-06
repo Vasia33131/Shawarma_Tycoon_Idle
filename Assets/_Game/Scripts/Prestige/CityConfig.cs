@@ -50,10 +50,10 @@ namespace ShaurmaTycoon.Prestige
         [SerializeField] private bool _fireflies = false;
 
         [Header("Sound (V6)")]
-        [Tooltip("Музыка города. Пусто — запасной трек из Music.asset. Назначает Art/Assign Icons.")]
-        [SerializeField] private AudioClip _music = null;
-        [Tooltip("Основа эмбиента: тихая улица или прибой. Пусто — без эмбиента улицы.")]
-        [SerializeField] private AudioClip _ambientBase = null;
+        [Tooltip("Музыка города: имя файла в Audio/Music без расширения. Пусто — запасной трек из Music.asset. Назначает Art/Assign Icons.")]
+        [SerializeField] private string _musicName = "";
+        [Tooltip("Основа эмбиента: имя файла в Audio/Ambient без расширения (тихая улица или прибой). Пусто — без эмбиента улицы.")]
+        [SerializeField] private string _ambientBaseName = "";
 
         [Header("Map")]
         [Tooltip("Точка города на карте во вкладке «Город»: доли ширины и высоты карты, (0, 0) — левый нижний угол.")]
@@ -79,8 +79,8 @@ namespace ShaurmaTycoon.Prestige
         public bool SnowAllowed => _snowAllowed;
         public IReadOnlyList<Sprite> Vehicles => _vehicles;
         public bool Fireflies => _fireflies;
-        public AudioClip Music => _music != null ? _music : null;
-        public AudioClip AmbientBase => _ambientBase != null ? _ambientBase : null;
+        public string MusicName => _musicName;
+        public string AmbientBaseName => _ambientBaseName;
         public Vector2 MapPosition => _mapPosition;
         public Sprite MapIcon => _mapIcon != null ? _mapIcon : null;
 

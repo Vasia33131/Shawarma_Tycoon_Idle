@@ -45,6 +45,7 @@ namespace ShaurmaTycoon.UI
         private BillShop _shop;
         private BillWallet _bills;
         private Loc _loc;
+        private PriceCatalog _prices;
         private CoinFlyEffect _coinFly;
         private BillShopRowView[] _billRows;
         private BillShopRowView[] _coinRows;
@@ -75,6 +76,7 @@ namespace ShaurmaTycoon.UI
             _loc = loc;
             _coinFly = coinFly;
             _adBills = adBills;
+            Services.TryGet(out _prices);
             _rewardTemplate = loc.GetTemplate("shop.coins_reward");
             _adWaitTemplate = loc.GetTemplate("bills.ad_wait");
 
@@ -130,6 +132,8 @@ namespace ShaurmaTycoon.UI
             _bills.BillsChanged += OnBillsChanged;
             _shop.CoinsPurchased += OnCoinsPurchased;
             _loc.LanguageChanged += RefreshStatic;
+            if (_prices != null)
+                _prices.Changed += RefreshStatic;
             RefreshStatic();
         }
 
@@ -145,6 +149,8 @@ namespace ShaurmaTycoon.UI
             _bills.BillsChanged -= OnBillsChanged;
             _shop.CoinsPurchased -= OnCoinsPurchased;
             _loc.LanguageChanged -= RefreshStatic;
+            if (_prices != null)
+                _prices.Changed -= RefreshStatic;
         }
 
         private void OnEnable()
@@ -265,14 +271,15 @@ namespace ShaurmaTycoon.UI
                 PermanentProduct product = PremiumProducts[i];
                 BillShopRowView row = _premiumRows[i];
                 bool owned = _permanent.Has(product);
+                PermanentOfferConfig offer = _permanent.GetOffer(product);
+                // Товара нет в каталоге консоли — не показываем (купленный остаётся с подписью «Куплено»).
+                row.gameObject.SetActive(owned || IsAvailable(offer.ProductId));
                 string prefix = product == PermanentProduct.NoAds ? "shop.no_ads" : "shop.x2";
-                row.SetIcon(_permanent.GetOffer(product).Icon);
+                row.SetIcon(offer.Icon);
                 row.SetName(_loc.Get(prefix + "_name"));
                 row.SetDescription(_loc.Get(prefix + "_desc"));
                 row.SetBadge(false);
-                row.SetButton(owned ? _loc.Get("shop.owned")
-                    : _loc.Format("shop.price_yan", _permanent.GetOffer(product).DisplayPrice.ToString(CultureInfo.InvariantCulture)),
-                    _permanent.CanBuy(product));
+                row.SetButton(owned ? _loc.Get("shop.owned") : FormatPrice(offer.ProductId, offer.DisplayPrice), _permanent.CanBuy(product));
             }
         }
 
@@ -320,11 +327,12 @@ namespace ShaurmaTycoon.UI
             {
                 BillPackConfig pack = _shop.GetBillPack(i);
                 BillShopRowView row = _billRows[i];
+                row.gameObject.SetActive(IsAvailable(pack.ProductId));
                 row.SetName(_loc.Get(pack.NameKey));
                 row.SetDescription(_loc.Format("shop.bills_amount", pack.Bills.ToString(CultureInfo.InvariantCulture)));
                 row.SetBadge(pack.Best);
                 row.SetIcon(pack.Icon);
-                row.SetButton(_loc.Format("shop.price_yan", pack.DisplayPrice.ToString(CultureInfo.InvariantCulture)), !_shop.IsPurchasing);
+                row.SetButton(FormatPrice(pack.ProductId, pack.DisplayPrice), !_shop.IsPurchasing);
             }
 
             for (int i = 0; i < _coinRows.Length; i++)
@@ -338,6 +346,18 @@ namespace ShaurmaTycoon.UI
             }
 
             RefreshRewards(force: true);
+        }
+
+        private bool IsAvailable(string productId)
+        {
+            return _prices == null || _prices.IsAvailable(productId);
+        }
+
+        /// <summary>Цена из каталога платформы (число + валюта портала); каталога нет — из конфига в янах.</summary>
+        private string FormatPrice(string productId, int fallbackYan)
+        {
+            return _prices != null ? _prices.Format(_loc, productId, fallbackYan)
+                : _loc.Format("shop.price_yan", fallbackYan.ToString(CultureInfo.InvariantCulture));
         }
 
         private void RefreshInteractable()

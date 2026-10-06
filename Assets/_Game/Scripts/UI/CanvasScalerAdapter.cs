@@ -6,7 +6,7 @@ namespace ShaurmaTycoon.UI
 {
     /// <summary>
     /// Настраивает CanvasScaler под ориентацию экрана:
-    /// портрет — референс 1080×1920, подгонка по ширине; ландшафт — 1920×1080, подгонка по высоте.
+    /// портрет — референс 1080×1920, ландшафт — 1920×1080; канвас не меньше референса ни по одной стороне.
     /// </summary>
     [RequireComponent(typeof(CanvasScaler))]
     public sealed class CanvasScalerAdapter : MonoBehaviour
@@ -26,7 +26,9 @@ namespace ShaurmaTycoon.UI
         {
             _scaler = GetComponent<CanvasScaler>();
             _scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            _scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            // Expand: опорный прямоугольник всегда помещается целиком — на окнах 4:3, почти квадратных и 21:9
+            // зоны не сжимаются меньше рассчитанных и не обрезаются (требования 1.10.1, 1.10.3).
+            _scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
             Apply(force: true);
         }
 
@@ -51,7 +53,6 @@ namespace ShaurmaTycoon.UI
             _scaler.referenceResolution = isLandscape
                 ? new Vector2(_portraitReference.y, _portraitReference.x)
                 : _portraitReference;
-            _scaler.matchWidthOrHeight = isLandscape ? 1f : 0f;
 
             if (force || isLandscape != IsLandscape)
             {

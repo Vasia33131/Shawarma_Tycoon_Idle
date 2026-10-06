@@ -1,0 +1,5 @@
+<!-- Этап 12: Managed Stripping = High. Сохраняем код, к которому обращаются через рефлексию или сериализацию:
+     ShaurmaTycoon — сейв через JsonUtility и SendMessage('YandexBridge', 'OnResult'). -->
+<linker>
+  <assembly fullname="ShaurmaTycoon" preserve="all" />
+</linker>

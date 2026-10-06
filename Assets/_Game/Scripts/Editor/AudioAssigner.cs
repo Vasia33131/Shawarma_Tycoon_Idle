@@ -11,7 +11,7 @@ namespace ShaurmaTycoon.EditorTools
     /// <summary>
     /// Звуки пакета G (V6) по путям из Docs/Visual/ASSET_PROMPTS.md: музыка и основа эмбиента — в города,
     /// гриль/дождь/ветер — в AmbientAudio.asset, эффекты — в Audio.asset. Вызывается из Art/Assign Icons.
-    /// Нет файла — остаётся старый звук (фишки, HappyClappyLoop) или слой молчит.
+    /// Нет файла — остаётся старый звук (фишки) или слой молчит. Запасной трек Music.asset — music_cozy_01 (этап 12: HappyClappyLoop.wav в билд не идёт).
     /// </summary>
     public static class AudioAssigner
     {
@@ -80,10 +80,10 @@ namespace ShaurmaTycoon.EditorTools
 
                 int number = int.Parse(match.Groups[1].Value);
                 var so = new SerializedObject(AssetDatabase.LoadAssetAtPath<CityConfig>(configPath));
-                so.FindProperty("_music").objectReferenceValue =
-                    CityMusic.TryGetValue(number, out string track) ? Load($"{MusicFolder}/{track}") : null;
-                so.FindProperty("_ambientBase").objectReferenceValue =
-                    Load($"{AmbientFolder}/{(number == SeaCity ? "amb_sea" : "amb_street")}");
+                so.FindProperty("_musicName").stringValue =
+                    CityMusic.TryGetValue(number, out string track) ? ClipName($"{MusicFolder}/{track}") : string.Empty;
+                so.FindProperty("_ambientBaseName").stringValue =
+                    ClipName($"{AmbientFolder}/{(number == SeaCity ? "amb_sea" : "amb_street")}");
                 so.ApplyModifiedPropertiesWithoutUndo();
             }
         }
@@ -91,9 +91,9 @@ namespace ShaurmaTycoon.EditorTools
         private static void AssignAmbientConfig()
         {
             var so = new SerializedObject(ContentSetup.EnsureAmbientAudio());
-            so.FindProperty("_sizzle").objectReferenceValue = Load($"{AmbientFolder}/amb_sizzle");
-            so.FindProperty("_rain").objectReferenceValue = Load($"{AmbientFolder}/amb_rain");
-            so.FindProperty("_wind").objectReferenceValue = Load($"{AmbientFolder}/amb_wind_soft");
+            so.FindProperty("_sizzleName").stringValue = ClipName($"{AmbientFolder}/amb_sizzle");
+            so.FindProperty("_rainName").stringValue = ClipName($"{AmbientFolder}/amb_rain");
+            so.FindProperty("_windName").stringValue = ClipName($"{AmbientFolder}/amb_wind_soft");
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
@@ -162,6 +162,16 @@ namespace ShaurmaTycoon.EditorTools
                     clips.Add(clip);
             }
             return clips.ToArray();
+        }
+
+        /// <summary>
+        /// Имя клипа для конфига (музыка и эмбиент идут в билд отдельными MP3 — AudioClipStore, поэтому в конфиге имя, а не ссылка).
+        /// Файла нет — пустая строка: слой молчит.
+        /// </summary>
+        private static string ClipName(string pathWithoutExtension)
+        {
+            AudioClip clip = Load(pathWithoutExtension);
+            return clip != null ? clip.name : string.Empty;
         }
 
         /// <param name="pathWithoutExtension">Путь без расширения: подходит .ogg, .wav или .mp3.</param>

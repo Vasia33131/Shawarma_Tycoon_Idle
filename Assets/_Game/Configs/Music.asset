@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db384dd655b7d764f8f9c67f7bf48dcd, type: 3}
   m_Name: Music
   m_EditorClassIdentifier: 
-  _track: {fileID: 8300000, guid: d81285ffa80ca3bc9fda2e2a716f857f, type: 3}
+  _trackName: music_cozy_01
   _volume: 0.35
   _fadeDuration: 2

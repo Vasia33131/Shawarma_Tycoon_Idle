@@ -19,6 +19,9 @@ namespace ShaurmaTycoon.Tests
             public DateTime ServerTimeUtc => DateTime.UtcNow;
             public void Init(Action onReady) => onReady?.Invoke();
             public void GameReady() { }
+            public void SetGameplayPaused(bool paused) { }
+            public void GetCatalog(Action<ProductPrice[]> onLoaded) => onLoaded?.Invoke(null);
+            public event Action<bool> AdShowing { add { } remove { } }
             public void ShowRewarded(Action<bool> onComplete) => onComplete?.Invoke(true);
             public void ShowInterstitial(Action onClosed) => onClosed?.Invoke();
             public void Save(string json, Action<bool> onComplete) => onComplete?.Invoke(true);
