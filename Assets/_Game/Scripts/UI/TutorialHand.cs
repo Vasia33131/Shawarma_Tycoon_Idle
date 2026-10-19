@@ -148,9 +148,16 @@ namespace ShaurmaTycoon.UI
 
         private void Place(RectTransform target)
         {
-            Vector3 local = _area.InverseTransformPoint(target.position);
+            // Центр прямоугольника цели, а не её pivot: у кнопок справа в строке pivot бывает на краю.
+            Vector3 local = _area.InverseTransformPoint(target.TransformPoint(target.rect.center));
             float bob = Mathf.Abs(Mathf.Sin(_time * _bobSpeed)) * _bobAmplitude;
             _hand.localPosition = new Vector3(local.x, local.y - bob, 0f);
+
+            // Ладонь уходит от кончика пальца вбок; в правой половине экрана отражаем руку,
+            // чтобы она лежала внутри экрана, а не уезжала за край (под рекламный блок Яндекса).
+            Rect area = _area.rect;
+            float side = local.x > area.center.x ? -1f : 1f;
+            _hand.localScale = new Vector3(side, 1f, 1f);
 
             float phase = Mathf.Repeat(_time * _bobSpeed / Mathf.PI, 1f);
             float ringScale = 0.6f + phase * 0.8f;
@@ -159,7 +166,6 @@ namespace ShaurmaTycoon.UI
             _ringGroup.alpha = 1f - phase;
 
             // Подпись — над целью в нижней половине экрана и под ней в верхней, не выходя за края.
-            Rect area = _area.rect;
             float halfWidth = _bubble.rect.width * 0.5f;
             float x = Mathf.Clamp(local.x, area.xMin + halfWidth + 16f, area.xMax - halfWidth - 16f);
             float y = local.y < area.center.y ? local.y + _bubbleOffset : local.y - _bubbleOffset - 60f;
